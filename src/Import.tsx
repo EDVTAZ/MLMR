@@ -2,6 +2,7 @@ import { useFilePicker } from "use-file-picker";
 import styled from "styled-components";
 import { FormEvent, MouseEvent, useRef, useState } from "react";
 import { FileContent } from "use-file-picker/dist/interfaces";
+import { storeCollection } from "./storage";
 
 type Rectangle = {
   x1: number | null;
@@ -10,7 +11,7 @@ type Rectangle = {
   y2: number | null;
 };
 
-type Zone = {
+export type Zone = {
   rectangle: Rectangle;
   key: number;
 };
@@ -84,6 +85,7 @@ function getZoneBoxStyle(rectangle: Rectangle, image: HTMLImageElement | null) {
 function Import({ ...rest }) {
   const imgRef = useRef<HTMLImageElement | null>(null);
 
+  const [collectionName, setCollectionName] = useState("");
   const [selectedPreview, setSelected] = useState({ name: "", blobURL: "" });
   const [zones, setZones] = useState<Zones>({
     zones: [],
@@ -106,8 +108,8 @@ function Import({ ...rest }) {
   }
 
   function handleSubmit(ev: FormEvent) {
-    // TODO
     ev.preventDefault();
+    storeCollection(collectionName, filesContent, zones.zones);
   }
 
   function addEmptyZone() {
@@ -223,7 +225,13 @@ function Import({ ...rest }) {
         <div className="control-panel">
           <label htmlFor="collection-name">Collection Name:</label>
           <form onSubmit={handleSubmit}>
-            <input id="collection-name" name="collectionName" />
+            <input
+              id="collection-name"
+              name="collectionName"
+              onInput={(e) =>
+                setCollectionName((e.target as HTMLInputElement).value)
+              }
+            />
             <button type="submit">Save images</button>
           </form>
         </div>
@@ -274,7 +282,7 @@ function Import({ ...rest }) {
   );
 }
 
-export default styled(Import)`
+export const StyledImport = styled(Import)`
   display: flex;
   justify-content: center;
 

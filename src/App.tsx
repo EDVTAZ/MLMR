@@ -1,8 +1,8 @@
 import "./App.css";
-import Import from "./Import";
+import { StyledImport } from "./Import";
 
 function App() {
-  return <Import></Import>;
+  return <StyledImport></StyledImport>;
 }
 
 export default App;
