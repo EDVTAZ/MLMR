@@ -5,9 +5,9 @@ const COLLECTIONS = "collections";
 const IMAGES = "images";
 const PAGE_NUMBER = "pageNumber";
 
-type CollectionInfo = {
+export type CollectionInfo = {
   name: string;
-  zones: Array<Zone> | null;
+  zones: Array<Zone>;
   length: number;
   position: number;
 };
@@ -18,11 +18,11 @@ type LocalStorageCollections = {
 
 type DBImage = {
   filename: string;
-  [PAGE_NUMBER]: number;
+  pageNumber: number;
   imageData: ArrayBuffer;
 };
 
-function getLSAll(): LocalStorageCollections {
+export function getLSAll(): LocalStorageCollections {
   return JSON.parse(localStorage.getItem(COLLECTIONS) ?? "{}");
 }
 
@@ -30,7 +30,7 @@ function setLSAll(collections: LocalStorageCollections) {
   localStorage.setItem(COLLECTIONS, JSON.stringify(collections));
 }
 
-function getLSCollectionInfo(name: string): CollectionInfo | null {
+export function getLSCollectionInfo(name: string): CollectionInfo | null {
   const ls = getLSAll();
   return ls[name];
 }
@@ -39,6 +39,13 @@ function setLSCollectionInfo(name: string, collectionInfo: CollectionInfo) {
   const current = getLSAll();
   current[name] = collectionInfo;
   setLSAll(current);
+}
+
+export function setCurrentPage(name: string, page: number) {
+  const current = getLSCollectionInfo(name);
+  if (!current) return null;
+  current.position = page;
+  setLSCollectionInfo(name, current);
 }
 
 export function storeCollection(
@@ -78,6 +85,35 @@ export function storeCollection(
         };
         imagesObjectStore.add(dbImage);
       });
+    };
+  };
+}
+
+export function getPageData(
+  name: string,
+  start: number,
+  length: number,
+  callback: (image: Array<ArrayBuffer>) => void
+) {
+  const result: Array<ArrayBuffer> = [];
+  const range = IDBKeyRange.bound(start + 1, start + length);
+  const dbName = name;
+  const request = indexedDB.open(dbName);
+  request.onsuccess = () => {
+    const db = request.result;
+    db.transaction(IMAGES).objectStore(IMAGES).openCursor(range).onsuccess = (
+      event
+    ) => {
+      //@ts-ignore
+      const cursor = event.target.result;
+      if (cursor) {
+        const item = cursor.value as DBImage;
+        result[item.pageNumber - 1] = item.imageData;
+
+        cursor.continue();
+      } else {
+        callback(result);
+      }
     };
   };
 }

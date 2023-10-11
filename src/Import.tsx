@@ -4,7 +4,7 @@ import { FormEvent, MouseEvent, useRef, useState } from "react";
 import { FileContent } from "use-file-picker/dist/interfaces";
 import { storeCollection } from "./storage";
 
-type Rectangle = {
+export type Rectangle = {
   x1: number | null;
   x2: number | null;
   y1: number | null;
