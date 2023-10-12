@@ -58,7 +58,7 @@ function ReaderImage({
   useLayoutEffect(() => {
     const currentZone: CompleteRectangle = (collectionInfo.zones[
       position % collectionInfo.zones.length
-    ].rectangle as CompleteRectangle) ?? { x1: 0, y1: 0, x2: 1, y2: 1 };
+    ]?.rectangle as CompleteRectangle) ?? { x1: 0, y1: 0, x2: 1, y2: 1 };
 
     const widthPercent = currentZone.x2 - currentZone.x1;
     const heightPercent = currentZone.y2 - currentZone.y1;

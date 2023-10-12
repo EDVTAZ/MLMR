@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { StyledReaderImage } from "./ReaderImage";
 
 function Reader({ collectionNames, ...rest }: { collectionNames: string[] }) {
   const [position, setPosition] = useState(0);
+  const [version, setVersion] = useState(1);
 
   function step(count: number) {
     setPosition((prev) => {
@@ -12,16 +13,36 @@ function Reader({ collectionNames, ...rest }: { collectionNames: string[] }) {
     });
   }
 
+  useEffect(() => {
+    function keyPressHandler(ev: KeyboardEvent) {
+      if (ev.key === "ArrowLeft" || ev.key === "a") step(1);
+      else if (ev.key === "ArrowRight" || ev.key === "d") step(-1);
+      else if (ev.key === "v") setVersion((v) => -v);
+      else return;
+      ev.preventDefault();
+    }
+    document.addEventListener("keydown", keyPressHandler);
+    return () => {
+      document.removeEventListener("keydown", keyPressHandler);
+    };
+  }, []);
+
   return (
     <div {...rest}>
       <StyledReaderImage
         collectionName={collectionNames[0]}
         position={position}
-        visible={true}
+        visible={version === 1}
+      />
+
+      <StyledReaderImage
+        collectionName={collectionNames[1]}
+        position={position}
+        visible={version === -1}
       />
       <div className="base-navigation">
-        <button className="side-navigation" onClick={() => step(1)} />
-        <button className="side-navigation" onClick={() => step(-1)} />
+        <div className="side-navigation" onClick={() => step(1)} />
+        <div className="side-navigation" onClick={() => step(-1)} />
       </div>
     </div>
   );
