@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { FormEvent, MouseEvent, useRef, useState } from "react";
 import { FileContent } from "use-file-picker/dist/interfaces";
 import { storeCollection } from "../storage";
+import { StyledNameInput } from "./ImportName";
 
 export type Rectangle = {
   x1: number | null;
@@ -85,7 +86,6 @@ function getZoneBoxStyle(rectangle: Rectangle, image: HTMLImageElement | null) {
 function Import({ ...rest }) {
   const imgRef = useRef<HTMLImageElement | null>(null);
 
-  const [collectionName, setCollectionName] = useState("");
   const [selectedPreview, setSelected] = useState({ name: "", blobURL: "" });
   const [zones, setZones] = useState<Zones>({
     zones: [],
@@ -105,11 +105,6 @@ function Import({ ...rest }) {
       name: file.name,
       blobURL: URL.createObjectURL(imageBlob),
     });
-  }
-
-  function handleSubmit(ev: FormEvent) {
-    ev.preventDefault();
-    storeCollection(collectionName, filesContent, zones.zones);
   }
 
   function addEmptyZone() {
@@ -222,20 +217,11 @@ function Import({ ...rest }) {
       </div>
       <div className="controls-pane">
         <h1 onClick={openFilePicker}>Import images</h1>
-        <div className="control-panel">
-          <label htmlFor="collection-name">Collection Name:</label>
-          <form onSubmit={handleSubmit}>
-            <input
-              id="collection-name"
-              name="collectionName"
-              onInput={(e) =>
-                setCollectionName((e.target as HTMLInputElement).value)
-              }
-            />
-            <button type="submit">Save images</button>
-          </form>
-        </div>
-
+        <StyledNameInput
+          storeCollection={(collectionName) =>
+            storeCollection(collectionName, filesContent, zones.zones)
+          }
+        />
         <div className="control-panel">
           <div>Zones:</div>
           {zones.zones.map((zone) => {
@@ -358,20 +344,6 @@ export const StyledImport = styled(Import)`
     padding: 0.5em;
     margin: 1em 0 0 0;
 
-    form {
-      display: flex;
-      align-items: center;
-      input {
-        flex: 1 1 auto;
-        margin: 0 0.5em 0 0;
-        border: 1px solid;
-      }
-      button {
-        border: 1px solid;
-        background: #bbbbbb;
-      }
-    }
-
     .zone-button {
       border: 1px solid;
       background: #bbbbbb;
@@ -382,6 +354,7 @@ export const StyledImport = styled(Import)`
     .zone-box {
       border: 2px solid;
       position: absolute;
+      pointer-events: none;
     }
   }
 `;
