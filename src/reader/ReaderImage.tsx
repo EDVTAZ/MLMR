@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { CollectionInfo, getLSCollectionInfo, getPageData } from "./storage";
+import { CollectionInfo, getLSCollectionInfo, getPageData } from "../storage";
 import styled from "styled-components";
 
 type CompleteRectangle = {

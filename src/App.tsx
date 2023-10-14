@@ -1,6 +1,6 @@
 import "./App.css";
-import { StyledImport } from "./Import";
-import { StyledReader } from "./Reader";
+import { StyledImport } from "./import/Import";
+import { StyledReader } from "./reader/Reader";
 
 function App() {
   if (window.location.hash === "#import") return <StyledImport></StyledImport>;

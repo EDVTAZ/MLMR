@@ -2,7 +2,7 @@ import { useFilePicker } from "use-file-picker";
 import styled from "styled-components";
 import { FormEvent, MouseEvent, useRef, useState } from "react";
 import { FileContent } from "use-file-picker/dist/interfaces";
-import { storeCollection } from "./storage";
+import { storeCollection } from "../storage";
 
 export type Rectangle = {
   x1: number | null;
