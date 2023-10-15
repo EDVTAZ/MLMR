@@ -4,6 +4,7 @@ import { FormEvent, MouseEvent, useRef, useState } from "react";
 import { FileContent } from "use-file-picker/dist/interfaces";
 import { storeCollection } from "../storage";
 import { StyledNameInput } from "./ImportName";
+import { StyledFileList } from "./ImportFileList";
 
 export type Rectangle = {
   x1: number | null;
@@ -183,30 +184,11 @@ function Import({ ...rest }) {
   return (
     <div {...rest}>
       <div className="preview-pane">
-        <div className="table-div">
-          <table>
-            <tbody>
-              {filesContent.map((fileContent) => {
-                return (
-                  <tr
-                    key={fileContent.name}
-                    onClick={() => selectImage(fileContent)}
-                  >
-                    <td
-                      className={
-                        selectedPreview.name === fileContent.name
-                          ? "selected"
-                          : "not-selected"
-                      }
-                    >
-                      {fileContent.name}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <StyledFileList
+          filesContent={filesContent}
+          selectedPreview={selectedPreview}
+          selectImage={selectImage}
+        />
         <img
           src={selectedPreview.blobURL}
           alt="Preview"
@@ -305,30 +287,6 @@ export const StyledImport = styled(Import)`
     text-align: center;
     border: 1px solid;
     background: #bbbbbb;
-  }
-
-  .table-div {
-    border: 1px solid;
-    overflow-y: auto;
-    width: 90%;
-    height: 45%;
-    display: block;
-  }
-
-  table {
-    width: 100%;
-  }
-
-  td {
-    border: 1px solid;
-    height: 0;
-    width: 100%;
-  }
-
-  .selected {
-    background-color: #666666;
-    color: #f0f0f0;
-    border-color: #000000;
   }
 
   img {
