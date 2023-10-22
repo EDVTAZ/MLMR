@@ -1,5 +1,5 @@
-import { FileContent } from "use-file-picker/dist/interfaces";
-import { Zone } from "../types/types";
+import { FileContent } from "use-file-picker/types";
+import { Zone } from "./types";
 
 const COLLECTIONS = "collections";
 const IMAGES = "images";

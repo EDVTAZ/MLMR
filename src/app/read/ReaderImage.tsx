@@ -1,13 +1,10 @@
+/* eslint-disable @next/next/no-img-element */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import {
-  CollectionInfo,
-  getLSCollectionInfo,
-  getPageData,
-} from "../storage/storage";
+import { CollectionInfo, getLSCollectionInfo, getPageData } from "../storage";
 import styled from "styled-components";
-import { CompleteRectangle } from "../types/types";
+import { CompleteRectangle } from "../types";
 
-const PLACEHOLDER_IMG_SRC = "logo512.png";
+const PLACEHOLDER_IMG_SRC = "next.svg";
 
 function ReaderImage({
   collectionName,

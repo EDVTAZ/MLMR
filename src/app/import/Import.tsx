@@ -1,13 +1,13 @@
 import { useFilePicker } from "use-file-picker";
+import { FileContent } from "use-file-picker/types";
 import styled from "styled-components";
 import { useState } from "react";
-import { FileContent } from "use-file-picker/dist/interfaces";
-import { storeCollection } from "../storage/storage";
+import { storeCollection } from "../storage";
 import { StyledNameInput } from "./ImportName";
 import { StyledFileList } from "./ImportFileList";
 import { StyledImportPreview } from "./ImportPreview";
 import { StyledZoneControl } from "./ImportZoneControl";
-import { Zones } from "../types/types";
+import { Zones } from "../types";
 
 function Import({ ...rest }) {
   const [selectedPreview, setSelected] = useState({ name: "", blobURL: "" });
