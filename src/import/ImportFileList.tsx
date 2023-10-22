@@ -1,16 +1,18 @@
 import styled from "styled-components";
 import { FileContent } from "use-file-picker/dist/interfaces";
 
+type FileListProp = {
+  filesContent: FileContent<ArrayBuffer>[];
+  selectedPreview: { name: string; blobURL: string };
+  selectImage: (file: FileContent<ArrayBuffer>) => void;
+};
+
 function FileList({
   filesContent,
   selectedPreview,
   selectImage,
   ...rest
-}: {
-  filesContent: FileContent<ArrayBuffer>[];
-  selectedPreview: { name: string; blobURL: string };
-  selectImage: (file: FileContent<ArrayBuffer>) => void;
-}) {
+}: FileListProp) {
   return (
     <div {...rest}>
       <table>
