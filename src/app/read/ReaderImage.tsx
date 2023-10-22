@@ -2,7 +2,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { CollectionInfo, getLSCollectionInfo, getPageData } from "../storage";
 import styled from "styled-components";
-import { CompleteRectangle } from "../types";
+import { CompleteRectangle, ReaderPosition } from "../types";
 
 const PLACEHOLDER_IMG_SRC = "next.svg";
 
@@ -13,7 +13,7 @@ function ReaderImage({
   ...rest
 }: {
   collectionName: string;
-  position: number;
+  position: ReaderPosition;
   visible: boolean;
 }) {
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -27,7 +27,7 @@ function ReaderImage({
   ); // TODO
   const zoneCount =
     collectionInfo.zones.length === 0 ? 1 : collectionInfo.zones.length;
-  const page = Math.floor(position / zoneCount);
+  const page = Math.floor(position.count / zoneCount);
   const currentImgSrc = blobURLs[page] ?? PLACEHOLDER_IMG_SRC;
 
   useEffect(() => {
@@ -52,7 +52,7 @@ function ReaderImage({
 
   useLayoutEffect(() => {
     const currentZone: CompleteRectangle = (collectionInfo.zones[
-      position % collectionInfo.zones.length
+      position.count % collectionInfo.zones.length
     ]?.rectangle as CompleteRectangle) ?? { x1: 0, y1: 0, x2: 1, y2: 1 };
 
     const widthPercent = currentZone.x2 - currentZone.x1;
@@ -73,6 +73,14 @@ function ReaderImage({
     position,
     collectionInfo,
   ]);
+
+  useLayoutEffect(() => {
+    imgRef.current?.scrollIntoView({
+      block: position.scroll,
+      inline: "center",
+      behavior: "instant",
+    });
+  }, [position]);
 
   return (
     <img

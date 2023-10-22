@@ -1,15 +1,21 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { StyledReaderImage } from "./ReaderImage";
+import { ReaderPosition } from "../types";
 
 function Reader({ collectionNames, ...rest }: { collectionNames: string[] }) {
-  const [position, setPosition] = useState(0);
+  const [position, setPosition] = useState<ReaderPosition>({
+    count: 0,
+    scroll: "start",
+  });
   const [version, setVersion] = useState(1);
 
   function step(count: number) {
     setPosition((prev) => {
-      const newVal = Math.max(prev + count, 0);
-      return newVal;
+      return {
+        count: Math.max(prev.count + count, 0),
+        scroll: count > 0 ? "start" : "end",
+      };
     });
   }
 

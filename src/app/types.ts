@@ -21,3 +21,8 @@ export type Zones = {
   zones: Array<Zone>;
   inProgressZone: Zone | null;
 };
+
+export type ReaderPosition = {
+  count: number;
+  scroll: "start" | "end";
+};

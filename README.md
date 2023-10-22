@@ -5,9 +5,6 @@
 
 # TODO
 
-- separate Import into components
-- move from CRA to Next.js (or something else that is maintained) + proper routing
-- unify types into separate file (instead of having them in random components)
 - handle type errors without shortcuts
 - handle edge-cases without shortcuts
 - implement temporary 0-1 zone view for irregular pages (such as 2 page spanning panels) with button press
