@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { StyledReaderImage } from "./ReaderImage";
 import { ReaderPosition } from "../types";
+import { getCurrentPage } from "../storage";
 
 function Reader({ collectionNames, ...rest }: { collectionNames: string[] }) {
   const [position, setPosition] = useState<ReaderPosition>({
-    count: 0,
+    count: getCurrentPage(collectionNames[0]),
     scroll: "start",
   });
   const [version, setVersion] = useState(1);

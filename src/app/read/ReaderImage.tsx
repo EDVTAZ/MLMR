@@ -1,6 +1,11 @@
 /* eslint-disable @next/next/no-img-element */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { CollectionInfo, getLSCollectionInfo, getPageData } from "../storage";
+import {
+  CollectionInfo,
+  getLSCollectionInfo,
+  getPageData,
+  setCurrentPage,
+} from "../storage";
 import styled from "styled-components";
 import { CompleteRectangle, ReaderPosition } from "../types";
 
@@ -75,12 +80,13 @@ function ReaderImage({
   ]);
 
   useLayoutEffect(() => {
+    setCurrentPage(collectionName, position.count);
     imgRef.current?.scrollIntoView({
       block: position.scroll,
       inline: "center",
       behavior: "instant",
     });
-  }, [position]);
+  }, [position, collectionName]);
 
   return (
     <img

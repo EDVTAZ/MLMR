@@ -41,6 +41,12 @@ function setLSCollectionInfo(name: string, collectionInfo: CollectionInfo) {
   setLSAll(current);
 }
 
+export function getCurrentPage(name: string): number {
+  const current = getLSCollectionInfo(name);
+  if (!current) return 0;
+  return current.position;
+}
+
 export function setCurrentPage(name: string, page: number) {
   const current = getLSCollectionInfo(name);
   if (!current) return null;
@@ -64,7 +70,7 @@ export function storeCollection(
     name,
     zones,
     length: images.length,
-    position: 1,
+    position: 0,
   });
 
   const dbName = name;
