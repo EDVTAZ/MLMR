@@ -1,13 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { CollectionInfo, getLSCollectionInfo, getPageData } from "../storage";
+import {
+  CollectionInfo,
+  getLSCollectionInfo,
+  getPageData,
+} from "../storage/storage";
 import styled from "styled-components";
-
-type CompleteRectangle = {
-  x1: number;
-  x2: number;
-  y1: number;
-  y2: number;
-};
+import { CompleteRectangle } from "../types/types";
 
 const PLACEHOLDER_IMG_SRC = "logo512.png";
 

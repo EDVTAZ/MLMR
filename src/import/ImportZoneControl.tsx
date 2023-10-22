@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { Rectangle, Zones } from "./Import";
+import { Rectangle, Zones } from "../types/types";
 
 function pc(n: number | null) {
   if (n == null) return "*";

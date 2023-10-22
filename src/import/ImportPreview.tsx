@@ -1,6 +1,6 @@
 import { useRef, MouseEvent } from "react";
 import styled from "styled-components";
-import { Rectangle, Zones } from "./Import";
+import { Rectangle, Zones } from "../types/types";
 
 function getMatrix(image: HTMLImageElement) {
   const matrix = new DOMMatrix();

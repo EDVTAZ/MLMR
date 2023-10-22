@@ -2,28 +2,12 @@ import { useFilePicker } from "use-file-picker";
 import styled from "styled-components";
 import { useState } from "react";
 import { FileContent } from "use-file-picker/dist/interfaces";
-import { storeCollection } from "../storage";
+import { storeCollection } from "../storage/storage";
 import { StyledNameInput } from "./ImportName";
 import { StyledFileList } from "./ImportFileList";
 import { StyledImportPreview } from "./ImportPreview";
 import { StyledZoneControl } from "./ImportZoneControl";
-
-export type Rectangle = {
-  x1: number | null;
-  x2: number | null;
-  y1: number | null;
-  y2: number | null;
-};
-
-export type Zone = {
-  rectangle: Rectangle;
-  key: number;
-};
-
-export type Zones = {
-  zones: Array<Zone>;
-  inProgressZone: Zone | null;
-};
+import { Zones } from "../types/types";
 
 function Import({ ...rest }) {
   const [selectedPreview, setSelected] = useState({ name: "", blobURL: "" });
