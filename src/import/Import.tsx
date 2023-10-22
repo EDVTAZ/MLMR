@@ -6,6 +6,7 @@ import { storeCollection } from "../storage";
 import { StyledNameInput } from "./ImportName";
 import { StyledFileList } from "./ImportFileList";
 import { StyledImportPreview } from "./ImportPreview";
+import { StyledZoneControl } from "./ImportZoneControl";
 
 export type Rectangle = {
   x1: number | null;
@@ -23,15 +24,6 @@ export type Zones = {
   zones: Array<Zone>;
   inProgressZone: Zone | null;
 };
-
-function pc(n: number | null) {
-  if (n == null) return "*";
-  const formatter = new Intl.NumberFormat("en-US", { style: "percent" });
-  return formatter.format(n).slice(0, -1);
-}
-function rectStr(rect: Rectangle) {
-  return `<${pc(rect.x1)},${pc(rect.y1)}> - <${pc(rect.x2)},${pc(rect.y2)}>`;
-}
 
 function Import({ ...rest }) {
   const [selectedPreview, setSelected] = useState({ name: "", blobURL: "" });
@@ -134,26 +126,11 @@ function Import({ ...rest }) {
             storeCollection(collectionName, filesContent, zones.zones)
           }
         />
-        <div className="control-panel">
-          <div>Zones:</div>
-          {zones.zones.map((zone) => {
-            return (
-              <div className="zone-button" key={zone.key}>
-                {rectStr(zone.rectangle)}
-              </div>
-            );
-          })}
-          {zones.inProgressZone && (
-            <div className="zone-button" key={`ipz${zones.inProgressZone.key}`}>
-              {rectStr(zones.inProgressZone.rectangle)}
-            </div>
-          )}
-          {selectedPreview.name.length > 0 && !zones.inProgressZone && (
-            <div className="zone-button" key="anz" onClick={addEmptyZone}>
-              Add new zone
-            </div>
-          )}
-        </div>
+        <StyledZoneControl
+          previewAvailable={selectedPreview.name.length > 0}
+          zones={zones}
+          addEmptyZone={addEmptyZone}
+        />
       </div>
     </div>
   );
@@ -196,18 +173,5 @@ export const StyledImport = styled(Import)`
     text-align: center;
     border: 1px solid;
     background: #bbbbbb;
-  }
-
-  .control-panel {
-    border: 1px solid;
-    padding: 0.5em;
-    margin: 1em 0 0 0;
-
-    .zone-button {
-      border: 1px solid;
-      background: #bbbbbb;
-      padding: 0.2em;
-      margin: 0.5em 0 0 0;
-    }
   }
 `;
