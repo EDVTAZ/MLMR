@@ -48,6 +48,7 @@ export const StyledFileList = styled(FileList)`
 
   table {
     width: 100%;
+    border-spacing: 0;
   }
 
   td {
