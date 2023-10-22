@@ -1,6 +1,7 @@
+/* eslint-disable @next/next/no-img-element */
 import { useRef, MouseEvent } from "react";
 import styled from "styled-components";
-import { Rectangle, Zones } from "../types/types";
+import { Rectangle, Zones } from "../types";
 
 function getMatrix(image: HTMLImageElement) {
   const matrix = new DOMMatrix();

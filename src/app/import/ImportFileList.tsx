@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { FileContent } from "use-file-picker/dist/interfaces";
+import { FileContent } from "use-file-picker/types";
 
 type FileListProp = {
   filesContent: FileContent<ArrayBuffer>[];

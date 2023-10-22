@@ -14,11 +14,13 @@ const PLACEHOLDER_IMG_SRC = "next.svg";
 function ReaderImage({
   collectionName,
   position,
+  zoom,
   visible,
   ...rest
 }: {
   collectionName: string;
   position: ReaderPosition;
+  zoom: number;
   visible: boolean;
 }) {
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -63,12 +65,14 @@ function ReaderImage({
     const widthPercent = currentZone.x2 - currentZone.x1;
     const heightPercent = currentZone.y2 - currentZone.y1;
 
-    const sizeRatio = window.innerWidth / (imgNaturalSize.width * widthPercent);
+    const sizeRatio =
+      (window.innerWidth * zoom) / (imgNaturalSize.width * widthPercent);
 
     setImageStyle({
       height: `${heightPercent * imgNaturalSize.height}px`,
       width: `${widthPercent * imgNaturalSize.width}px`,
       transform: `scale(${sizeRatio})`,
+      left: `${50 - zoom * 50}vw`,
       objectPosition: `left -${currentZone.x1 * imgNaturalSize.width}px top -${
         currentZone.y1 * imgNaturalSize.height
       }px`,
@@ -76,6 +80,7 @@ function ReaderImage({
   }, [
     imgNaturalSize /*window.innerWidth, TODO listen for change event*/,
     position,
+    zoom,
     collectionInfo,
   ]);
 
@@ -111,7 +116,6 @@ export const StyledReaderImage = styled(ReaderImage)`
   display: block;
   position: absolute;
   top: 0;
-  left: 0;
   object-fit: cover;
   transform-origin: top left;
 `;
