@@ -1,7 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
-import { useRef, MouseEvent } from "react";
+import { useRef, MouseEvent, useState } from "react";
 import styled from "styled-components";
 import { Rectangle, Zones } from "../types";
+import { Layer, Rect, Stage } from "react-konva";
+import { KonvaEventObject } from "konva/lib/Node";
 
 function getMatrix(image: HTMLImageElement) {
   const matrix = new DOMMatrix();
@@ -39,16 +41,18 @@ function ImportPreview({
 }) {
   const imgRef = useRef<HTMLImageElement | null>(null);
 
-  function handleZoneClick(ev: MouseEvent) {
-    ev.preventDefault();
+  function handleZoneClick(
+    konvaEvent: KonvaEventObject<globalThis.MouseEvent>
+  ) {
+    const nativeEvent = konvaEvent.evt;
     if (imgRef.current == null) return;
 
     const image = imgRef.current;
     const matrix = getMatrix(image);
 
     const point = new DOMPoint(
-      ev.clientX - image.offsetLeft,
-      ev.clientY - image.offsetTop
+      nativeEvent.clientX - image.offsetLeft,
+      nativeEvent.clientY - image.offsetTop
     );
     const translated = matrix.inverse().transformPoint(point);
     const [newX, newY] = [translated.x, translated.y].map((e) =>
@@ -72,8 +76,8 @@ function ImportPreview({
 
     if (rectangle.x2 == null || rectangle.y2 == null) {
       return {
-        left: topLeft.x + image.offsetLeft,
-        top: topLeft.y + image.offsetTop,
+        x: topLeft.x,
+        y: topLeft.y,
         width: 0,
         height: 0,
       };
@@ -83,8 +87,8 @@ function ImportPreview({
       new DOMPoint(rectangle.x2, rectangle.y2)
     );
     return {
-      left: topLeft.x + image.offsetLeft,
-      top: topLeft.y + image.offsetTop,
+      x: topLeft.x,
+      y: topLeft.y,
       width: bottomRight.x - topLeft.x,
       height: bottomRight.y - topLeft.y,
     };
@@ -96,28 +100,43 @@ function ImportPreview({
         src={imageURL}
         alt="Preview"
         style={{ opacity: imageURL === "" ? 0 : 1 }}
-        onClick={handleZoneClick}
         ref={imgRef}
       />
-      {imgRef.current != null &&
-        zones.zones.map((zone) => {
-          return (
-            <div
-              className="zone-box"
-              key={zone.key}
-              style={getZoneBoxStyle(zone.rectangle, imgRef.current)}
-            />
-          );
-        })}{" "}
-      {imgRef.current != null && zones.inProgressZone?.rectangle.x1 != null && (
-        <div
-          className="zone-box"
-          key={`ipzb${zones.inProgressZone.key}`}
-          style={getZoneBoxStyle(
-            zones.inProgressZone.rectangle,
-            imgRef.current
-          )}
-        />
+      {imgRef.current != null && (
+        <Stage
+          width={imgRef.current.clientWidth}
+          height={imgRef.current.clientHeight}
+          style={{
+            position: "absolute",
+            left: imgRef.current.offsetLeft,
+            top: imgRef.current.offsetTop,
+          }}
+          onClick={handleZoneClick}
+        >
+          <Layer>
+            {zones.zones.map((zone) => {
+              return (
+                <Rect
+                  key={zone.key}
+                  stroke={"black"}
+                  draggable={true}
+                  {...getZoneBoxStyle(zone.rectangle, imgRef.current)}
+                />
+              );
+            })}
+            {zones.inProgressZone?.rectangle.x1 != null && (
+              <Rect
+                key={`ipzb${zones.inProgressZone.key}`}
+                stroke={"black"}
+                draggable={true}
+                {...getZoneBoxStyle(
+                  zones.inProgressZone.rectangle,
+                  imgRef.current
+                )}
+              />
+            )}
+          </Layer>
+        </Stage>
       )}
     </div>
   );
@@ -133,11 +152,5 @@ export const StyledImportPreview = styled(ImportPreview)`
     height: 100%;
     object-fit: contain;
     background-color: #666666;
-  }
-
-  .zone-box {
-    border: 2px solid;
-    position: absolute;
-    pointer-events: none;
   }
 `;

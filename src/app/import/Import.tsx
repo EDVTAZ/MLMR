@@ -120,7 +120,7 @@ function Import({ ...rest }) {
   );
 }
 
-export const StyledImport = styled(Import)`
+const StyledImport = styled(Import)`
   display: flex;
   justify-content: center;
 
@@ -159,3 +159,5 @@ export const StyledImport = styled(Import)`
     background: #bbbbbb;
   }
 `;
+
+export default StyledImport;
