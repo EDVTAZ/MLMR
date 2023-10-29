@@ -14,10 +14,14 @@ function ZoneControl({
   previewAvailable,
   zones,
   addEmptyZone,
+  selectedZone,
+  setSelectedZone,
   ...rest
 }: {
   previewAvailable: boolean;
   zones: Zones;
+  selectedZone: number | null;
+  setSelectedZone: (zone: number | null) => void;
   addEmptyZone: () => void;
 }) {
   return (
@@ -25,18 +29,38 @@ function ZoneControl({
       <div>Zones:</div>
       {zones.zones.map((zone) => {
         return (
-          <div className="zone-button" key={zone.key}>
+          <div
+            className={
+              zone.key === selectedZone
+                ? "zone-button active-zone"
+                : "zone-button"
+            }
+            key={zone.key}
+            onClick={() => {
+              setSelectedZone(zone.key);
+            }}
+          >
             {rectStr(zone.rectangle)}
           </div>
         );
       })}
       {zones.inProgressZone && (
-        <div className="zone-button" key={`ipz${zones.inProgressZone.key}`}>
+        <div
+          className="zone-button active-zone"
+          key={`ipz${zones.inProgressZone.key}`}
+        >
           {rectStr(zones.inProgressZone.rectangle)}
         </div>
       )}
       {previewAvailable && !zones.inProgressZone && (
-        <div className="zone-button" key="anz" onClick={addEmptyZone}>
+        <div
+          className="zone-button"
+          key="anz"
+          onClick={() => {
+            setSelectedZone(null);
+            addEmptyZone();
+          }}
+        >
           Add new zone
         </div>
       )}
@@ -54,5 +78,9 @@ export const StyledZoneControl = styled(ZoneControl)`
     background: #bbbbbb;
     padding: 0.2em;
     margin: 0.5em 0 0 0;
+  }
+
+  .active-zone {
+    background: #dddddd !important;
   }
 `;

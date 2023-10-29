@@ -22,11 +22,15 @@ function constrainCoordinates(zone: CompleteZone): CompleteZone {
 }
 
 function Import({ ...rest }) {
-  const [selectedPreview, setSelected] = useState({ name: "", blobURL: "" });
+  const [selectedPreview, setSelectedPreview] = useState({
+    name: "",
+    blobURL: "",
+  });
   const [zones, setZones] = useState<Zones>({
     zones: [],
     inProgressZone: null,
   });
+  const [selectedZone, setSelectedZone] = useState<number | null>(null);
   // TODO handle loading state and errors
   const { openFilePicker, filesContent, loading, errors } = useFilePicker({
     readAs: "ArrayBuffer",
@@ -37,7 +41,7 @@ function Import({ ...rest }) {
   function selectImage(file: FileContent<ArrayBuffer>) {
     // if (selected.blobURL) URL.revokeObjectURL(selected.blobURL); this is not safe to do here I think, leave this for later...
     const imageBlob = new Blob([file.content], { type: "image/*" });
-    setSelected({
+    setSelectedPreview({
       name: file.name,
       blobURL: URL.createObjectURL(imageBlob),
     });
@@ -155,6 +159,7 @@ function Import({ ...rest }) {
           handleSetZone={handleSetZone}
           handleCommitZone={handleCommitZone}
           handleMoveZone={handleMoveZone}
+          selectedZone={selectedZone}
         />
       </div>
       <div className="controls-pane">
@@ -168,6 +173,8 @@ function Import({ ...rest }) {
           previewAvailable={selectedPreview.name.length > 0}
           zones={zones}
           addEmptyZone={addEmptyZone}
+          selectedZone={selectedZone}
+          setSelectedZone={setSelectedZone}
         />
       </div>
     </div>

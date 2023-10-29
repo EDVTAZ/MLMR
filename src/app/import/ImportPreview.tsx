@@ -66,6 +66,7 @@ function ImportPreview({
   handleSetZone,
   handleCommitZone,
   handleMoveZone,
+  selectedZone,
   ...rest
 }: {
   imageURL: string;
@@ -73,6 +74,7 @@ function ImportPreview({
   handleSetZone: (zone: CompleteZone) => void;
   handleCommitZone: () => void;
   handleMoveZone: (key: number, newX: number, newY: number) => void;
+  selectedZone: number | null;
 }) {
   const imgRef = useRef<HTMLImageElement | null>(null);
 
@@ -164,9 +166,7 @@ function ImportPreview({
               return (
                 <Rect
                   key={zone.key}
-                  stroke={"black"}
-                  //draggable={true}
-                  //onDragEnd={(ev) => handleCanvasEvent(ev, zone.key)}
+                  stroke={zone.key === selectedZone ? "blue" : "black"}
                   {...getZoneBoxCoordinates(zone.rectangle, imgRef.current)}
                 />
               );
