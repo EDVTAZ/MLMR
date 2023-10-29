@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { useRef, MouseEvent, useState } from "react";
 import styled from "styled-components";
-import { CompleteZone, Rectangle, Zones } from "../types";
+import { CompleteRectangle, CompleteZone, Rectangle, Zones } from "../types";
 import { Layer, Rect, Stage } from "react-konva";
 import { KonvaEventObject } from "konva/lib/Node";
 
@@ -65,7 +65,6 @@ function ImportPreview({
   zones,
   handleSetZone,
   handleCommitZone,
-  handleMoveZone,
   selectedZone,
   ...rest
 }: {
@@ -73,10 +72,10 @@ function ImportPreview({
   zones: Zones;
   handleSetZone: (zone: CompleteZone) => void;
   handleCommitZone: () => void;
-  handleMoveZone: (key: number, newX: number, newY: number) => void;
   selectedZone: number | null;
 }) {
   const imgRef = useRef<HTMLImageElement | null>(null);
+  const [dragging, setDragging] = useState<any>(null);
 
   function translateClickCoordinates(x: number, y: number) {
     if (imgRef.current == null) throw new Error("imgRef not defined");
@@ -96,48 +95,76 @@ function ImportPreview({
   function handleMouseDown(
     konvaEvent: KonvaEventObject<globalThis.MouseEvent>
   ) {
-    if (!zones.inProgressZone || imgRef.current == null) return;
+    if (imgRef.current == null) return;
 
     const [newX, newY] = translateClickCoordinates(
       konvaEvent.evt.clientX,
       konvaEvent.evt.clientY
     );
 
-    handleSetZone({
-      rectangle: { x1: newX, x2: newX, y1: newY, y2: newY },
-      key: -1,
-    });
+    if (zones.inProgressZone != null) {
+      handleSetZone({
+        rectangle: { x1: newX, x2: newX, y1: newY, y2: newY },
+        key: -1,
+      });
+    }
+
+    if (selectedZone != null) {
+      const zone = zones.zones.find((e) => e.key === selectedZone);
+      if (!zone) return;
+      const sides = [];
+      if (zone.rectangle.x1 > newX) sides.push("x1");
+      if (zone.rectangle.y1 > newY) sides.push("y1");
+      if (zone.rectangle.x2 < newX) sides.push("x2");
+      if (zone.rectangle.y2 < newY) sides.push("y2");
+      if (sides.length == 0) sides.push("x1", "x2", "y1", "y2");
+      setDragging({ sides, x: newX, y: newY, original: zone });
+    }
   }
 
   function handleMouseUp(konvaEvent: KonvaEventObject<globalThis.MouseEvent>) {
     handleCommitZone();
+    setDragging(null);
   }
 
   function handleMouseMove(
     konvaEvent: KonvaEventObject<globalThis.MouseEvent>
   ) {
-    if (
-      !zones.inProgressZone ||
-      zones.inProgressZone.rectangle.x1 == null ||
-      zones.inProgressZone.rectangle.y1 == null ||
-      imgRef.current == null
-    )
-      return;
+    if (imgRef.current == null) return;
 
     const [newX, newY] = translateClickCoordinates(
       konvaEvent.evt.clientX,
       konvaEvent.evt.clientY
     );
 
-    handleSetZone({
-      rectangle: {
-        x1: zones.inProgressZone.rectangle.x1,
-        y1: zones.inProgressZone.rectangle.y1,
-        x2: newX,
-        y2: newY,
-      },
-      key: -1,
-    });
+    if (
+      zones.inProgressZone != null &&
+      zones.inProgressZone.rectangle.x1 != null &&
+      zones.inProgressZone.rectangle.y1 != null
+    ) {
+      handleSetZone({
+        rectangle: {
+          x1: zones.inProgressZone.rectangle.x1,
+          y1: zones.inProgressZone.rectangle.y1,
+          x2: newX,
+          y2: newY,
+        },
+        key: -1,
+      });
+    }
+
+    if (dragging !== null && selectedZone !== null) {
+      const offset = { x: newX - dragging.x, y: newY - dragging.y };
+      const newRect = { ...dragging.original.rectangle };
+      dragging.sides.forEach((i: string) => {
+        //@ts-ignore
+        newRect[i] += offset[i[0]];
+      });
+      handleSetZone({
+        rectangle: newRect,
+        key: selectedZone,
+      });
+    }
   }
 
   return (

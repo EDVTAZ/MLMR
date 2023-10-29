@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { Rectangle, Zones } from "../types";
+import { Dispatch, SetStateAction } from "react";
 
 function pc(n: number | null) {
   if (n == null) return "*";
@@ -21,7 +22,7 @@ function ZoneControl({
   previewAvailable: boolean;
   zones: Zones;
   selectedZone: number | null;
-  setSelectedZone: (zone: number | null) => void;
+  setSelectedZone: Dispatch<SetStateAction<number | null>>;
   addEmptyZone: () => void;
 }) {
   return (
@@ -37,7 +38,10 @@ function ZoneControl({
             }
             key={zone.key}
             onClick={() => {
-              setSelectedZone(zone.key);
+              setSelectedZone((state) => {
+                if (state === zone.key) return null;
+                return zone.key;
+              });
             }}
           >
             {rectStr(zone.rectangle)}

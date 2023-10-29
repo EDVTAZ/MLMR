@@ -81,7 +81,9 @@ function Import({ ...rest }) {
     } else {
       targetZone = constrainCoordinates(targetZone);
       setZones((state) => {
-        const index = state.zones.findIndex((zone) => zone.key === zone.key);
+        const index = state.zones.findIndex(
+          (zone) => zone.key === targetZone.key
+        );
         if (index === -1) {
           return state;
         }
@@ -95,36 +97,6 @@ function Import({ ...rest }) {
         };
       });
     }
-  }
-
-  function handleMoveZone(key: number, newX: number, newY: number) {
-    setZones((state) => {
-      const index = state.zones.findIndex((zone) => zone.key === key);
-      if (index === -1) {
-        return state;
-      }
-      const width =
-        state.zones[index].rectangle.x2 - state.zones[index].rectangle.x1;
-      const height =
-        state.zones[index].rectangle.y2 - state.zones[index].rectangle.y1;
-      return {
-        zones: [
-          ...state.zones.slice(0, index),
-          {
-            key: state.zones[index].key,
-            rectangle: {
-              // Math min/max to avoid out of bounds
-              x1: newX,
-              y1: newY,
-              x2: newX + width,
-              y2: newY + height,
-            },
-          },
-          ...state.zones.slice(index + 1),
-        ],
-        inProgressZone: state.inProgressZone,
-      };
-    });
   }
 
   function handleCommitZone() {
@@ -158,7 +130,6 @@ function Import({ ...rest }) {
           zones={zones}
           handleSetZone={handleSetZone}
           handleCommitZone={handleCommitZone}
-          handleMoveZone={handleMoveZone}
           selectedZone={selectedZone}
         />
       </div>
