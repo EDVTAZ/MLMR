@@ -7,7 +7,19 @@ import { StyledNameInput } from "./ImportName";
 import { StyledFileList } from "./ImportFileList";
 import { StyledImportPreview } from "./ImportPreview";
 import { StyledZoneControl } from "./ImportZoneControl";
-import { Zones } from "../types";
+import { CompleteZone, Zones } from "../types";
+
+function constrainCoordinates(zone: CompleteZone): CompleteZone {
+  return {
+    ...zone,
+    rectangle: {
+      x1: Math.min(zone.rectangle.x1, zone.rectangle.x2),
+      y1: Math.min(zone.rectangle.y1, zone.rectangle.y2),
+      x2: Math.max(zone.rectangle.x1, zone.rectangle.x2),
+      y2: Math.max(zone.rectangle.y1, zone.rectangle.y2),
+    },
+  };
+}
 
 function Import({ ...rest }) {
   const [selectedPreview, setSelected] = useState({ name: "", blobURL: "" });
@@ -51,38 +63,78 @@ function Import({ ...rest }) {
     });
   }
 
-  function handleSetZone(newX: number, newY: number) {
-    setZones((state) => {
-      if (state.inProgressZone == null) return state;
-      if (
-        state.inProgressZone.rectangle.x1 == null ||
-        state.inProgressZone.rectangle.y1 == null
-      ) {
+  function handleSetZone(targetZone: CompleteZone) {
+    if (targetZone.key == -1) {
+      setZones((state) => {
         return {
-          ...state,
+          zones: state.zones,
           inProgressZone: {
-            ...state.inProgressZone,
-            rectangle: {
-              ...state.inProgressZone.rectangle,
-              x1: newX,
-              y1: newY,
-            },
+            ...targetZone,
+            key: state.inProgressZone?.key ?? -1,
           },
         };
+      });
+    } else {
+      targetZone = constrainCoordinates(targetZone);
+      setZones((state) => {
+        const index = state.zones.findIndex((zone) => zone.key === zone.key);
+        if (index === -1) {
+          return state;
+        }
+        return {
+          zones: [
+            ...state.zones.slice(0, index),
+            targetZone,
+            ...state.zones.slice(index + 1),
+          ],
+          inProgressZone: state.inProgressZone,
+        };
+      });
+    }
+  }
+
+  function handleMoveZone(key: number, newX: number, newY: number) {
+    setZones((state) => {
+      const index = state.zones.findIndex((zone) => zone.key === key);
+      if (index === -1) {
+        return state;
       }
+      const width =
+        state.zones[index].rectangle.x2 - state.zones[index].rectangle.x1;
+      const height =
+        state.zones[index].rectangle.y2 - state.zones[index].rectangle.y1;
+      return {
+        zones: [
+          ...state.zones.slice(0, index),
+          {
+            key: state.zones[index].key,
+            rectangle: {
+              // Math min/max to avoid out of bounds
+              x1: newX,
+              y1: newY,
+              x2: newX + width,
+              y2: newY + height,
+            },
+          },
+          ...state.zones.slice(index + 1),
+        ],
+        inProgressZone: state.inProgressZone,
+      };
+    });
+  }
+
+  function handleCommitZone() {
+    setZones((state) => {
+      if (
+        !state.inProgressZone ||
+        Object.entries(state.inProgressZone.rectangle).some((e) => !e[1])
+      )
+        return state;
 
       return {
         zones: [
           ...state.zones,
-          {
-            ...state.inProgressZone,
-            rectangle: {
-              x1: Math.min(state.inProgressZone.rectangle.x1, newX),
-              y1: Math.min(state.inProgressZone.rectangle.y1, newY),
-              x2: Math.max(state.inProgressZone.rectangle.x1, newX),
-              y2: Math.max(state.inProgressZone.rectangle.y1, newY),
-            },
-          },
+          constrainCoordinates(state.inProgressZone as CompleteZone),
         ],
         inProgressZone: null,
       };
@@ -101,6 +153,8 @@ function Import({ ...rest }) {
           imageURL={selectedPreview.blobURL}
           zones={zones}
           handleSetZone={handleSetZone}
+          handleCommitZone={handleCommitZone}
+          handleMoveZone={handleMoveZone}
         />
       </div>
       <div className="controls-pane">

@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { useRef, MouseEvent, useState } from "react";
 import styled from "styled-components";
-import { Rectangle, Zones } from "../types";
+import { CompleteZone, Rectangle, Zones } from "../types";
 import { Layer, Rect, Stage } from "react-konva";
 import { KonvaEventObject } from "konva/lib/Node";
 
@@ -29,69 +29,113 @@ function getMatrix(image: HTMLImageElement) {
   return matrix;
 }
 
+function getZoneBoxCoordinates(
+  rectangle: Rectangle,
+  image: HTMLImageElement | null
+) {
+  if (rectangle.x1 == null || rectangle.y1 == null || image == null) return {};
+
+  const matrix = getMatrix(image);
+  const topLeft = matrix.transformPoint(
+    new DOMPoint(rectangle.x1, rectangle.y1)
+  );
+
+  if (rectangle.x2 == null || rectangle.y2 == null) {
+    return {
+      x: topLeft.x,
+      y: topLeft.y,
+      width: 0,
+      height: 0,
+    };
+  }
+
+  const bottomRight = matrix.transformPoint(
+    new DOMPoint(rectangle.x2, rectangle.y2)
+  );
+  return {
+    x: topLeft.x,
+    y: topLeft.y,
+    width: bottomRight.x - topLeft.x,
+    height: bottomRight.y - topLeft.y,
+  };
+}
+
 function ImportPreview({
   imageURL,
   zones,
   handleSetZone,
+  handleCommitZone,
+  handleMoveZone,
   ...rest
 }: {
   imageURL: string;
   zones: Zones;
-  handleSetZone: (newX: number, newY: number) => void;
+  handleSetZone: (zone: CompleteZone) => void;
+  handleCommitZone: () => void;
+  handleMoveZone: (key: number, newX: number, newY: number) => void;
 }) {
   const imgRef = useRef<HTMLImageElement | null>(null);
 
-  function handleZoneClick(
-    konvaEvent: KonvaEventObject<globalThis.MouseEvent>
-  ) {
-    const nativeEvent = konvaEvent.evt;
-    if (imgRef.current == null) return;
+  function translateClickCoordinates(x: number, y: number) {
+    if (imgRef.current == null) throw new Error("imgRef not defined");
 
     const image = imgRef.current;
     const matrix = getMatrix(image);
 
-    const point = new DOMPoint(
-      nativeEvent.clientX - image.offsetLeft,
-      nativeEvent.clientY - image.offsetTop
-    );
+    const point = new DOMPoint(x - image.offsetLeft, y - image.offsetTop);
     const translated = matrix.inverse().transformPoint(point);
     const [newX, newY] = [translated.x, translated.y].map((e) =>
       Math.min(Math.max(e, 0), 1)
     );
 
-    handleSetZone(newX, newY);
+    return [newX, newY];
   }
 
-  function getZoneBoxStyle(
-    rectangle: Rectangle,
-    image: HTMLImageElement | null
+  function handleMouseDown(
+    konvaEvent: KonvaEventObject<globalThis.MouseEvent>
   ) {
-    if (rectangle.x1 == null || rectangle.y1 == null || image == null)
-      return {};
+    if (!zones.inProgressZone || imgRef.current == null) return;
 
-    const matrix = getMatrix(image);
-    const topLeft = matrix.transformPoint(
-      new DOMPoint(rectangle.x1, rectangle.y1)
+    const [newX, newY] = translateClickCoordinates(
+      konvaEvent.evt.clientX,
+      konvaEvent.evt.clientY
     );
 
-    if (rectangle.x2 == null || rectangle.y2 == null) {
-      return {
-        x: topLeft.x,
-        y: topLeft.y,
-        width: 0,
-        height: 0,
-      };
-    }
+    handleSetZone({
+      rectangle: { x1: newX, x2: newX, y1: newY, y2: newY },
+      key: -1,
+    });
+  }
 
-    const bottomRight = matrix.transformPoint(
-      new DOMPoint(rectangle.x2, rectangle.y2)
+  function handleMouseUp(konvaEvent: KonvaEventObject<globalThis.MouseEvent>) {
+    handleCommitZone();
+  }
+
+  function handleMouseMove(
+    konvaEvent: KonvaEventObject<globalThis.MouseEvent>
+  ) {
+    if (
+      !zones.inProgressZone ||
+      zones.inProgressZone.rectangle.x1 == null ||
+      zones.inProgressZone.rectangle.y1 == null ||
+      imgRef.current == null
+    )
+      return;
+
+    const [newX, newY] = translateClickCoordinates(
+      konvaEvent.evt.clientX,
+      konvaEvent.evt.clientY
     );
-    return {
-      x: topLeft.x,
-      y: topLeft.y,
-      width: bottomRight.x - topLeft.x,
-      height: bottomRight.y - topLeft.y,
-    };
+
+    handleSetZone({
+      rectangle: {
+        x1: zones.inProgressZone.rectangle.x1,
+        y1: zones.inProgressZone.rectangle.y1,
+        x2: newX,
+        y2: newY,
+      },
+      key: -1,
+    });
   }
 
   return (
@@ -111,7 +155,9 @@ function ImportPreview({
             left: imgRef.current.offsetLeft,
             top: imgRef.current.offsetTop,
           }}
-          onClick={handleZoneClick}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
         >
           <Layer>
             {zones.zones.map((zone) => {
@@ -119,8 +165,9 @@ function ImportPreview({
                 <Rect
                   key={zone.key}
                   stroke={"black"}
-                  draggable={true}
-                  {...getZoneBoxStyle(zone.rectangle, imgRef.current)}
+                  //draggable={true}
+                  //onDragEnd={(ev) => handleCanvasEvent(ev, zone.key)}
+                  {...getZoneBoxCoordinates(zone.rectangle, imgRef.current)}
                 />
               );
             })}
@@ -128,8 +175,7 @@ function ImportPreview({
               <Rect
                 key={`ipzb${zones.inProgressZone.key}`}
                 stroke={"black"}
-                draggable={true}
-                {...getZoneBoxStyle(
+                {...getZoneBoxCoordinates(
                   zones.inProgressZone.rectangle,
                   imgRef.current
                 )}

@@ -12,13 +12,18 @@ export type CompleteRectangle = {
   y2: number;
 };
 
+export type CompleteZone = {
+  rectangle: CompleteRectangle;
+  key: number;
+};
+
 export type Zone = {
   rectangle: Rectangle;
   key: number;
 };
 
 export type Zones = {
-  zones: Array<Zone>;
+  zones: Array<CompleteZone>;
   inProgressZone: Zone | null;
 };
 
