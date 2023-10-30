@@ -42,8 +42,7 @@ function FileList({
 export const StyledFileList = styled(FileList)`
   border: 1px solid;
   overflow-y: auto;
-  width: 90%;
-  height: 45%;
+  height: 100%;
   display: block;
 
   table {

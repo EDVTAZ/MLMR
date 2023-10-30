@@ -120,32 +120,35 @@ function Import({ ...rest }) {
   return (
     <div {...rest}>
       <div className="preview-pane">
-        <StyledFileList
-          filesContent={filesContent}
-          selectedPreview={selectedPreview}
-          selectImage={selectImage}
-        />
+        <div className="upper-pane">
+          <div className="controls-pane">
+            <h2 onClick={openFilePicker}>Import images</h2>
+            <StyledNameInput
+              storeCollection={(collectionName) =>
+                storeCollection(collectionName, filesContent, zones.zones)
+              }
+            />
+            <StyledZoneControl
+              previewAvailable={selectedPreview.name.length > 0}
+              zones={zones}
+              addEmptyZone={addEmptyZone}
+              selectedZone={selectedZone}
+              setSelectedZone={setSelectedZone}
+            />
+          </div>
+
+          <StyledFileList
+            filesContent={filesContent}
+            selectedPreview={selectedPreview}
+            selectImage={selectImage}
+          />
+        </div>
         <StyledImportPreview
           imageURL={selectedPreview.blobURL}
           zones={zones}
           handleSetZone={handleSetZone}
           handleCommitZone={handleCommitZone}
           selectedZone={selectedZone}
-        />
-      </div>
-      <div className="controls-pane">
-        <h1 onClick={openFilePicker}>Import images</h1>
-        <StyledNameInput
-          storeCollection={(collectionName) =>
-            storeCollection(collectionName, filesContent, zones.zones)
-          }
-        />
-        <StyledZoneControl
-          previewAvailable={selectedPreview.name.length > 0}
-          zones={zones}
-          addEmptyZone={addEmptyZone}
-          selectedZone={selectedZone}
-          setSelectedZone={setSelectedZone}
         />
       </div>
     </div>
@@ -155,6 +158,15 @@ function Import({ ...rest }) {
 const StyledImport = styled(Import)`
   display: flex;
   justify-content: center;
+
+  .upper-pane {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1em;
+
+    width: 90%;
+    height: 45%;
+  }
 
   .preview-pane {
     display: flex;
@@ -174,17 +186,12 @@ const StyledImport = styled(Import)`
     display: flex;
     flex-direction: column;
     justify-content: start;
-    align-items: left;
 
-    width: 40%;
-    height: 100vh;
-    border-left: 1px solid;
-    border-right: 1px solid;
-    margin: 0 1em;
+    border: 1px solid;
     padding: 0 0.5em;
   }
 
-  h1 {
+  h2 {
     width: 100%;
     text-align: center;
     border: 1px solid;

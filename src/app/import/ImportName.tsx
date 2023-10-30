@@ -40,13 +40,15 @@ export const StyledNameInput = styled(NameInput)`
     display: flex;
     align-items: center;
     input {
-      flex: 1 1 auto;
       margin: 0 0.5em 0 0;
       border: 1px solid;
+      width: 100%;
+      min-width: 0;
     }
     button {
       border: 1px solid;
       background: #bbbbbb;
+      white-space: nowrap;
     }
   }
 `;
