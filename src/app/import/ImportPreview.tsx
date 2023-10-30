@@ -5,6 +5,8 @@ import { CompleteRectangle, CompleteZone, Rectangle, Zones } from "../types";
 import { Layer, Rect, Stage } from "react-konva";
 import { KonvaEventObject } from "konva/lib/Node";
 
+const EPSILON = 0.01;
+
 function getMatrix(image: HTMLImageElement) {
   const matrix = new DOMMatrix();
   const elementCenter = new DOMPoint(
@@ -113,10 +115,10 @@ function ImportPreview({
       const zone = zones.zones.find((e) => e.key === selectedZone);
       if (!zone) return;
       const sides = [];
-      if (zone.rectangle.x1 > newX) sides.push("x1");
-      if (zone.rectangle.y1 > newY) sides.push("y1");
-      if (zone.rectangle.x2 < newX) sides.push("x2");
-      if (zone.rectangle.y2 < newY) sides.push("y2");
+      if (zone.rectangle.x1 > newX - EPSILON) sides.push("x1");
+      if (zone.rectangle.y1 > newY - EPSILON) sides.push("y1");
+      if (zone.rectangle.x2 < newX + EPSILON) sides.push("x2");
+      if (zone.rectangle.y2 < newY + EPSILON) sides.push("y2");
       if (sides.length == 0) sides.push("x1", "x2", "y1", "y2");
       setDragging({ sides, x: newX, y: newY, original: zone });
     }
