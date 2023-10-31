@@ -9,7 +9,7 @@ import { StyledImportPreview } from "./ImportPreview";
 import { StyledZoneControl } from "./ImportZoneControl";
 import { CompleteZone, Zones } from "../../types";
 import { ColumnLayout } from "@/layout-components/ColumnLayout";
-import { RowLayout } from "@/layout-components/RowLayout";
+import { RowFlexLayout, RowLayout } from "@/layout-components/RowLayout";
 
 function constrainCoordinates(zone: CompleteZone): CompleteZone {
   return {
@@ -123,7 +123,7 @@ function Import({ ...rest }) {
     <ColumnLayout $proportions="40%" {...rest}>
       <RowLayout>
         <ColumnLayout $height="100%">
-          <div className="controls-pane">
+          <RowFlexLayout>
             <h2 onClick={openFilePicker}>Import images</h2>
             <StyledNameInput
               storeCollection={(collectionName) =>
@@ -137,7 +137,7 @@ function Import({ ...rest }) {
               selectedZone={selectedZone}
               setSelectedZone={setSelectedZone}
             />
-          </div>
+          </RowFlexLayout>
 
           <StyledFileList
             filesContent={filesContent}
@@ -158,18 +158,6 @@ function Import({ ...rest }) {
 }
 
 const StyledImport = styled(Import)`
-  .controls-pane {
-    display: flex;
-    flex-direction: column;
-    justify-content: start;
-
-    border: 1px solid;
-    padding: 0 0.5em;
-
-    box-sizing: border-box;
-    width: 100%;
-  }
-
   h2 {
     width: 100%;
     text-align: center;

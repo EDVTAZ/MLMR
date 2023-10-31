@@ -11,15 +11,25 @@ export const RowLayout = styled.div<{
       ? "grid-template-rows: " + props.$proportions + ";"
       : "grid-auto-rows: minmax(0, 1fr);"}
   justify-items: center;
+  row-gap: 10px;
+
+  padding: 10px;
+  border: 1px solid;
 
   width: 100%;
   ${(props) => (props.$height ? "height: " + props.$height + ";" : "")}
   min-height: 0;
+  box-sizing: border-box;
+`;
 
-  row-gap: 10px;
+export const RowFlexLayout = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
 
   border: 1px solid;
+  padding: 0 0.5em;
 
-  padding: 10px;
   box-sizing: border-box;
+  width: 100%;
 `;
