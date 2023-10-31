@@ -9,6 +9,7 @@ import { StyledImportPreview } from "./ImportPreview";
 import { StyledZoneControl } from "./ImportZoneControl";
 import { CompleteZone, Zones } from "../../types";
 import { ColumnLayout } from "@/layout-components/ColumnLayout";
+import { RowLayout } from "@/layout-components/RowLayout";
 
 function constrainCoordinates(zone: CompleteZone): CompleteZone {
   return {
@@ -119,9 +120,9 @@ function Import({ ...rest }) {
   }
 
   return (
-    <ColumnLayout {...rest}>
-      <div className="preview-pane">
-        <ColumnLayout $height="45%">
+    <ColumnLayout $proportions="40%" {...rest}>
+      <RowLayout>
+        <ColumnLayout $height="100%">
           <div className="controls-pane">
             <h2 onClick={openFilePicker}>Import images</h2>
             <StyledNameInput
@@ -151,26 +152,12 @@ function Import({ ...rest }) {
           handleCommitZone={handleCommitZone}
           selectedZone={selectedZone}
         />
-      </div>
+      </RowLayout>
     </ColumnLayout>
   );
 }
 
 const StyledImport = styled(Import)`
-  .preview-pane {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-evenly;
-    align-items: center;
-
-    width: 40%;
-    height: 100vh;
-    border-left: 1px solid;
-    border-right: 1px solid;
-    margin: 0 1em;
-    padding: 0 0.5em;
-  }
-
   .controls-pane {
     display: flex;
     flex-direction: column;

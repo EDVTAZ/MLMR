@@ -9,10 +9,14 @@ export const ColumnLayout = styled.div<{
   ${(props) =>
     props.$proportions
       ? "grid-template-columns: " + props.$proportions + ";"
-      : "grid-auto-columns: 1fr;"}
-  justify-items: center;
+      : "grid-auto-columns: minmax(0, 1fr);"}
+  justify-content: center;
 
   height: ${(props) => (props.$height ? props.$height : "100vh")};
+  min-height: 0;
   width: 100%;
-  column-gap: 1%;
+  column-gap: 10px;
+
+  padding: 10px
+  box-sizing: border-box;
 `;

@@ -219,8 +219,8 @@ function ImportPreview({
 
 export const StyledImportPreview = styled(ImportPreview)`
   border: 1px solid;
-  width: 90%;
-  height: 45%;
+  width: 100%;
+  height: 100%;
 
   img {
     width: 100%;
