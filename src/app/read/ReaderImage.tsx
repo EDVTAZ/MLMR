@@ -5,9 +5,9 @@ import {
   getLSCollectionInfo,
   getPageData,
   setCurrentPage,
-} from "../storage";
+} from "../../storage";
 import styled from "styled-components";
-import { CompleteRectangle, ReaderPosition } from "../types";
+import { CompleteRectangle, ReaderPosition } from "../../types";
 
 const PLACEHOLDER_IMG_SRC = "next.svg";
 

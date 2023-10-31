@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { useRef, MouseEvent, useState } from "react";
 import styled from "styled-components";
-import { CompleteRectangle, CompleteZone, Rectangle, Zones } from "../types";
+import { CompleteRectangle, CompleteZone, Rectangle, Zones } from "../../types";
 import { Layer, Rect, Stage } from "react-konva";
 import { KonvaEventObject } from "konva/lib/Node";
 

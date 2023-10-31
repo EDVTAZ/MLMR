@@ -2,13 +2,13 @@ import { useFilePicker } from "use-file-picker";
 import { FileContent } from "use-file-picker/types";
 import styled from "styled-components";
 import { useState } from "react";
-import { storeCollection } from "../storage";
+import { storeCollection } from "../../storage";
 import { StyledNameInput } from "./ImportName";
 import { StyledFileList } from "./ImportFileList";
 import { StyledImportPreview } from "./ImportPreview";
 import { StyledZoneControl } from "./ImportZoneControl";
-import { CompleteZone, Zones } from "../types";
-import { ColumnLayout } from "@/layout-components/ColumnPanel";
+import { CompleteZone, Zones } from "../../types";
+import { ColumnLayout } from "@/layout-components/ColumnLayout";
 
 function constrainCoordinates(zone: CompleteZone): CompleteZone {
   return {

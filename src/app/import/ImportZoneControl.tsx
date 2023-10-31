@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { Rectangle, Zones } from "../types";
+import { Rectangle, Zones } from "../../types";
 import { Dispatch, SetStateAction } from "react";
 
 function pc(n: number | null) {
