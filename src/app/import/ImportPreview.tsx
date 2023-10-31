@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { CompleteRectangle, CompleteZone, Rectangle, Zones } from "../../types";
 import { Layer, Rect, Stage } from "react-konva";
 import { KonvaEventObject } from "konva/lib/Node";
+import { ImagePreview } from "@/styled-components/ImagePreview";
 
 const EPSILON = 0.01;
 
@@ -171,7 +172,7 @@ function ImportPreview({
 
   return (
     <div {...rest}>
-      <img
+      <ImagePreview
         src={imageURL}
         alt="Preview"
         style={{ opacity: imageURL === "" ? 0 : 1 }}
@@ -221,11 +222,4 @@ export const StyledImportPreview = styled(ImportPreview)`
   border: 1px solid;
   width: 100%;
   height: 100%;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    background-color: #666666;
-  }
 `;

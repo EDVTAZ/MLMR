@@ -1,22 +1,28 @@
+import { FullWidthButton } from "@/styled-components/Buttons";
+import { BoxContainer } from "@/styled-components/Container";
 import { FormEvent, useState } from "react";
 import styled from "styled-components";
 
 function NameInput({
-  storeCollection,
+  handleSave,
+  buttonText,
+  labelText,
   ...rest
 }: {
-  storeCollection: (collectionName: string) => void;
+  handleSave: (collectionName: string) => void;
+  buttonText: string;
+  labelText: string;
 }) {
   const [collectionName, setCollectionName] = useState("");
 
   function handleSubmit(ev: FormEvent) {
     ev.preventDefault();
-    storeCollection(collectionName);
+    handleSave(collectionName);
   }
 
   return (
-    <div {...rest}>
-      <label htmlFor="collection-name">Collection Name:</label>
+    <BoxContainer {...rest}>
+      <label htmlFor="collection-name">{labelText}</label>
       <form onSubmit={handleSubmit}>
         <input
           id="collection-name"
@@ -25,17 +31,13 @@ function NameInput({
             setCollectionName((e.target as HTMLInputElement).value)
           }
         />
-        <button type="submit">Save images</button>
+        <FullWidthButton>{buttonText}</FullWidthButton>
       </form>
-    </div>
+    </BoxContainer>
   );
 }
 
 export const StyledNameInput = styled(NameInput)`
-  border: 1px solid;
-  padding: 0.5em;
-  margin: 1em 0 0 0;
-
   form {
     display: flex;
     align-items: center;
@@ -44,11 +46,6 @@ export const StyledNameInput = styled(NameInput)`
       border: 1px solid;
       width: 100%;
       min-width: 0;
-    }
-    button {
-      border: 1px solid;
-      background: #bbbbbb;
-      white-space: nowrap;
     }
   }
 `;

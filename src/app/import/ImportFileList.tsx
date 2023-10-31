@@ -1,10 +1,10 @@
+import { DBImage } from "@/types";
 import styled from "styled-components";
-import { FileContent } from "use-file-picker/types";
 
 type FileListProp = {
-  filesContent: FileContent<ArrayBuffer>[];
+  filesContent: DBImage[];
   selectedPreview: { name: string; blobURL: string };
-  selectImage: (file: FileContent<ArrayBuffer>) => void;
+  selectImage: (file: DBImage) => void;
 };
 
 function FileList({
@@ -20,15 +20,17 @@ function FileList({
           {filesContent.map((fileContent) => {
             return (
               <tr
-                key={fileContent.name}
+                key={fileContent.filename}
                 onClick={() => selectImage(fileContent)}
               >
                 <td
                   className={
-                    selectedPreview.name === fileContent.name ? "selected" : ""
+                    selectedPreview.name === fileContent.filename
+                      ? "selected"
+                      : ""
                   }
                 >
-                  {fileContent.name}
+                  {fileContent.filename}
                 </td>
               </tr>
             );

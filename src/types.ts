@@ -34,13 +34,29 @@ export type ReaderPosition = {
 
 export type CollectionInfo = {
   name: string;
-  zones: Array<Zone>;
   length: number;
+};
+
+export type ReadingPair = {
+  name: string;
+  collections: [CollectionInfo, CollectionInfo];
+  zoness: [Array<CompleteZone>, Array<CompleteZone>];
   position: number;
 };
 
 export type LocalStorageCollections = {
   [key: string]: CollectionInfo;
+};
+
+export type LocalStoragReadingPair = {
+  name: string;
+  collections: [string, string];
+  zoness: [Array<CompleteZone>, Array<CompleteZone>];
+  position: number;
+};
+
+export type LocalStoragReadingPairs = {
+  [key: string]: LocalStoragReadingPair;
 };
 
 export type DBImage = {

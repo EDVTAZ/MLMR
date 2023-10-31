@@ -1,15 +1,13 @@
-import { useFilePicker } from "use-file-picker";
-import { FileContent } from "use-file-picker/types";
 import styled from "styled-components";
-import { useState } from "react";
-import { storeCollection } from "../../storage";
-import { StyledNameInput } from "./ImportName";
+import { useEffect, useState } from "react";
+import { getLSCollectionsAll, getPageData } from "../../storage";
 import { StyledFileList } from "./ImportFileList";
 import { StyledImportPreview } from "./ImportPreview";
 import { StyledZoneControl } from "./ImportZoneControl";
-import { CompleteZone, Zones } from "../../types";
-import { ColumnLayout } from "@/layout-components/ColumnLayout";
-import { RowFlexLayout, RowLayout } from "@/layout-components/RowLayout";
+import { CompleteZone, DBImage, Zones } from "../../types";
+import { ColumnLayout } from "@/styled-components/ColumnLayout";
+import { RowFlexLayout, RowLayout } from "@/styled-components/RowLayout";
+import { BoxContainer } from "@/styled-components/Container";
 
 function constrainCoordinates(zone: CompleteZone): CompleteZone {
   return {
@@ -24,6 +22,9 @@ function constrainCoordinates(zone: CompleteZone): CompleteZone {
 }
 
 function Import({ ...rest }) {
+  const [collectionName, setCollectionName] = useState("");
+  const [collections, setCollections] = useState(getLSCollectionsAll());
+  const [filesContent, setFilesContent] = useState<DBImage[]>([]);
   const [selectedPreview, setSelectedPreview] = useState({
     name: "",
     blobURL: "",
@@ -33,18 +34,23 @@ function Import({ ...rest }) {
     inProgressZone: null,
   });
   const [selectedZone, setSelectedZone] = useState<number | null>(null);
-  // TODO handle loading state and errors
-  const { openFilePicker, filesContent, loading, errors } = useFilePicker({
-    readAs: "ArrayBuffer",
-    accept: "image/*",
-    multiple: true,
-  });
 
-  function selectImage(file: FileContent<ArrayBuffer>) {
+  useEffect(() => {
+    if (collectionName != "") {
+      getPageData(
+        collectionName,
+        0,
+        collections[collectionName].length,
+        setFilesContent
+      );
+    }
+  }, [collectionName, collections]);
+
+  function selectImage(file: DBImage) {
     // if (selected.blobURL) URL.revokeObjectURL(selected.blobURL); this is not safe to do here I think, leave this for later...
-    const imageBlob = new Blob([file.content], { type: "image/*" });
+    const imageBlob = new Blob([file.imageData], { type: "image/*" });
     setSelectedPreview({
-      name: file.name,
+      name: file.filename,
       blobURL: URL.createObjectURL(imageBlob),
     });
   }
@@ -120,16 +126,22 @@ function Import({ ...rest }) {
   }
 
   return (
-    <ColumnLayout $proportions="40%" {...rest}>
+    <ColumnLayout $height="100vh" $proportions="40%" {...rest}>
       <RowLayout>
         <ColumnLayout $height="100%">
           <RowFlexLayout>
-            <h2 onClick={openFilePicker}>Import images</h2>
-            <StyledNameInput
-              storeCollection={(collectionName) =>
-                storeCollection(collectionName, filesContent, zones.zones)
-              }
-            />
+            <BoxContainer $height="auto">
+              <select onChange={(e) => setCollectionName(e.target.value)}>
+                <option value="">--Please choose a collection!--</option>
+                {Object.entries(collections).map((e) => {
+                  return (
+                    <option value={e[1].name} key={e[1].name}>
+                      {e[1].name}
+                    </option>
+                  );
+                })}
+              </select>
+            </BoxContainer>
             <StyledZoneControl
               previewAvailable={selectedPreview.name.length > 0}
               zones={zones}
@@ -157,13 +169,6 @@ function Import({ ...rest }) {
   );
 }
 
-const StyledImport = styled(Import)`
-  h2 {
-    width: 100%;
-    text-align: center;
-    border: 1px solid;
-    background: #bbbbbb;
-  }
-`;
+const StyledImport = styled(Import)``;
 
 export default StyledImport;

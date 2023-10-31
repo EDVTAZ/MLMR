@@ -15,7 +15,7 @@ export const ColumnLayout = styled.div<{
   padding: 10px
   box-sizing: border-box;
 
-  height: ${(props) => (props.$height ? props.$height : "100vh")};
+  ${(props) => (props.$height ? "height: " + props.$height + ";" : "")}
   min-height: 0;
   width: 100%;
   column-gap: 10px;

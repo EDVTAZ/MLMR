@@ -28,7 +28,7 @@ export const RowFlexLayout = styled.div`
   justify-content: start;
 
   border: 1px solid;
-  padding: 0 0.5em;
+  padding: 10px;
 
   box-sizing: border-box;
   width: 100%;
