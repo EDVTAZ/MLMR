@@ -178,6 +178,9 @@ const StyledImport = styled(Import)`
 
     border: 1px solid;
     padding: 0 0.5em;
+
+    box-sizing: border-box;
+    width: 100%;
   }
 
   h2 {
