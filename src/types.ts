@@ -31,3 +31,20 @@ export type ReaderPosition = {
   count: number;
   scroll: "start" | "end";
 };
+
+export type CollectionInfo = {
+  name: string;
+  zones: Array<Zone>;
+  length: number;
+  position: number;
+};
+
+export type LocalStorageCollections = {
+  [key: string]: CollectionInfo;
+};
+
+export type DBImage = {
+  filename: string;
+  pageNumber: number;
+  imageData: ArrayBuffer;
+};

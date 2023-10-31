@@ -1,26 +1,14 @@
 import { FileContent } from "use-file-picker/types";
-import { Zone } from "./types";
+import {
+  CollectionInfo,
+  DBImage,
+  LocalStorageCollections,
+  Zone,
+} from "./types";
 
 const COLLECTIONS = "collections";
 const IMAGES = "images";
 const PAGE_NUMBER = "pageNumber";
-
-export type CollectionInfo = {
-  name: string;
-  zones: Array<Zone>;
-  length: number;
-  position: number;
-};
-
-type LocalStorageCollections = {
-  [key: string]: CollectionInfo;
-};
-
-type DBImage = {
-  filename: string;
-  pageNumber: number;
-  imageData: ArrayBuffer;
-};
 
 export function getLSAll(): LocalStorageCollections {
   return JSON.parse(localStorage.getItem(COLLECTIONS) ?? "{}");

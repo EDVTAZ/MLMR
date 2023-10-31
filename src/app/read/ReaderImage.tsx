@@ -1,13 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
-  CollectionInfo,
   getLSCollectionInfo,
   getPageData,
   setCurrentPage,
 } from "../../storage";
 import styled from "styled-components";
-import { CompleteRectangle, ReaderPosition } from "../../types";
+import { CollectionInfo, CompleteRectangle, ReaderPosition } from "../../types";
 
 const PLACEHOLDER_IMG_SRC = "next.svg";
 
