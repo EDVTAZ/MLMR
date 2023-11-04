@@ -11,7 +11,7 @@ export const RowLayout = styled.div<{
       ? "grid-template-rows: " + props.$proportions + ";"
       : "grid-auto-rows: minmax(0, 1fr);"}
   justify-items: center;
-  row-gap: 10px;
+  row-gap: 1%;
 
   padding: 10px;
   border: 1px solid;

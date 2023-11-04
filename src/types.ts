@@ -64,3 +64,8 @@ export type DBImage = {
   pageNumber: number;
   imageData: ArrayBuffer;
 };
+
+export type SelectedPreview = {
+  name: string;
+  blobURL: string;
+};
