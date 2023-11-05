@@ -44,7 +44,7 @@ function Upload({ ...rest }) {
   return (
     <RowLayout
       $height="100vh"
-      $proportions={`4em ${"minmax(0,1fr) ".repeat(ROWCOUNT)}`}
+      $proportions={`5em ${"minmax(0,1fr) ".repeat(ROWCOUNT)}`}
       {...rest}
     >
       <ColumnLayout>

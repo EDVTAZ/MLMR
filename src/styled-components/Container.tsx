@@ -3,11 +3,13 @@ import styled from "styled-components";
 export const BoxContainer = styled.div<{
   $height?: string;
   $width?: string;
+  $textAlign?: string;
+  $noPadding?: boolean;
 }>`
   border: 1px solid;
-  padding: 10px;
+  padding: ${(props) => (props.$noPadding ? "0" : "4%")};
   box-sizing: border-box;
-  text-align: center;
+  text-align: ${(props) => props.$textAlign ?? "center"};
 
   width: ${(props) => props.$width ?? "100%"};
   min-width: 0;

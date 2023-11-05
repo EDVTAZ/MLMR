@@ -1,15 +1,22 @@
 import styled from "styled-components";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { getLSCollectionsAll, getPageData } from "../../storage";
 import { StyledFileList } from "./ImportFileList";
 import { StyledImportPreview } from "./ImportPreview";
 import { StyledZoneControl } from "./ImportZoneControl";
-import { CompleteZone, DBImage, Zones } from "../../types";
+import {
+  CompleteZone,
+  DBImage,
+  LocalStorageCollections,
+  Zones,
+  SelectedPreview,
+} from "../../types";
 import { ColumnLayout } from "@/styled-components/ColumnLayout";
 import { RowFlexLayout, RowLayout } from "@/styled-components/RowLayout";
 import { BoxContainer } from "@/styled-components/Container";
+import { ImportState } from "./import-state";
 
-function constrainCoordinates(zone: CompleteZone): CompleteZone {
+export function constrainCoordinates(zone: CompleteZone): CompleteZone {
   return {
     ...zone,
     rectangle: {
@@ -21,20 +28,20 @@ function constrainCoordinates(zone: CompleteZone): CompleteZone {
   };
 }
 
-function Import({ ...rest }) {
-  const [collectionName, setCollectionName] = useState("");
-  const [collections, setCollections] = useState(getLSCollectionsAll());
-  const [filesContent, setFilesContent] = useState<DBImage[]>([]);
-  const [selectedPreview, setSelectedPreview] = useState({
-    name: "",
-    blobURL: "",
-  });
-  const [zones, setZones] = useState<Zones>({
-    zones: [],
-    inProgressZone: null,
-  });
-  const [selectedZone, setSelectedZone] = useState<number | null>(null);
-
+function Import({
+  collections,
+  importState: {
+    collectionName: [collectionName, setCollectionName],
+    filesContent: [filesContent, setFilesContent],
+    selectedPreview: [selectedPreview, setSelectedPreview],
+    zones: [zones, setZones],
+    selectedZone: [selectedZone, setSelectedZone],
+  },
+  ...rest
+}: {
+  collections: LocalStorageCollections;
+  importState: ImportState;
+}) {
   useEffect(() => {
     if (collectionName != "") {
       getPageData(
@@ -44,7 +51,7 @@ function Import({ ...rest }) {
         setFilesContent
       );
     }
-  }, [collectionName, collections]);
+  }, [collectionName, collections, setFilesContent]);
 
   function selectImage(file: DBImage) {
     // if (selected.blobURL) URL.revokeObjectURL(selected.blobURL); this is not safe to do here I think, leave this for later...
@@ -126,46 +133,47 @@ function Import({ ...rest }) {
   }
 
   return (
-    <ColumnLayout $height="100vh" $proportions="40%" {...rest}>
-      <RowLayout>
-        <ColumnLayout $height="100%">
-          <RowFlexLayout>
-            <BoxContainer $height="auto">
-              <select onChange={(e) => setCollectionName(e.target.value)}>
-                <option value="">--Please choose a collection!--</option>
-                {Object.entries(collections).map((e) => {
-                  return (
-                    <option value={e[1].name} key={e[1].name}>
-                      {e[1].name}
-                    </option>
-                  );
-                })}
-              </select>
-            </BoxContainer>
-            <StyledZoneControl
-              previewAvailable={selectedPreview.name.length > 0}
-              zones={zones}
-              addEmptyZone={addEmptyZone}
-              selectedZone={selectedZone}
-              setSelectedZone={setSelectedZone}
-            />
-          </RowFlexLayout>
-
-          <StyledFileList
-            filesContent={filesContent}
-            selectedPreview={selectedPreview}
-            selectImage={selectImage}
+    <RowLayout {...rest}>
+      <ColumnLayout $height="100%" $noPadding={true}>
+        <RowFlexLayout>
+          <BoxContainer $height="auto">
+            <select
+              value={collectionName}
+              onChange={(e) => setCollectionName(e.target.value)}
+            >
+              <option value="">--Please choose a collection!--</option>
+              {Object.entries(collections).map((e) => {
+                return (
+                  <option value={e[1].name} key={e[1].name}>
+                    {e[1].name}
+                  </option>
+                );
+              })}
+            </select>
+          </BoxContainer>
+          <StyledZoneControl
+            previewAvailable={selectedPreview.name.length > 0}
+            zones={zones}
+            addEmptyZone={addEmptyZone}
+            selectedZone={selectedZone}
+            setSelectedZone={setSelectedZone}
           />
-        </ColumnLayout>
-        <StyledImportPreview
-          imageURL={selectedPreview.blobURL}
-          zones={zones}
-          handleSetZone={handleSetZone}
-          handleCommitZone={handleCommitZone}
-          selectedZone={selectedZone}
+        </RowFlexLayout>
+
+        <StyledFileList
+          filesContent={filesContent}
+          selectedPreview={selectedPreview}
+          selectImage={selectImage}
         />
-      </RowLayout>
-    </ColumnLayout>
+      </ColumnLayout>
+      <StyledImportPreview
+        imageURL={selectedPreview.blobURL}
+        zones={zones}
+        handleSetZone={handleSetZone}
+        handleCommitZone={handleCommitZone}
+        selectedZone={selectedZone}
+      />
+    </RowLayout>
   );
 }
 

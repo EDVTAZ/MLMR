@@ -11,9 +11,9 @@ export const RowLayout = styled.div<{
       ? "grid-template-rows: " + props.$proportions + ";"
       : "grid-auto-rows: minmax(0, 1fr);"}
   justify-items: center;
-  row-gap: 1%;
+  row-gap: 2%;
 
-  padding: 10px;
+  padding: 4%;
   border: 1px solid;
 
   width: 100%;
@@ -28,7 +28,7 @@ export const RowFlexLayout = styled.div`
   justify-content: start;
 
   border: 1px solid;
-  padding: 10px;
+  padding: 4%;
 
   box-sizing: border-box;
   width: 100%;

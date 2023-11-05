@@ -21,7 +21,7 @@ function NameInput({
   }
 
   return (
-    <BoxContainer {...rest}>
+    <BoxContainer $textAlign="start" {...rest}>
       <label htmlFor="collection-name">{labelText}</label>
       <form onSubmit={handleSubmit}>
         <input
