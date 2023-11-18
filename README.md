@@ -5,6 +5,10 @@
 
 # TODO
 
+- extra help for syncing zones (sync points)
+- undo option
+- enlarge function for parts of the UI
+
 - handle type errors without shortcuts
 - handle edge-cases without shortcuts
 - implement temporary 0-1 zone view for irregular pages (such as 2 page spanning panels) with button press

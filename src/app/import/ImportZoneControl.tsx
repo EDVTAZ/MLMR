@@ -37,12 +37,7 @@ function ZoneControl({
                 : "zone-button"
             }
             key={zone.key}
-            onClick={() => {
-              setSelectedZone((state) => {
-                if (state === zone.key) return null;
-                return zone.key;
-              });
-            }}
+            onClick={() => setSelectedZone(zone.key)}
           >
             {rectStr(zone.rectangle)}
           </div>

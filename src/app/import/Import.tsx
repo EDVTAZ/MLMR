@@ -115,6 +115,9 @@ function Import({
   }
 
   function handleCommitZone() {
+    if (zones.inProgressZone) {
+      setSelectedZone(zones.inProgressZone.key);
+    }
     setZones((state) => {
       if (
         !state.inProgressZone ||
