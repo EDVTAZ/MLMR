@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { StyledReaderImage } from "./ReaderImage";
-import { ReaderPosition } from "../../types";
-import { getCurrentPage } from "../../storage";
+import { LocalStoragReadingPair, ReaderPosition } from "../../types";
+import { getCurrentPage, getLSPairingInfo } from "../../storage";
 
-function Reader({ collectionNames, ...rest }: { collectionNames: string[] }) {
+function Reader({ pairingName, ...rest }: { pairingName: string }) {
+  const nonStatePairing = getLSPairingInfo(
+    pairingName
+  ) as LocalStoragReadingPair; // TDOOD
+  const [pairing, setPairing] = useState(nonStatePairing);
   const [position, setPosition] = useState<ReaderPosition>({
-    count: getCurrentPage(collectionNames[0]),
+    count: nonStatePairing.position,
     scroll: "start",
   });
   const [zoom, setZoom] = useState(100);
@@ -40,14 +44,16 @@ function Reader({ collectionNames, ...rest }: { collectionNames: string[] }) {
   return (
     <div {...rest}>
       <StyledReaderImage
-        collectionName={collectionNames[0]}
+        collectionName={pairing.collections[0]}
+        zones={pairing.zoness[0]}
         position={position}
         zoom={zoom / 100}
         visible={version === 1}
       />
 
       <StyledReaderImage
-        collectionName={collectionNames[1]}
+        collectionName={pairing.collections[1]}
+        zones={pairing.zoness[1]}
         position={position}
         zoom={zoom / 100}
         visible={version === -1}

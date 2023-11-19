@@ -8,6 +8,7 @@
 - extra help for syncing zones (sync points)
 - undo option
 - enlarge function for parts of the UI
+- use konva everywhere to show images
 
 - handle type errors without shortcuts
 - handle edge-cases without shortcuts
