@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { useRef, MouseEvent, useState } from "react";
+import { useRef, MouseEvent, useState, useLayoutEffect } from "react";
 import styled from "styled-components";
 import { CompleteRectangle, CompleteZone, Rectangle, Zones } from "../../types";
 import { Layer, Rect, Stage } from "react-konva";
@@ -7,6 +7,15 @@ import { KonvaEventObject } from "konva/lib/Node";
 import { ImagePreview } from "@/styled-components/ImagePreview";
 
 const EPSILON = 0.01;
+
+type SidesArray = Array<"x1" | "x2" | "y1" | "y2">;
+
+type Dragging = {
+  sides: SidesArray;
+  x: number;
+  y: number;
+  original: CompleteZone;
+};
 
 function getMatrix(image: HTMLImageElement) {
   const matrix = new DOMMatrix();
@@ -78,7 +87,7 @@ function ImportPreview({
   selectedZone: number | null;
 }) {
   const imgRef = useRef<HTMLImageElement | null>(null);
-  const [dragging, setDragging] = useState<any>(null);
+  const [dragging, setDragging] = useState<Dragging | null>(null);
 
   function translateClickCoordinates(x: number, y: number) {
     if (imgRef.current == null) throw new Error("imgRef not defined");
@@ -88,11 +97,7 @@ function ImportPreview({
 
     const point = new DOMPoint(x - image.offsetLeft, y - image.offsetTop);
     const translated = matrix.inverse().transformPoint(point);
-    const [newX, newY] = [translated.x, translated.y].map((e) =>
-      Math.min(Math.max(e, 0), 1)
-    );
-
-    return [newX, newY];
+    return [translated.x, translated.y];
   }
 
   function handleMouseDown(
@@ -115,7 +120,7 @@ function ImportPreview({
     if (selectedZone != null) {
       const zone = zones.zones.find((e) => e.key === selectedZone);
       if (!zone) return;
-      const sides = [];
+      const sides: SidesArray = [];
       if (zone.rectangle.x1 > newX - EPSILON) sides.push("x1");
       if (zone.rectangle.y1 > newY - EPSILON) sides.push("y1");
       if (zone.rectangle.x2 < newX + EPSILON) sides.push("x2");
@@ -125,50 +130,64 @@ function ImportPreview({
     }
   }
 
-  function handleMouseUp(konvaEvent: KonvaEventObject<globalThis.MouseEvent>) {
-    handleCommitZone();
-    setDragging(null);
-  }
-
-  function handleMouseMove(
-    konvaEvent: KonvaEventObject<globalThis.MouseEvent>
-  ) {
-    if (imgRef.current == null) return;
-
-    const [newX, newY] = translateClickCoordinates(
-      konvaEvent.evt.clientX,
-      konvaEvent.evt.clientY
-    );
-
-    if (
-      zones.inProgressZone != null &&
-      zones.inProgressZone.rectangle.x1 != null &&
-      zones.inProgressZone.rectangle.y1 != null
-    ) {
-      handleSetZone({
-        rectangle: {
-          x1: zones.inProgressZone.rectangle.x1,
-          y1: zones.inProgressZone.rectangle.y1,
-          x2: newX,
-          y2: newY,
-        },
-        key: -1,
-      });
+  useLayoutEffect(() => {
+    function handleMouseUp(mouseEvent: globalThis.MouseEvent) {
+      handleCommitZone();
+      setDragging(null);
     }
 
-    if (dragging !== null && selectedZone !== null) {
-      const offset = { x: newX - dragging.x, y: newY - dragging.y };
-      const newRect = { ...dragging.original.rectangle };
-      dragging.sides.forEach((i: string) => {
-        //@ts-ignore
-        newRect[i] += offset[i[0]];
-      });
-      handleSetZone({
-        rectangle: newRect,
-        key: selectedZone,
-      });
+    function handleMouseMove(mouseEvent: globalThis.MouseEvent) {
+      if (imgRef.current == null) return;
+
+      const [newX, newY] = translateClickCoordinates(
+        mouseEvent.clientX,
+        mouseEvent.clientY
+      );
+
+      if (
+        zones.inProgressZone != null &&
+        zones.inProgressZone.rectangle.x1 != null &&
+        zones.inProgressZone.rectangle.y1 != null
+      ) {
+        handleSetZone({
+          rectangle: {
+            x1: zones.inProgressZone.rectangle.x1,
+            y1: zones.inProgressZone.rectangle.y1,
+            x2: newX,
+            y2: newY,
+          },
+          key: -1,
+        });
+      }
+
+      if (dragging !== null && selectedZone !== null) {
+        const offset = { x: newX - dragging.x, y: newY - dragging.y };
+        const newRect = { ...dragging.original.rectangle };
+        dragging.sides.forEach((i: string) => {
+          //@ts-ignore
+          newRect[i] += offset[i[0]];
+        });
+        handleSetZone({
+          rectangle: newRect,
+          key: selectedZone,
+        });
+      }
     }
-  }
+
+    addEventListener("mousemove", handleMouseMove);
+    addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      removeEventListener("mousemove", handleMouseMove);
+      removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [
+    dragging,
+    handleCommitZone,
+    handleSetZone,
+    selectedZone,
+    zones.inProgressZone,
+  ]);
 
   return (
     <div {...rest}>
@@ -188,8 +207,6 @@ function ImportPreview({
             top: imgRef.current.offsetTop,
           }}
           onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
         >
           <Layer>
             {zones.zones.map((zone) => {
