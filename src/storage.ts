@@ -7,7 +7,6 @@ import {
   LocalStoragReadingPairs,
   LocalStorageCollections,
   ReadingPair,
-  Zone,
 } from "./types";
 
 const COLLECTIONS = "collections";

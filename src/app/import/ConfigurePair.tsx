@@ -3,7 +3,7 @@ import StyledImport, { constrainCoordinates } from "./Import";
 import { RowLayout } from "@/styled-components/RowLayout";
 import { StyledNameInput } from "@/styled-components/NameInput";
 import { useMemo, useRef, useState } from "react";
-import { getLSCollectionsAll } from "@/storage";
+import { getLSCollectionsAll, storePairing } from "@/storage";
 import {
   CompleteRectangle,
   CompleteZone,
@@ -79,7 +79,15 @@ export default function ConfigurePair() {
       ></StyledImport>
       <RowLayout $proportions="4rem 1fr 70%">
         <StyledNameInput
-          handleSave={(name) => {}}
+          handleSave={(name) => {
+            storePairing(
+              name,
+              leftImportState.collectionName[0],
+              rightImportState.collectionName[0],
+              leftImportState.zones[0].zones,
+              rightImportState.zones[0].zones
+            );
+          }}
           labelText="Pairing Name:"
           buttonText="Save Pairing"
         />
