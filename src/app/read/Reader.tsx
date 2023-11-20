@@ -44,19 +44,11 @@ function Reader({ pairingName, ...rest }: { pairingName: string }) {
   return (
     <div {...rest}>
       <StyledReaderImage
-        collectionName={pairing.collections[0]}
-        zones={pairing.zoness[0]}
+        collectionNames={pairing.collections}
+        zoness={pairing.zoness}
         position={position}
         zoom={zoom / 100}
-        visible={version === 1}
-      />
-
-      <StyledReaderImage
-        collectionName={pairing.collections[1]}
-        zones={pairing.zoness[1]}
-        position={position}
-        zoom={zoom / 100}
-        visible={version === -1}
+        version={version}
       />
       <div className="base-navigation">
         <div className="side-navigation" onClick={() => step(1)} />
