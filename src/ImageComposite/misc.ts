@@ -10,11 +10,10 @@ export function getVisibleImages(
   images: { [key: string]: DisplayImage },
   imageElements: ImageResults
 ): string[] {
-  console.log({ images, imageElements });
   return Object.entries(images)
     .filter(
       ([idx, val]) =>
-        val.transparency < 1 && imageElements[val.id].state == "loaded"
+        val.transparency < 1 && imageElements[val.id]?.state == "loaded"
     )
     .map(([idx, val]) => val.id);
 }
@@ -50,9 +49,9 @@ export function getImagePosition(
   };
 
   return {
-    x: zoneRectScaled.x1,
-    y: zoneRectScaled.y1,
-    width: zoneRectScaled.x2 - zoneRectScaled.x1,
-    height: zoneRectScaled.y2 - zoneRectScaled.y1,
+    x: -zoneRectScaled.x1,
+    y: -zoneRectScaled.y1,
+    width: image.naturalWidth * scale,
+    height: image.naturalHeight * scale,
   };
 }

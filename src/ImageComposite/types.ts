@@ -24,7 +24,7 @@ export type ImageCompositeDimensions =
 export type ImageResult = {
   url: string;
   element: undefined | HTMLImageElement;
-  state: "loaded" | "loading" | "failed";
+  state: "loaded" | "initializing" | "loading" | "failed";
 };
 
 export type ImageResults = { [key: string]: ImageResult };

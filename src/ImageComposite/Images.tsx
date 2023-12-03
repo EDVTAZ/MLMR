@@ -5,7 +5,7 @@ import {
   HeightOpenDimensions,
 } from "./types";
 import { useImages } from "./use-images";
-import { useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { getVisibleImages, getHeightFromWidth, getImagePosition } from "./misc";
 
 // TODO - implement margins - implement fixed height/width
@@ -22,7 +22,7 @@ export function Images({
     height: dimensions.width,
   });
 
-  const [imageElements, imageUpdate] = useImages(
+  const imageElements = useImages(
     Object.fromEntries(
       Object.entries(images).map(([idx, val]) => [val.id, val.url])
     )
@@ -30,6 +30,7 @@ export function Images({
 
   useLayoutEffect(() => {
     const calculatedHeight = Math.max(
+      0,
       ...getVisibleImages(images, imageElements).map((id) => {
         return getHeightFromWidth(
           dimensions.width,
@@ -43,7 +44,20 @@ export function Images({
       height: calculatedHeight,
     });
     if (dimensions.setHeight) dimensions.setHeight(calculatedHeight);
-  }, [imageUpdate, imageElements, images, dimensions]);
+  }, [imageElements, images, dimensions]);
+
+  useLayoutEffect(() => {
+    getVisibleImages(images, imageElements).map((id) => {
+      console.log(
+        id,
+        getImagePosition(
+          calculatedDimensions,
+          images[id].position,
+          imageElements[id].element as HTMLImageElement
+        )
+      );
+    });
+  });
 
   return (
     <Stage
@@ -52,17 +66,19 @@ export function Images({
     >
       <Layer>
         {getVisibleImages(images, imageElements).map((id) => {
-          <Image
-            image={imageElements[id].element}
-            opacity={1 - images[id].transparency}
-            {...getImagePosition(
-              calculatedDimensions,
-              images[id].position,
-              imageElements[id].element as HTMLImageElement
-            )}
-            key={id}
-            alt={id}
-          ></Image>;
+          return (
+            <Image
+              image={imageElements[id].element}
+              opacity={1 - images[id].transparency}
+              {...getImagePosition(
+                calculatedDimensions,
+                images[id].position,
+                imageElements[id].element as HTMLImageElement
+              )}
+              key={id}
+              alt={id}
+            ></Image>
+          );
         })}
       </Layer>
     </Stage>

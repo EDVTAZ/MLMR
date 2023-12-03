@@ -9,7 +9,7 @@ export function useImagesFromDB(
   currentPage: number
 ): { [key: number]: string } {
   const [blobURLs, setBlobURLs] = useState<{ [key: number]: string }>({});
-  const startPage = Math.min(0, currentPage - CACHE_SIZE / 2);
+  const startPage = Math.max(0, currentPage - CACHE_SIZE / 2);
 
   useEffect(() => {
     setBlobURLs({});

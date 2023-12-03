@@ -31,7 +31,7 @@ function ReaderImage({
 
   const blobURLss = [
     useImagesFromDB(collectionNames[0], pages[0]),
-    useImagesFromDB(collectionNames[1], pages[0]),
+    useImagesFromDB(collectionNames[1], pages[1]),
   ];
 
   const images = {
