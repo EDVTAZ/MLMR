@@ -6,19 +6,17 @@ import {
   CompleteDimensions,
 } from "./types";
 
-export function getDisplayImageID(img: DisplayImage): string {
-  return `${img.id}-${img.url}-${Object.values(img.position).join("/")}`;
-}
-
 export function getVisibleImages(
-  images: DisplayImage[],
+  images: { [key: string]: DisplayImage },
   imageElements: ImageResults
-): number[] {
-  return images
+): string[] {
+  console.log({ images, imageElements });
+  return Object.entries(images)
     .filter(
-      (val) => val.transparency < 1 && imageElements[val.id].state == "loaded"
+      ([idx, val]) =>
+        val.transparency < 1 && imageElements[val.id].state == "loaded"
     )
-    .map((val) => val.id);
+    .map(([idx, val]) => val.id);
 }
 
 export function getHeightFromWidth(

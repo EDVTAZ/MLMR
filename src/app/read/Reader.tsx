@@ -14,7 +14,7 @@ function Reader({ pairingName, ...rest }: { pairingName: string }) {
     scroll: "start",
   });
   const [zoom, setZoom] = useState(100);
-  const [version, setVersion] = useState(1);
+  const [version, setVersion] = useState(0);
 
   function step(count: number) {
     setPosition((prev) => {
@@ -29,7 +29,7 @@ function Reader({ pairingName, ...rest }: { pairingName: string }) {
     function keyPressHandler(ev: KeyboardEvent) {
       if (ev.key === "ArrowLeft" || ev.key === "a") step(1);
       else if (ev.key === "ArrowRight" || ev.key === "d") step(-1);
-      else if (ev.key === "v") setVersion((v) => -v);
+      else if (ev.key === "v") setVersion((v) => (v + 1) % 2);
       else if (ev.key === "+") setZoom((z) => Math.min(z + 10, 100));
       else if (ev.key === "-") setZoom((z) => Math.max(z - 10, 10));
       else return;

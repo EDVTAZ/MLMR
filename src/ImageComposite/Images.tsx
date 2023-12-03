@@ -13,11 +13,9 @@ import { getVisibleImages, getHeightFromWidth, getImagePosition } from "./misc";
 export function Images({
   images,
   dimensions,
-  margins,
 }: {
-  images: DisplayImage[];
+  images: { [key: string]: DisplayImage };
   dimensions: HeightOpenDimensions;
-  margins: "none";
 }) {
   const [calculatedDimensions, setDimensions] = useState<CompleteDimensions>({
     width: dimensions.width,
@@ -25,7 +23,9 @@ export function Images({
   });
 
   const [imageElements, imageUpdate] = useImages(
-    Object.fromEntries(images.map((val) => [val.id, val.url]))
+    Object.fromEntries(
+      Object.entries(images).map(([idx, val]) => [val.id, val.url])
+    )
   );
 
   useLayoutEffect(() => {
@@ -54,6 +54,7 @@ export function Images({
         {getVisibleImages(images, imageElements).map((id) => {
           <Image
             image={imageElements[id].element}
+            opacity={1 - images[id].transparency}
             {...getImagePosition(
               calculatedDimensions,
               images[id].position,

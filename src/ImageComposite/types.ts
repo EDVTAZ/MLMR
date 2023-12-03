@@ -1,7 +1,7 @@
 import { CompleteRectangle } from "@/types";
 
 export type DisplayImage = {
-  id: number;
+  id: string;
   url: string;
   transparency: number;
   position: CompleteRectangle;

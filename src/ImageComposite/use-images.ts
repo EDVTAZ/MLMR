@@ -29,30 +29,33 @@ export function useImages(urls: {
         ])
       ),
     };
+
     setStateUpdated((prev) => prev + 1);
   }
 
   useLayoutEffect(() => {
     for (const key in imagesRef.current) {
-      let img = document.createElement("img");
+      if (key in newKeys) {
+        let img = document.createElement("img");
 
-      // what happens if I don't clean up these listeners? we'll find out...
-      img.addEventListener("load", () => {
-        if (!(key in imagesRef.current)) return;
-        imagesRef.current[key].state = "loaded";
-        imagesRef.current[key].element = img;
-        setStateUpdated((prev) => prev + 1);
-      });
-      img.addEventListener("error", () => {
-        if (!(key in imagesRef.current)) return;
-        imagesRef.current[key].state = "failed";
-        imagesRef.current[key].element = undefined;
-        setStateUpdated((prev) => prev + 1);
-      });
+        // what happens if I don't clean up these listeners? we'll find out...
+        img.addEventListener("load", () => {
+          if (!(key in imagesRef.current)) return;
+          imagesRef.current[key].state = "loaded";
+          imagesRef.current[key].element = img;
+          setStateUpdated((prev) => prev + 1);
+        });
+        img.addEventListener("error", () => {
+          if (!(key in imagesRef.current)) return;
+          imagesRef.current[key].state = "failed";
+          imagesRef.current[key].element = undefined;
+          setStateUpdated((prev) => prev + 1);
+        });
 
-      img.src = imagesRef.current[key].url;
+        img.src = imagesRef.current[key].url;
+      }
     }
-  }, [imagesRef.current]);
+  }, [newKeys.length]);
 
   return [imagesRef.current, stateUpdated];
 }
