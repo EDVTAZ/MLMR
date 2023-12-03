@@ -9,6 +9,7 @@
 - undo option
 - enlarge function for parts of the UI
 - use konva everywhere to show images
+- allow updown endless scrolling together with clicking/arrows page turn
 
 - handle type errors without shortcuts
 - handle edge-cases without shortcuts
