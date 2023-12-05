@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { CompleteZone, ReaderPosition } from "../../types";
 import { useImagesFromDB } from "./use-image-from-db";
@@ -20,6 +20,7 @@ function ReaderImage({
   zoom: number;
   version: number;
 }) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [windowWidth, setWindowWidth] = useState(0);
   useLayoutEffect(() => {
     setWindowWidth(window.innerWidth);
@@ -48,16 +49,16 @@ function ReaderImage({
     if (images[idx].id == currentlyShown) images[idx].transparency = 0;
   }
 
-  /* useLayoutEffect(() => {
-    imgRef.current?.scrollIntoView({
+  useLayoutEffect(() => {
+    containerRef.current?.scrollIntoView({
       block: position.scroll,
       inline: "center",
       behavior: "instant",
     });
-  }, [position, collectionName]);*/
+  }, [position.scroll]);
 
   return (
-    <div {...rest}>
+    <div ref={containerRef} {...rest}>
       <Images
         images={images}
         dimensions={{ width: windowWidth * zoom }}
