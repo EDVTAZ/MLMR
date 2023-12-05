@@ -46,19 +46,6 @@ export function Images({
     if (dimensions.setHeight) dimensions.setHeight(calculatedHeight);
   }, [imageElements, images, dimensions]);
 
-  useLayoutEffect(() => {
-    getVisibleImages(images, imageElements).map((id) => {
-      console.log(
-        id,
-        getImagePosition(
-          calculatedDimensions,
-          images[id].position,
-          imageElements[id].element as HTMLImageElement
-        )
-      );
-    });
-  });
-
   return (
     <Stage
       width={calculatedDimensions.width}

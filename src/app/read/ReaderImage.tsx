@@ -58,18 +58,16 @@ function ReaderImage({
   }, [position, collectionName]);*/
 
   return (
-    <Images
-      images={images}
-      dimensions={{ width: windowWidth }}
-      {...rest}
-    ></Images>
+    <div {...rest}>
+      <Images
+        images={images}
+        dimensions={{ width: windowWidth * zoom }}
+      ></Images>
+    </div>
   );
 }
 
 export const StyledReaderImage = styled(ReaderImage)`
-  margin: auto;
-  display: block;
-  position: absolute;
-  top: 0;
-  left: 0;
+  display: flex;
+  justify-content: center;
 `;

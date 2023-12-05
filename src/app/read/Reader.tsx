@@ -57,7 +57,7 @@ function Reader({ pairingName, ...rest }: { pairingName: string }) {
     </div>
   );
 }
-export const StyledReader = styled(Reader)`
+export default styled(Reader)`
   position: absolute;
   left: 0;
   top: 0;
