@@ -49,7 +49,6 @@ function ReaderImage({
   }
 
   /* useLayoutEffect(() => {
-    setCurrentPage(collectionName, position.count);
     imgRef.current?.scrollIntoView({
       block: position.scroll,
       inline: "center",

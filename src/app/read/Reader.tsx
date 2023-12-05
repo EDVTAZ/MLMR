@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { StyledReaderImage } from "./ReaderImage";
+import { getLSPairingInfo, setCurrentPage } from "../../storage";
 import { LocalStoragReadingPair, ReaderPosition } from "../../types";
-import { getCurrentPage, getLSPairingInfo } from "../../storage";
+import { StyledReaderImage } from "./ReaderImage";
 
 function Reader({ pairingName, ...rest }: { pairingName: string }) {
   const nonStatePairing = getLSPairingInfo(
@@ -40,6 +40,10 @@ function Reader({ pairingName, ...rest }: { pairingName: string }) {
       document.removeEventListener("keydown", keyPressHandler);
     };
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(pairingName, position.count);
+  }, [pairingName, position.count]);
 
   return (
     <div {...rest}>
