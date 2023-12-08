@@ -5,12 +5,9 @@ import { LocalStoragReadingPair, ReaderPosition } from "../../types";
 import { StyledReaderImage } from "./ReaderImage";
 
 function Reader({ pairingName, ...rest }: { pairingName: string }) {
-  const nonStatePairing = getLSPairingInfo(
-    pairingName
-  ) as LocalStoragReadingPair; // TDOOD
-  const [pairing, setPairing] = useState(nonStatePairing);
+  const [pairing, setPairing] = useState<LocalStoragReadingPair | null>(null);
   const [position, setPosition] = useState<ReaderPosition>({
-    count: nonStatePairing.position,
+    count: -1,
     scroll: "start",
   });
   const [zoom, setZoom] = useState(100);
@@ -24,6 +21,18 @@ function Reader({ pairingName, ...rest }: { pairingName: string }) {
       };
     });
   }
+
+  useEffect(() => {
+    const nonStatePairing = getLSPairingInfo(
+      pairingName
+    ) as LocalStoragReadingPair; // TDOOD
+
+    setPairing(nonStatePairing);
+    setPosition({
+      count: nonStatePairing.position,
+      scroll: "start",
+    });
+  }, [pairingName]);
 
   useEffect(() => {
     function keyPressHandler(ev: KeyboardEvent) {
@@ -42,22 +51,28 @@ function Reader({ pairingName, ...rest }: { pairingName: string }) {
   }, []);
 
   useEffect(() => {
-    setCurrentPage(pairingName, position.count);
-  }, [pairingName, position.count]);
+    if (pairing && position.count >= 0) {
+      setCurrentPage(pairing.name, position.count);
+    }
+  }, [pairing, position.count]);
 
   return (
     <div {...rest}>
-      <StyledReaderImage
-        collectionNames={pairing.collections}
-        zoness={pairing.zoness}
-        position={position}
-        zoom={zoom / 100}
-        version={version}
-      />
-      <div className="base-navigation">
-        <div className="side-navigation" onClick={() => step(1)} />
-        <div className="side-navigation" onClick={() => step(-1)} />
-      </div>
+      {pairing && position.count >= 0 && (
+        <>
+          <StyledReaderImage
+            collectionNames={pairing.collections}
+            zoness={pairing.zoness}
+            position={position}
+            zoom={zoom / 100}
+            version={version}
+          />
+          <div className="base-navigation">
+            <div className="side-navigation" onClick={() => step(1)} />
+            <div className="side-navigation" onClick={() => step(-1)} />
+          </div>
+        </>
+      )}
     </div>
   );
 }
