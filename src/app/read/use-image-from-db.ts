@@ -40,7 +40,9 @@ export function useImagesFromDB(
           );
 
           for (const index in oldBlobURLs) {
-            if (!newBlobURLs[index]) URL.revokeObjectURL(oldBlobURLs[index]);
+            if (!newBlobURLs[index]) {
+              URL.revokeObjectURL(oldBlobURLs[index]);
+            }
           }
 
           for (let i = startPage; i < startPage + CACHE_SIZE; i++) {

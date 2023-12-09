@@ -28,8 +28,10 @@ function Reader({ pairingName, ...rest }: { pairingName: string }) {
     ) as LocalStoragReadingPair; // TDOOD
 
     setPairing(nonStatePairing);
+
+    const hashPosition = parseInt(location.hash.slice(1));
     setPosition({
-      count: nonStatePairing.position,
+      count: hashPosition ? hashPosition : nonStatePairing.position,
       scroll: "start",
     });
   }, [pairingName]);
@@ -55,6 +57,30 @@ function Reader({ pairingName, ...rest }: { pairingName: string }) {
       setCurrentPage(pairing.name, position.count);
     }
   }, [pairing, position.count]);
+
+  useEffect(() => {
+    if (position.count >= 0) {
+      history.pushState(null, "", `#${position.count}`);
+    }
+  }, [position.count]);
+
+  useEffect(() => {
+    const hashChangedHandler = (event: HashChangeEvent) => {
+      const hashPosition = parseInt(new URL(event.newURL).hash.slice(1));
+      if (hashPosition) {
+        console.log(hashPosition);
+        setPosition({
+          count: hashPosition,
+          scroll: "start",
+        });
+      }
+    };
+
+    addEventListener("hashchange", hashChangedHandler);
+    return () => {
+      removeEventListener("hashchange", hashChangedHandler);
+    };
+  }, []);
 
   return (
     <div {...rest}>
