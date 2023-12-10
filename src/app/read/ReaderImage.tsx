@@ -55,7 +55,7 @@ function ReaderImage({
       inline: "center",
       behavior: "instant",
     });
-  }, [position.scroll]);
+  }, [position.scroll, position.count]);
 
   return (
     <div ref={containerRef} {...rest}>
