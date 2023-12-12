@@ -5,6 +5,7 @@ import { LocalStoragReadingPair, ReaderPosition } from "../../types";
 import { StyledReaderImage } from "./ReaderImage";
 
 function Reader({ pairingName, ...rest }: { pairingName: string }) {
+  const [offset, setOffset] = useState(0);
   const [pairing, setPairing] = useState<LocalStoragReadingPair | null>(null);
   const [position, setPosition] = useState<ReaderPosition>({
     count: -1,
@@ -43,6 +44,8 @@ function Reader({ pairingName, ...rest }: { pairingName: string }) {
       else if (ev.key === "v") setVersion((v) => (v + 1) % 2);
       else if (ev.key === "+") setZoom((z) => Math.min(z + 10, 100));
       else if (ev.key === "-") setZoom((z) => Math.max(z - 10, 10));
+      else if (ev.key === "i") setOffset((o) => o + 1);
+      else if (ev.key === "o") setOffset((o) => o - 1);
       else return;
       ev.preventDefault();
     }
@@ -90,6 +93,7 @@ function Reader({ pairingName, ...rest }: { pairingName: string }) {
             collectionNames={pairing.collections}
             zoness={pairing.zoness}
             position={position}
+            offset={offset}
             zoom={zoom / 100}
             version={version}
           />

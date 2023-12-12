@@ -12,6 +12,7 @@ function ReaderImage({
   position,
   zoom,
   version,
+  offset,
   ...rest
 }: {
   collectionNames: [string, string];
@@ -19,15 +20,17 @@ function ReaderImage({
   position: ReaderPosition;
   zoom: number;
   version: number;
+  offset: number;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [windowWidth, setWindowWidth] = useState(0);
   useLayoutEffect(() => {
     setWindowWidth(window.innerWidth);
   }, []);
+  const positionWithOffset = position.count + (version ? offset : 0);
 
   const pages = zoness.map((zones) =>
-    Math.floor(position.count / zones.length)
+    Math.floor(positionWithOffset / zones.length)
   ) as [number, number];
 
   const blobURLss = [
@@ -43,7 +46,7 @@ function ReaderImage({
   const currentlyShown = getDisplayImageID(
     pages[version],
     blobURLss[version][pages[version]],
-    zoness[version][position.count % zoness[version].length]
+    zoness[version][positionWithOffset % zoness[version].length]
   );
   for (const idx in images) {
     if (images[idx].id == currentlyShown) images[idx].transparency = 0;
