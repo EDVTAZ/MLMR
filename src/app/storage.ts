@@ -8,6 +8,23 @@ export function useCollectionLocalStorage(collectionName: string | undefined) {
   };
 }
 
+export function useCollectionNamesLocalStorage(): string[] {
+  const [collections, setCollections] = useState<string[]>([]);
+
+  useEffect(() => {
+    const newCollections: string[] = [];
+    for (let i = 0; i < localStorage.length; ++i) {
+      const currentKey = localStorage.key(i);
+      if (currentKey?.slice(-5) === '-orig') {
+        newCollections.push(currentKey.slice(0, -5));
+      }
+    }
+    setCollections(newCollections);
+  }, []);
+
+  return collections;
+}
+
 function useLocalStorage(key: string): {
   value: string;
   setValue: Dispatch<string>;

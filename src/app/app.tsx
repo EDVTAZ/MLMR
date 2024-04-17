@@ -1,8 +1,13 @@
 import { CreateCollection } from './CreateCollection';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { ReadCollection, readCollectionLoader } from './ReadCollection';
+import { MainMenu } from './MainMenu';
 
 const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <MainMenu />,
+  },
   {
     path: 'import',
     element: <CreateCollection />,
