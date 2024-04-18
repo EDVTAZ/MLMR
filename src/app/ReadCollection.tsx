@@ -26,9 +26,11 @@ function ReadCollectionUnstyled({ ...rest }) {
     useCollectionLocalStorage(collectionName);
 
   useEffect(() => {
+    function switchLanguage() {
+      setLanguage((v) => (v === 'orig' ? 'transl' : 'orig'));
+    }
     function keyPressHandler(ev: KeyboardEvent) {
-      if (ev.key === 'v')
-        setLanguage((v) => (v === 'orig' ? 'transl' : 'orig'));
+      if (ev.key === 'v') switchLanguage();
       // else if (ev.key === 'ArrowLeft' || ev.key === 'a') step(1);
       // else if (ev.key === 'ArrowRight' || ev.key === 'd') step(-1);
       // else if (ev.key === '+') setZoom((z) => Math.min(z + 10, 100));
@@ -38,9 +40,17 @@ function ReadCollectionUnstyled({ ...rest }) {
       else return;
       ev.preventDefault();
     }
+    function clickHandler(ev: MouseEvent) {
+      if (ev.button === 0) {
+        switchLanguage();
+        ev.preventDefault();
+      }
+    }
     document.addEventListener('keydown', keyPressHandler);
+    document.addEventListener('mousedown', clickHandler);
     return () => {
       document.removeEventListener('keydown', keyPressHandler);
+      document.removeEventListener('mousedown', clickHandler);
     };
   }, []);
 
