@@ -5,6 +5,8 @@
   "scripts": {
     "start": "nx serve",
     "build": "nx build",
+    "build-opencv": "cd aligner-module; bash build-opencv.sh; cd ..",
+    "build-aligner": "cd aligner-module; bash build-aligner.sh; cd ..",
     "test": "nx test"
   },
   "private": true,
