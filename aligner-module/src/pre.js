@@ -137,7 +137,7 @@ async function runAlignment(
     await syncToIDB();
     postMessage({
       msg: 'transl-written',
-      count: FS.readdir(`${FSmounted}/out_transl`).length - 2,
+      count: i + 1,
     });
     console.log(`Processed transl image no.${i}`);
   }

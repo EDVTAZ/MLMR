@@ -88,6 +88,7 @@ export function useIDBImage(
   index: number
 ) {
   const [blobURL, setBlobURL] = useState('');
+  const [cacheV, setCacheV] = useState(0);
 
   useEffect(() => {
     getImageDataFromIDB(
@@ -109,7 +110,7 @@ export function useIDBImage(
         return '';
       });
     };
-  }, [collectionName, index, type]);
+  }, [collectionName, index, type, cacheV]);
 
-  return blobURL;
+  return { blobURL, refresh: () => setCacheV((v) => v + 1) };
 }

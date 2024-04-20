@@ -1,4 +1,6 @@
+import { useContext, useEffect } from 'react';
 import { useIDBImage } from './storage';
+import { WorkerContext } from './AlignerWorker';
 
 function getStyle(show: boolean): React.CSSProperties {
   const rv: React.CSSProperties = { width: '90vw', margin: '8px' };
@@ -20,9 +22,33 @@ export function Page({
   index: number;
   language: 'orig' | 'transl';
 }) {
-  const originalPage = useIDBImage(collectionName, 'out_orig', index);
-  const translatedPage = useIDBImage(collectionName, 'out_transl', index);
+  const { blobURL: originalPage } = useIDBImage(
+    collectionName,
+    'out_orig',
+    index
+  );
+  const { blobURL: translatedPage, refresh: refreshTransl } = useIDBImage(
+    collectionName,
+    'out_transl',
+    index
+  );
   const effectiveLanguage = translatedPage === '' ? 'orig' : language;
+
+  const { worker } = useContext(WorkerContext);
+  useEffect(() => {
+    if (!worker) return;
+
+    function messageHandler({ data }: MessageEvent) {
+      if (data['msg'] === 'transl-written' && data['count'] === index + 1) {
+        refreshTransl();
+      }
+    }
+
+    worker.addEventListener('message', messageHandler);
+    return () => {
+      worker.removeEventListener('message', messageHandler);
+    };
+  }, [worker, refreshTransl, index]);
 
   return (
     <>

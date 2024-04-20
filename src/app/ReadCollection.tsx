@@ -2,7 +2,8 @@ import { ParamParseKey, Params, useLoaderData } from 'react-router-dom';
 import { useCollectionLocalStorage } from './storage';
 import { Page } from './Page';
 import styled from 'styled-components';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
+import { WorkerContext } from './AlignerWorker';
 
 const PathNames = {
   collectionName: '/read/:collectionName',
@@ -24,6 +25,7 @@ function ReadCollectionUnstyled({ ...rest }) {
 
   const { originalCount, translatedCount } =
     useCollectionLocalStorage(collectionName);
+  const { worker } = useContext(WorkerContext);
 
   useEffect(() => {
     function switchLanguage() {
@@ -53,6 +55,24 @@ function ReadCollectionUnstyled({ ...rest }) {
       document.removeEventListener('mousedown', clickHandler);
     };
   }, []);
+
+  useEffect(() => {
+    if (!worker) return;
+
+    function messageHandler({ data }: MessageEvent) {
+      if (data['msg'] === 'orig-written') {
+        originalCount.setValue(data['count']);
+      }
+      if (data['msg'] === 'transl-written') {
+        translatedCount.setValue(data['count']);
+      }
+    }
+
+    worker.addEventListener('message', messageHandler);
+    return () => {
+      worker.removeEventListener('message', messageHandler);
+    };
+  }, [worker, originalCount.setValue, translatedCount.setValue]);
 
   return (
     <div {...rest}>

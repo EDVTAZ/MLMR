@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from 'react';
 import { useFilePicker } from 'use-file-picker';
 import { FileContent } from 'use-file-picker/types';
 import { WorkerContext } from './AlignerWorker';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export function CreateCollection({ ...rest }) {
   const [collectionName, setCollectionName] = useState<string>('');
@@ -18,8 +18,8 @@ export function CreateCollection({ ...rest }) {
       accept: 'image/*',
       multiple: true,
     });
-
   const { worker, setNeeded } = useContext(WorkerContext);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setNeeded(true);
@@ -31,6 +31,7 @@ export function CreateCollection({ ...rest }) {
     function messageHandler({ data }: MessageEvent) {
       if (data['msg'] === 'orig-written') {
         localStorage[`${collectionName}-orig`] = data['count'];
+        navigate(`/read/${collectionName}`);
       }
       if (data['msg'] === 'transl-written') {
         localStorage[`${collectionName}-transl`] = data['count'];
