@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useFilePicker } from 'use-file-picker';
 import { FileContent } from 'use-file-picker/types';
+import { WorkerContext } from './AlignerWorker';
+import { Link } from 'react-router-dom';
 
 export function CreateCollection({ ...rest }) {
-  const [worker, setWorker] = useState<null | Worker>(null);
   const [collectionName, setCollectionName] = useState<string>('');
   // TODO handle loading state and errors
   const { openFilePicker, filesContent } = useFilePicker({
@@ -18,24 +19,27 @@ export function CreateCollection({ ...rest }) {
       multiple: true,
     });
 
+  const { worker, setNeeded } = useContext(WorkerContext);
+
   useEffect(() => {
-    const w = new Worker('aligner.js');
-    setWorker(w);
-    return () => {
-      w.terminate();
-      setWorker(null);
-    };
+    setNeeded(true);
   }, []);
 
   useEffect(() => {
     if (!worker) return;
-    worker.onmessage = ({ data }) => {
+
+    function messageHandler({ data }: MessageEvent) {
       if (data['msg'] === 'orig-written') {
         localStorage[`${collectionName}-orig`] = data['count'];
       }
       if (data['msg'] === 'transl-written') {
         localStorage[`${collectionName}-transl`] = data['count'];
       }
+    }
+
+    worker.addEventListener('message', messageHandler);
+    return () => {
+      worker.removeEventListener('message', messageHandler);
     };
   }, [worker, collectionName]);
 
@@ -101,6 +105,9 @@ export function CreateCollection({ ...rest }) {
           </form>
         </>
       )}
+      <Link to={'/'}>
+        <button>Back to home</button>
+      </Link>
     </>
   );
 }

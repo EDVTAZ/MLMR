@@ -2,6 +2,7 @@ import { CreateCollection } from './CreateCollection';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { ReadCollection, readCollectionLoader } from './ReadCollection';
 import { MainMenu } from './MainMenu';
+import { WorkerProvider } from './AlignerWorker';
 
 const router = createBrowserRouter([
   {
@@ -20,7 +21,11 @@ const router = createBrowserRouter([
 ]);
 
 export function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <WorkerProvider>
+      <RouterProvider router={router} />
+    </WorkerProvider>
+  );
 }
 
 export default App;
