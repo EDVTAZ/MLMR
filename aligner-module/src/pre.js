@@ -1,22 +1,24 @@
-const mountpointBase = "/idbfs";
-const imageDirs = ["in_transl", "out_transl", "in_orig", "out_orig"];
+/* eslint-disable no-restricted-globals */
+/* eslint-disable no-undef */
+const mountpointBase = '/idbfs';
+const imageDirs = ['in_transl', 'out_transl', 'in_orig', 'out_orig'];
 const INDEX_BASE = 1000000;
 let FSsyncInProgress = false;
 let FSmounted = false;
 
 async function syncFromIDB() {
-  await syncIDB("from");
+  await syncIDB('from');
 }
 async function syncToIDB() {
-  await syncIDB("to");
+  await syncIDB('to');
 }
 
 async function syncIDB(direction) {
   return new Promise((resolve, reject) => {
-    if (FS && typeof FS.syncfs == "function") {
+    if (FS && typeof FS.syncfs == 'function') {
       if (!FSsyncInProgress) {
         FSsyncInProgress = true;
-        FS.syncfs(direction == "from", (err) => {
+        FS.syncfs(direction == 'from', (err) => {
           FSsyncInProgress = false;
           console.log(
             `Syncing ${direction} IDB to memory FS done, errors: ${err}`
@@ -39,7 +41,7 @@ async function syncIDB(direction) {
 }
 
 async function mountFS(mountpoint) {
-  if (FS && typeof FS.syncfs == "function" && !FSmounted) {
+  if (FS && typeof FS.syncfs == 'function' && !FSmounted) {
     FSmounted = true;
     const absmp = `${mountpointBase}/${mountpoint}`;
     const mpStatus = FS.analyzePath(absmp);
@@ -61,20 +63,20 @@ async function mountFS(mountpoint) {
     await syncToIDB();
   } else {
     console.log(
-      "mountFS: FS.syncFS is not available or there is already something mounted!"
+      'mountFS: FS.syncFS is not available or there is already something mounted!'
     );
   }
 }
 
 async function writeImages(type, images) {
   if (!FSmounted) {
-    console.log("Not mounted yet!");
-    throw new Error("Not mounted yet!");
+    console.log('Not mounted yet!');
+    throw new Error('Not mounted yet!');
   } else {
     images.forEach((file, index) => {
       FS.writeFile(
         `${FSmounted}/${type}/${index + INDEX_BASE}.${file.name
-          .split(".")
+          .split('.')
           .at(-1)}`,
         new Uint8Array(file.content)
       );
@@ -90,92 +92,96 @@ async function runAlignment(
   transl_imgs,
   transl_settings
 ) {
-  console.log("Starting alignment with...");
+  console.log('Starting alignment with...');
 
-  console.log("Cleaning up");
-  Module["clean"]();
+  console.log('Cleaning up');
+  Module['clean']();
 
-  console.log("Saving source images");
+  console.log('Saving source images');
   await mountFS(name);
-  await writeImages("in_orig", orig_imgs);
-  await writeImages("in_transl", transl_imgs);
+  await writeImages('in_orig', orig_imgs);
+  await writeImages('in_transl', transl_imgs);
 
-  console.log("Processing orig images");
+  console.log('Processing orig images');
   for (let i = 0; i < orig_imgs.length; ++i) {
-    Module["add_orig"](
+    Module['add_orig'](
       `${FSmounted}/in_orig/${i + INDEX_BASE}.${orig_imgs[i].name
-        .split(".")
+        .split('.')
         .at(-1)}`,
       `${FSmounted}/out_orig/`,
-      orig_settings["resize"],
-      orig_settings["do_split"],
-      orig_settings["do_crop"],
-      orig_settings["right2left"]
+      orig_settings['resize'],
+      orig_settings['do_split'],
+      orig_settings['do_crop'],
+      orig_settings['right2left']
     );
     await syncToIDB();
     postMessage({
-      msg: "orig-written",
+      msg: 'orig-written',
       count: FS.readdir(`${FSmounted}/out_orig`).length - 2,
     });
     console.log(`Processed orig image no.${i}`);
   }
 
-  console.log("Processing transl images");
+  console.log('Processing transl images');
   for (let i = 0; i < transl_imgs.length; ++i) {
-    Module["add_transl"](
+    Module['add_transl'](
       `${FSmounted}/in_transl/${i + INDEX_BASE}.${transl_imgs[i].name
-        .split(".")
+        .split('.')
         .at(-1)}`,
       `${FSmounted}/out_transl/`,
-      transl_settings["resize"],
-      transl_settings["do_split"],
-      transl_settings["do_crop"],
-      transl_settings["right2left"]
+      transl_settings['resize'],
+      transl_settings['do_split'],
+      transl_settings['do_crop'],
+      transl_settings['right2left']
     );
     await syncToIDB();
     postMessage({
-      msg: "transl-written",
+      msg: 'transl-written',
       count: FS.readdir(`${FSmounted}/out_transl`).length - 2,
     });
     console.log(`Processed transl image no.${i}`);
   }
 
-  console.log("Alignment done!");
+  console.log('Alignment done!');
 
   FS.unmount(FSmounted);
   FSmounted = false;
 
-  console.log("IDB FS unmounted!");
+  console.log('IDB FS unmounted!');
+
+  postMessage({
+    msg: 'done',
+  });
 }
 
 if (
-  typeof WorkerGlobalScope != "undefined" &&
+  typeof WorkerGlobalScope != 'undefined' &&
   self instanceof WorkerGlobalScope
 ) {
-  Module["onRuntimeInitialized"] = function () {
-    console.log("Aligner module loded!");
-    postMessage("loaded");
+  Module['onRuntimeInitialized'] = function () {
+    console.log('Aligner module loded!');
+    postMessage('loaded');
   };
   onmessage = async ({ data: msg }) => {
     console.log(`Aligner module received message: ${msg}`);
-    switch (msg["cmd"]) {
-      case "exit":
-        Module["_exit"]();
+    switch (msg['cmd']) {
+      case 'exit':
+        Module['_exit']();
         break;
-      case "start":
+      case 'start':
         runAlignment(
-          msg["name"],
-          msg["orig_imgs"],
-          msg["orig_settings"],
-          msg["transl_imgs"],
-          msg["transl_settings"]
+          msg['name'],
+          msg['orig_imgs'],
+          msg['orig_settings'],
+          msg['transl_imgs'],
+          msg['transl_settings']
         );
         break;
       default:
-        console.log("Unkown command for aligner module!");
+        console.log('Unkown command for aligner module!');
         break;
     }
   };
 } else {
-  console.error("Aligner module started in non-worker environment!");
+  console.error('Aligner module started in non-worker environment!');
 }
