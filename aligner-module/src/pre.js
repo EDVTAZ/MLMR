@@ -117,7 +117,7 @@ async function runAlignment(
     await syncToIDB();
     postMessage({
       msg: 'orig-written',
-      count: FS.readdir(`${FSmounted}/out_orig`).length - 2,
+      count: (FS.readdir(`${FSmounted}/out_orig`).length - 2) / 2,
     });
     console.log(`Processed orig image no.${i}`);
   }

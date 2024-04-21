@@ -1,13 +1,18 @@
 import { useContext, useEffect } from 'react';
-import { useIDBImage } from './storage';
+import { useIDBImage, useIDBImageInfo } from './storage';
 import { WorkerContext } from './AlignerWorker';
 
 function getStyle(show: boolean): React.CSSProperties {
-  const rv: React.CSSProperties = { width: '90vw', margin: '8px' };
+  const rv: React.CSSProperties = {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    left: '0',
+    top: '0',
+    zIndex: '1',
+  };
   if (!show) {
-    rv['position'] = 'absolute';
-    rv['left'] = -100000;
-    rv['top'] = -100000;
+    rv['zIndex'] = 0;
   }
   return rv;
 }
@@ -32,6 +37,7 @@ export function Page({
     'out_transl',
     index
   );
+  const { ratio } = useIDBImageInfo(collectionName, 'out_orig', index);
   const effectiveLanguage = translatedPage === '' ? 'orig' : language;
 
   const { worker } = useContext(WorkerContext);
@@ -51,7 +57,14 @@ export function Page({
   }, [worker, refreshTransl, index]);
 
   return (
-    <>
+    <div
+      style={{
+        height: `${90 * ratio}vw`,
+        width: '90vw',
+        margin: '8px',
+        position: 'relative',
+      }}
+    >
       <img
         src={originalPage}
         style={getStyle(effectiveLanguage === 'orig')}
@@ -64,6 +77,6 @@ export function Page({
         key={'translated'}
         alt={'loading'}
       />
-    </>
+    </div>
   );
 }

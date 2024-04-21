@@ -50,19 +50,18 @@ function useLocalStorage(key: string, parse = (param: string) => param) {
   return { value, setValue };
 }
 
-function getImageName(index: number, indexBase = 1000000, ext = 'png') {
+function getFileName(index: number, ext = 'png', indexBase = 1000000) {
   return `${indexBase + index + 1}.${ext}`;
 }
 
 const FILE_DATA = 'FILE_DATA';
 const READONLY = 'readonly';
-function getImageDataFromIDB(
+function getFileDataFromIDB(
   dbName: string,
-  type: string,
-  index: number,
+  file: string,
   callback: (imageData: ArrayBuffer) => void
 ) {
-  const range = IDBKeyRange.only(`${dbName}/${type}/${getImageName(index)}`);
+  const range = IDBKeyRange.only(`${dbName}/${file}`);
   const request = indexedDB.open(dbName);
   request.onsuccess = () => {
     const db = request.result;
@@ -91,10 +90,9 @@ export function useIDBImage(
   const [cacheV, setCacheV] = useState(0);
 
   useEffect(() => {
-    getImageDataFromIDB(
+    getFileDataFromIDB(
       `/idbfs/${collectionName}`,
-      type,
-      index,
+      `${type}/${getFileName(index, 'png')}`,
       (imageData) => {
         setBlobURL((oldBlobURL) => {
           URL.revokeObjectURL(oldBlobURL);
@@ -113,4 +111,28 @@ export function useIDBImage(
   }, [collectionName, index, type, cacheV]);
 
   return { blobURL, refresh: () => setCacheV((v) => v + 1) };
+}
+
+export function useIDBImageInfo(
+  collectionName: string,
+  type: 'out_orig' | 'out_transl',
+  index: number
+) {
+  // height/width
+  const [ratio, setRatio] = useState(-1);
+  const [cacheV, setCacheV] = useState(0);
+
+  useEffect(() => {
+    getFileDataFromIDB(
+      `/idbfs/${collectionName}`,
+      `${type}/${getFileName(index, 'txt')}`,
+      (data) => {
+        const dataString = new TextDecoder('utf-8').decode(data);
+        const [width, height] = dataString.split(':').map((i) => parseInt(i));
+        setRatio(height / width);
+      }
+    );
+  }, [collectionName, index, type, cacheV]);
+
+  return { ratio, refresh: () => setCacheV((v) => v + 1) };
 }

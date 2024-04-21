@@ -1,6 +1,6 @@
 #include <numeric>
 #include <filesystem>
-#include <chrono>
+#include <fstream>
 #include "opencv2/opencv.hpp"
 
 #include <emscripten/bind.h>
@@ -52,7 +52,6 @@ cv::Rect2i crop(cv::Mat &image)
 {
     bool changed = true;
     cv::Rect2i rv(0, 0, image.cols, image.rows);
-    cv::Rect2i backup = rv;
     while (changed && rv.area() > 0)
     {
         changed = false;
@@ -162,6 +161,22 @@ int load_and_preproc(std::string img_path, std::vector<cv::Mat> &color_acc, std:
     }
 }
 
+void write_im_and_info(std::string name, cv::Mat &image)
+{
+    cv::imwrite(name + ".png", image);
+
+    std::ofstream infofile(name + ".txt");
+    if (infofile.is_open())
+    {
+        infofile << image.cols << ":" << image.rows << std::endl;
+        infofile.close();
+    }
+    else
+    {
+        std::cout << "Error opening image info file for write: " << name << std::endl;
+    }
+}
+
 void checkHomography(int inlier_count, cv::Mat &aligim, cv::Mat &refim, cv::Mat &homography)
 {
     if (inlier_count <= 10)
@@ -262,11 +277,11 @@ int add_orig(std::string src_path, std::string dst_path, int resize, bool do_spl
 {
     int cnt = load_and_preproc(src_path, origs, origs_grey, resize, do_split, do_crop, right2left);
 
-    cv::imwrite(std::filesystem::path(dst_path) / (std::to_string(origs.size() + 1000000) + ".png"), origs.back());
+    write_im_and_info(std::filesystem::path(dst_path) / (std::to_string(origs.size() + 1000000)), origs.back());
 
     if (cnt > 1)
     {
-        cv::imwrite(std::filesystem::path(dst_path) / (std::to_string(origs.size() - 1 + 1000000) + ".png"), origs[origs.size() - 2]);
+        write_im_and_info(std::filesystem::path(dst_path) / (std::to_string(origs.size() - 1 + 1000000)), origs[origs.size() - 2]);
     }
     return cnt;
 }
@@ -290,7 +305,7 @@ int find_pairing(std::string dst_path, int transl_index)
                 last_aligned = aligned;
                 first_match = false;
             }
-            cv::imwrite(std::filesystem::path(dst_path) / (std::to_string(orig_index + i + 1000001) + ".png"), last_aligned);
+            write_im_and_info(std::filesystem::path(dst_path) / (std::to_string(orig_index + i + 1000001)), last_aligned);
             for (int j = 0; j < transl_backtrack_count && j < i; ++j)
             {
                 int bt_orig_index = orig_index + i - (j + 1);
@@ -301,7 +316,7 @@ int find_pairing(std::string dst_path, int transl_index)
                 cv::Mat resized;
                 cv::resize(transls[bt_transl_index], resized, cv::Size(origs[bt_orig_index].cols, origs[bt_orig_index].rows), 0, 0, cv::INTER_AREA);
                 cnt += 1;
-                cv::imwrite(std::filesystem::path(dst_path) / (std::to_string(bt_orig_index + 1000001) + ".png"), resized);
+                write_im_and_info(std::filesystem::path(dst_path) / (std::to_string(bt_orig_index + 1000001)), resized);
             }
             // if this is single page or both are double no need to search for more matching translations
             bool orig_double_page = double_page(origs_grey[orig_index + i]);
@@ -357,67 +372,6 @@ void clean()
     orig_index = 0;
     first_match = true;
 }
-/*
-int main(int argc, char **argv)
-{
-    if (argc != 5)
-    {
-        std::cout << "usage: main <orig_in> <transl_in> <orig_out> <transl_out>\n";
-        return -1;
-    }
-
-    clean();
-    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-    std::cout << "Originals\n";
-
-    std::vector<std::filesystem::path> files_in_directory;
-    std::copy(std::filesystem::directory_iterator(argv[1]), std::filesystem::directory_iterator(), std::back_inserter(files_in_directory));
-    std::sort(files_in_directory.begin(), files_in_directory.end());
-    for (const auto &entry : files_in_directory)
-    {
-        std::cout << entry << " " << add_orig(entry, argv[3], 2000000, true, true, true) << "\n";
-    }
-
-    std::cout << "Translations\n";
-
-    files_in_directory.clear();
-    std::copy(std::filesystem::directory_iterator(argv[2]), std::filesystem::directory_iterator(), std::back_inserter(files_in_directory));
-    std::sort(files_in_directory.begin(), files_in_directory.end());
-    for (const auto &entry : files_in_directory)
-    {
-        std::cout << entry << " " << add_transl(entry, argv[4], 2000000, false, true, true) << "\n";
-    }
-    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
-}*/
-/*
-void do_test()
-{
-    clean();
-    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-    std::cout << "Originals\n";
-
-    std::vector<std::filesystem::path> files_in_directory;
-    std::copy(std::filesystem::directory_iterator("/idbfs/in_orig"), std::filesystem::directory_iterator(), std::back_inserter(files_in_directory));
-    std::sort(files_in_directory.begin(), files_in_directory.end());
-    for (const auto &entry : files_in_directory)
-    {
-        std::cout << entry << " " << add_orig(entry, "/idbfs/out_orig", 2000000, true, true, true) << "\n";
-    }
-
-    std::cout << "Translations\n";
-
-    files_in_directory.clear();
-    std::copy(std::filesystem::directory_iterator("/idbfs/in_transl"), std::filesystem::directory_iterator(), std::back_inserter(files_in_directory));
-    std::sort(files_in_directory.begin(), files_in_directory.end());
-    for (const auto &entry : files_in_directory)
-    {
-        std::cout << entry << " " << add_transl(entry, "/idbfs/out_transl", 2000000, false, true, true) << "\n";
-    }
-    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
-}
-*/
 
 EMSCRIPTEN_BINDINGS(aligner_module)
 {
