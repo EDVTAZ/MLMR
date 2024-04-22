@@ -23,8 +23,7 @@ function ReadCollectionUnstyled({ ...rest }) {
   >;
   const [language, setLanguage] = useState<'orig' | 'transl'>('orig');
 
-  const { originalCount, translatedCount } =
-    useCollectionLocalStorage(collectionName);
+  const originalCount = useCollectionLocalStorage(collectionName);
   const { worker } = useContext(WorkerContext);
 
   useEffect(() => {
@@ -58,21 +57,16 @@ function ReadCollectionUnstyled({ ...rest }) {
 
   useEffect(() => {
     if (!worker) return;
-
     function messageHandler({ data }: MessageEvent) {
       if (data['msg'] === 'orig-written') {
         originalCount.setValue(data['count']);
       }
-      if (data['msg'] === 'transl-written') {
-        translatedCount.setValue(data['count']);
-      }
     }
-
     worker.addEventListener('message', messageHandler);
     return () => {
       worker.removeEventListener('message', messageHandler);
     };
-  }, [worker, originalCount.setValue, translatedCount.setValue]);
+  }, [worker, originalCount.setValue]);
 
   return (
     <div {...rest}>

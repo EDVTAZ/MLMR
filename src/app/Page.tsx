@@ -45,7 +45,7 @@ export function Page({
     if (!worker) return;
 
     function messageHandler({ data }: MessageEvent) {
-      if (data['msg'] === 'transl-written' && data['count'] === index + 1) {
+      if (data['msg'] === 'transl-written' && data['newIndexes'].has(index)) {
         refreshTransl();
       }
     }

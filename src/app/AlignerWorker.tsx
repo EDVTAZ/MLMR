@@ -46,6 +46,12 @@ function AlignerWorker() {
       if (data['msg'] === 'done') {
         setNeeded(false);
       }
+      if (data['msg'] === 'orig-written') {
+        localStorage[`${data['collectionName']}-orig`] = data['count'];
+      }
+      if (data['msg'] === 'transl-written') {
+        // pass
+      }
     }
     if (worker) {
       worker.addEventListener('message', messageHandler);

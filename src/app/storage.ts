@@ -2,10 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Dispatch } from 'react';
 
 export function useCollectionLocalStorage(collectionName: string | undefined) {
-  return {
-    originalCount: useLocalStorage(`${collectionName}-orig`, parseInt),
-    translatedCount: useLocalStorage(`${collectionName}-transl`, parseInt),
-  };
+  return useLocalStorage(`${collectionName}-orig`, parseInt);
 }
 
 export function useCollectionNamesLocalStorage(): string[] {

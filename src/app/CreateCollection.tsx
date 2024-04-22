@@ -27,17 +27,12 @@ export function CreateCollection({ ...rest }) {
 
   useEffect(() => {
     if (!worker) return;
-
     function messageHandler({ data }: MessageEvent) {
-      if (data['msg'] === 'orig-written') {
-        localStorage[`${collectionName}-orig`] = data['count'];
+      if (data['msg'] === 'orig-written' || data['msg'] === 'transl-written') {
+        localStorage[`${data['collectionName']}-orig`] = data['count'];
         navigate(`/read/${collectionName}`);
       }
-      if (data['msg'] === 'transl-written') {
-        localStorage[`${collectionName}-transl`] = data['count'];
-      }
     }
-
     worker.addEventListener('message', messageHandler);
     return () => {
       worker.removeEventListener('message', messageHandler);

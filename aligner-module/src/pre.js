@@ -85,6 +85,13 @@ async function writeImages(type, images) {
   }
 }
 
+function getFileIndexes(dir) {
+  const files = FS.readdir(dir).filter((e) => e !== '.' && e !== '..');
+  return new Set(
+    Array.from(files, (v) => parseInt(v.slice(0, -4)) - (INDEX_BASE + 1))
+  );
+}
+
 async function runAlignment(
   name,
   orig_imgs,
@@ -104,6 +111,7 @@ async function runAlignment(
 
   console.log('Processing orig images');
   for (let i = 0; i < orig_imgs.length; ++i) {
+    const old_indexes = getFileIndexes(`${FSmounted}/out_orig`);
     Module['add_orig'](
       `${FSmounted}/in_orig/${i + INDEX_BASE}.${orig_imgs[i].name
         .split('.')
@@ -117,13 +125,20 @@ async function runAlignment(
     await syncToIDB();
     postMessage({
       msg: 'orig-written',
+      collectionName: name,
       count: (FS.readdir(`${FSmounted}/out_orig`).length - 2) / 2,
+      progressIndex: i + 1,
+      progressMax: orig_imgs.length,
+      newIndexes: getFileIndexes(`${FSmounted}/out_orig`).difference(
+        old_indexes
+      ),
     });
     console.log(`Processed orig image no.${i}`);
   }
 
   console.log('Processing transl images');
   for (let i = 0; i < transl_imgs.length; ++i) {
+    const old_indexes = getFileIndexes(`${FSmounted}/out_transl`);
     Module['add_transl'](
       `${FSmounted}/in_transl/${i + INDEX_BASE}.${transl_imgs[i].name
         .split('.')
@@ -137,7 +152,13 @@ async function runAlignment(
     await syncToIDB();
     postMessage({
       msg: 'transl-written',
-      count: i + 1,
+      collectionName: name,
+      count: (FS.readdir(`${FSmounted}/out_transl`).length - 2) / 2,
+      progressIndex: i + 1,
+      progressMax: transl_imgs.length,
+      newIndexes: getFileIndexes(`${FSmounted}/out_transl`).difference(
+        old_indexes
+      ),
     });
     console.log(`Processed transl image no.${i}`);
   }
