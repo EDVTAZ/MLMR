@@ -1,4 +1,4 @@
-import { useContext, useEffect } from 'react';
+import { forwardRef, useContext, useEffect } from 'react';
 import { useIDBImage, useIDBImageInfo } from './storage';
 import { WorkerContext } from './AlignerWorker';
 
@@ -17,16 +17,16 @@ function getStyle(show: boolean): React.CSSProperties {
   return rv;
 }
 
-export function Page({
-  collectionName,
-  index,
-  language,
-  ...rest
-}: {
+type PageProps = {
   collectionName: string;
   index: number;
   language: 'orig' | 'transl';
-}) {
+};
+
+export const Page = forwardRef<HTMLDivElement | null, PageProps>(function Page(
+  { collectionName, index, language, ...rest },
+  ref
+) {
   const { blobURL: originalPage } = useIDBImage(
     collectionName,
     'out_orig',
@@ -64,6 +64,7 @@ export function Page({
         margin: '8px',
         position: 'relative',
       }}
+      ref={ref}
     >
       <img
         src={originalPage}
@@ -79,4 +80,4 @@ export function Page({
       />
     </div>
   );
-}
+});

@@ -2,7 +2,7 @@ import { ParamParseKey, Params, useLoaderData } from 'react-router-dom';
 import { useCollectionLocalStorage } from './storage';
 import { Page } from './Page';
 import styled from 'styled-components';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { WorkerContext } from './AlignerWorker';
 
 const PathNames = {
@@ -22,9 +22,12 @@ function ReadCollectionUnstyled({ ...rest }) {
     typeof readCollectionLoader
   >;
   const [language, setLanguage] = useState<'orig' | 'transl'>('orig');
+  const [currentPage, setCurrentPage] = useState(0);
 
   const originalCount = useCollectionLocalStorage(collectionName);
   const { worker } = useContext(WorkerContext);
+
+  const pageRefs = useRef<Array<HTMLElement | null>>([]);
 
   useEffect(() => {
     function switchLanguage() {
@@ -68,6 +71,23 @@ function ReadCollectionUnstyled({ ...rest }) {
     };
   }, [worker, originalCount.setValue]);
 
+  useEffect(() => {
+    function eventHandler(_event: Event) {
+      const newCurrentPage = pageRefs.current.reduce((prev, v, i): number => {
+        if ((v?.getBoundingClientRect().bottom ?? 0) > 0) {
+          return Math.min(prev, i);
+        }
+        return prev;
+      }, originalCount.value);
+      setCurrentPage(newCurrentPage);
+    }
+
+    window.addEventListener('scroll', eventHandler);
+    return () => {
+      window.removeEventListener('scroll', eventHandler);
+    };
+  }, [originalCount.value]);
+
   return (
     <div {...rest}>
       {collectionName &&
@@ -78,9 +98,20 @@ function ReadCollectionUnstyled({ ...rest }) {
               index={index}
               key={index}
               language={language}
+              ref={(node: HTMLElement | null) => {
+                pageRefs.current[index] = node;
+              }}
             />
           );
         })}
+      <div
+        style={{
+          position: 'fixed',
+          left: '0px',
+          bottom: '0px',
+          maxWidth: '4vw',
+        }}
+      >{`${currentPage + 1} / ${originalCount.value}`}</div>
     </div>
   );
 }

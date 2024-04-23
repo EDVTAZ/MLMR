@@ -18,7 +18,7 @@ async function syncIDB(direction) {
     if (FS && typeof FS.syncfs == 'function') {
       if (!FSsyncInProgress) {
         FSsyncInProgress = true;
-        FS.syncfs(direction == 'from', (err) => {
+        FS.syncfs(direction === 'from', (err) => {
           FSsyncInProgress = false;
           console.log(
             `Syncing ${direction} IDB to memory FS done, errors: ${err}`
