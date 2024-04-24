@@ -1,5 +1,8 @@
 import { ParamParseKey, Params, useLoaderData } from 'react-router-dom';
-import { useCollectionLocalStorage } from './storage';
+import {
+  useCollectionLocalStorage,
+  useCollectionPositionLocalStorage,
+} from './storage';
 import { Page } from './Page';
 import styled from 'styled-components';
 import { useContext, useEffect, useRef, useState } from 'react';
@@ -23,6 +26,8 @@ function ReadCollectionUnstyled({ ...rest }) {
   >;
   const [language, setLanguage] = useState<'orig' | 'transl'>('orig');
   const [currentPage, setCurrentPage] = useState({ page: 0, percentage: 0 });
+  const localStorageCurrentPage =
+    useCollectionPositionLocalStorage(collectionName);
 
   const originalCount = useCollectionLocalStorage(collectionName);
   const { worker } = useContext(WorkerContext);
@@ -72,24 +77,33 @@ function ReadCollectionUnstyled({ ...rest }) {
   }, [worker, originalCount.setValue]);
 
   useEffect(() => {
-    function eventHandler(_event: Event) {
+    function calculateScroll() {
       const page = pageRefs.current.reduce((prev, v, i): number => {
         if ((v?.getBoundingClientRect().bottom ?? 0) > 0) {
           return Math.min(prev, i);
         }
         return prev;
-      }, originalCount.value);
+      }, originalCount.value ?? 0);
 
       const { top, bottom } = pageRefs.current[
         page
       ]?.getBoundingClientRect() ?? { top: 0, bottom: 0 };
       const percentage = top >= 0 ? 0 : top / (top - bottom);
-      setCurrentPage({ page, percentage });
+      return { page, percentage };
     }
 
-    window.addEventListener('scroll', eventHandler);
+    function scrollHandler(_event: Event) {
+      setCurrentPage(calculateScroll());
+    }
+    function scrollendHandler(_event: Event) {
+      localStorageCurrentPage.setValue(JSON.stringify(calculateScroll()));
+    }
+
+    window.addEventListener('scroll', scrollHandler);
+    window.addEventListener('scrollend', scrollendHandler);
     return () => {
-      window.removeEventListener('scroll', eventHandler);
+      window.removeEventListener('scroll', scrollHandler);
+      window.removeEventListener('scrollend', scrollendHandler);
     };
   }, [originalCount.value]);
 

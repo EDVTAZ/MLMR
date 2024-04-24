@@ -5,6 +5,12 @@ export function useCollectionLocalStorage(collectionName: string | undefined) {
   return useLocalStorage(`${collectionName}-orig`, parseInt);
 }
 
+export function useCollectionPositionLocalStorage(
+  collectionName: string | undefined
+) {
+  return useLocalStorage(`${collectionName}-position`);
+}
+
 export function useCollectionNamesLocalStorage(): string[] {
   const [collections, setCollections] = useState<string[]>([]);
 
@@ -23,28 +29,39 @@ export function useCollectionNamesLocalStorage(): string[] {
 }
 
 function useLocalStorage(key: string): {
-  value: string;
-  setValue: Dispatch<string>;
+  value: string | null;
+  setValue: Dispatch<string | null>;
 };
 function useLocalStorage<T>(
   key: string,
   parse: (param: string) => T
 ): {
-  value: T;
-  setValue: Dispatch<T>;
+  value: T | null;
+  setValue: Dispatch<T | null>;
 };
-function useLocalStorage(key: string, parse = (param: string) => param) {
-  const [value, setValue] = useState(parse(localStorage[key]));
+function useLocalStorage<T>(key: string, parse = (param: T) => param) {
+  const [value, setValue] = useState<T | null>(null);
+  const safeSetValue = (v: T | null) => {
+    if (v !== null) setValue(v);
+  };
 
   useEffect(() => {
-    setValue(parse(localStorage[key]));
-  }, [key, setValue, parse]);
+    try {
+      const loadedValue = parse(localStorage[key]);
+      safeSetValue(loadedValue);
+    } catch (e) {
+      /* empty */
+    }
+  }, [key]);
 
   useEffect(() => {
-    localStorage[key] = value;
+    if (value !== null) localStorage[key] = value;
   }, [key, value]);
 
-  return { value, setValue };
+  return {
+    value,
+    setValue: safeSetValue,
+  };
 }
 
 function getFileName(index: number, ext = 'png', indexBase = 1000000) {
