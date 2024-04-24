@@ -22,7 +22,7 @@ function ReadCollectionUnstyled({ ...rest }) {
     typeof readCollectionLoader
   >;
   const [language, setLanguage] = useState<'orig' | 'transl'>('orig');
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState({ page: 0, percentage: 0 });
 
   const originalCount = useCollectionLocalStorage(collectionName);
   const { worker } = useContext(WorkerContext);
@@ -73,13 +73,18 @@ function ReadCollectionUnstyled({ ...rest }) {
 
   useEffect(() => {
     function eventHandler(_event: Event) {
-      const newCurrentPage = pageRefs.current.reduce((prev, v, i): number => {
+      const page = pageRefs.current.reduce((prev, v, i): number => {
         if ((v?.getBoundingClientRect().bottom ?? 0) > 0) {
           return Math.min(prev, i);
         }
         return prev;
       }, originalCount.value);
-      setCurrentPage(newCurrentPage);
+
+      const { top, bottom } = pageRefs.current[
+        page
+      ]?.getBoundingClientRect() ?? { top: 0, bottom: 0 };
+      const percentage = top >= 0 ? 0 : top / (top - bottom);
+      setCurrentPage({ page, percentage });
     }
 
     window.addEventListener('scroll', eventHandler);
@@ -111,7 +116,13 @@ function ReadCollectionUnstyled({ ...rest }) {
           bottom: '0px',
           maxWidth: '4vw',
         }}
-      >{`${currentPage + 1} / ${originalCount.value}`}</div>
+      >
+        {`${currentPage.page + 1} / ${originalCount.value}`}
+        <br />
+        {`${Intl.NumberFormat(navigator.language, { style: 'percent' }).format(
+          currentPage.percentage
+        )}`}
+      </div>
     </div>
   );
 }
