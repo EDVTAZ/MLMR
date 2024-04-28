@@ -49,14 +49,23 @@ function ReadCollectionUnstyled({ ...rest }) {
     function switchLanguage() {
       setLanguage((v) => (v === 'orig' ? 'transl' : 'orig'));
     }
+    function step(amount: number) {
+      localStorageCurrentPage.setValue((prev) => {
+        return {
+          page: Math.min(
+            Math.max(0, (prev?.page ?? 0) + amount),
+            (originalCount.value ?? 1) - 1
+          ),
+          percentage: 0,
+        };
+      });
+    }
     function keyPressHandler(ev: KeyboardEvent) {
       if (ev.key === 'v') switchLanguage();
-      // else if (ev.key === 'ArrowLeft' || ev.key === 'a') step(1);
-      // else if (ev.key === 'ArrowRight' || ev.key === 'd') step(-1);
+      else if (ev.key === 'ArrowLeft' || ev.key === 'a') step(-1);
+      else if (ev.key === 'ArrowRight' || ev.key === 'd') step(1);
       else if (ev.key === '+') setZoom((z) => Math.min(z + 10, 200));
       else if (ev.key === '-') setZoom((z) => Math.max(z - 10, 10));
-      // else if (ev.key === 'i') setOffset((o) => o + 1);
-      // else if (ev.key === 'o') setOffset((o) => o - 1);
       else return;
       ev.preventDefault();
     }
@@ -72,7 +81,7 @@ function ReadCollectionUnstyled({ ...rest }) {
       document.removeEventListener('keydown', keyPressHandler);
       document.removeEventListener('mousedown', clickHandler);
     };
-  }, []);
+  }, [originalCount]);
 
   useEffect(() => {
     if (!worker) return;

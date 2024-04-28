@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
-import type { Dispatch } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 
 export function useCollectionLocalStorage(collectionName: string | undefined) {
   return useLocalStorage(`${collectionName}-orig`, parseInt);
@@ -34,14 +34,14 @@ export function useCollectionNamesLocalStorage(): string[] {
 
 function useLocalStorage(key: string): {
   value: string | null;
-  setValue: Dispatch<string | null>;
+  setValue: Dispatch<SetStateAction<string | null>>;
 };
 function useLocalStorage<T>(
   key: string,
   parse: (param: string) => T
 ): {
   value: T | null;
-  setValue: Dispatch<T | null>;
+  setValue: Dispatch<SetStateAction<T | null>>;
 };
 function useLocalStorage<T>(
   key: string,
@@ -49,7 +49,7 @@ function useLocalStorage<T>(
   serialize: (param: T) => string
 ): {
   value: T | null;
-  setValue: Dispatch<T | null>;
+  setValue: Dispatch<SetStateAction<T | null>>;
 };
 function useLocalStorage<T = string>(
   key: string,
