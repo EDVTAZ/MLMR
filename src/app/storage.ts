@@ -8,7 +8,7 @@ export function useCollectionLocalStorage(collectionName: string | undefined) {
 export function useCollectionPositionLocalStorage(
   collectionName: string | undefined
 ) {
-  return useLocalStorage<object>(
+  return useLocalStorage<{ page: number; percentage: number }>(
     `${collectionName}-position`,
     JSON.parse,
     JSON.stringify
@@ -149,7 +149,7 @@ export function useIDBImageInfo(
   index: number
 ) {
   // height/width
-  const [ratio, setRatio] = useState(-1);
+  const [ratio, setRatio] = useState(0);
   const [cacheV, setCacheV] = useState(0);
 
   useEffect(() => {

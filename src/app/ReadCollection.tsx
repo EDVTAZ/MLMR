@@ -114,31 +114,39 @@ function ReadCollectionUnstyled({ ...rest }) {
     };
   }, [originalCount.value]);
 
-  // useLayoutEffect(() => {
-  //   // FIX THIS LOL
-  //   function scrollToSavedPosition(entries) {
-  //     console.log(entries, localStorage[`${collectionName}-position`]);
-  //     const { page, percentage } = JSON.parse(
-  //       localStorage[`${collectionName}-position`]
-  //     );
-  //     const targetDiv = pageRefs.current[page];
-  //     console.log('a', page);
-  //     if (targetDiv) {
-  //       const targetRect = targetDiv.getBoundingClientRect();
-  //       console.log(targetRect.top + targetRect.height * percentage);
-  //       window.scrollBy({
-  //         top: targetRect.top + targetRect.height * percentage,
-  //         behavior: 'instant',
-  //       });
-  //     }
-  //   }
+  useLayoutEffect(() => {
+    function scrollToSavedPosition() {
+      const containers = pageRefs.current.map(
+        (element) =>
+          element?.getBoundingClientRect() ?? { top: 0, bottom: 0, height: 0 }
+      );
+      if (
+        containers.some((rect) => rect.height === 0) ||
+        localStorageCurrentPage.value === null
+      )
+        return;
 
-  //   const observer = new ResizeObserver(scrollToSavedPosition);
-  //   if (containerRef.current) observer.observe(containerRef.current);
-  //   return () => {
-  //     observer.disconnect();
-  //   };
-  // }, []);
+      const targetDiv = pageRefs.current[localStorageCurrentPage.value.page];
+      if (targetDiv) {
+        const targetRect = containers[localStorageCurrentPage.value.page];
+        window.scrollBy({
+          top:
+            targetRect.top +
+            targetRect.height * localStorageCurrentPage.value.percentage,
+          behavior: 'instant',
+        });
+      }
+    }
+
+    const observer = new ResizeObserver(scrollToSavedPosition);
+    if (containerRef.current) observer.observe(containerRef.current);
+    return () => {
+      observer.disconnect();
+    };
+  }, [
+    localStorageCurrentPage.value?.page,
+    localStorageCurrentPage.value?.percentage,
+  ]);
 
   return (
     <div ref={containerRef} {...rest}>
