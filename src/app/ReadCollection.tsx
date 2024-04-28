@@ -38,7 +38,7 @@ function ReadCollectionUnstyled({ ...rest }) {
     useCollectionPositionLocalStorage(collectionName);
 
   const originalCount = useCollectionLocalStorage(collectionName);
-  const { worker } = useContext(WorkerContext);
+  const { worker, needed, progress } = useContext(WorkerContext);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const pageRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -175,14 +175,36 @@ function ReadCollectionUnstyled({ ...rest }) {
           left: '0px',
           bottom: '0px',
           maxWidth: '4vw',
+          zIndex: 2,
         }}
       >
         {`${currentPage.page + 1} / ${originalCount.value}`}
         <br />
-        {`${Intl.NumberFormat(navigator.language, { style: 'percent' }).format(
+        {Intl.NumberFormat(navigator.language, { style: 'percent' }).format(
           currentPage.percentage
-        )}`}
+        )}
       </div>
+      {needed && (
+        <div
+          style={{
+            position: 'fixed',
+            right: '0px',
+            top: '0px',
+            maxWidth: '4vw',
+            zIndex: 2,
+          }}
+        >
+          {`Loading...`}
+          <br />
+          {`Original: ${Intl.NumberFormat(navigator.language, {
+            style: 'percent',
+          }).format(progress?.orig ?? 0)}`}
+          <br />
+          {`Translation: ${Intl.NumberFormat(navigator.language, {
+            style: 'percent',
+          }).format(progress?.transl ?? 0)}`}
+        </div>
+      )}
     </div>
   );
 }
