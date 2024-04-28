@@ -162,7 +162,7 @@ export function useIDBImageInfo(
       (data) => {
         const dataString = new TextDecoder('utf-8').decode(data);
         const [width, height] = dataString.split(':').map((i) => parseInt(i));
-        setRatio(height / width);
+        setRatio(width / height);
       }
     );
   }, [collectionName, index, type, cacheV]);

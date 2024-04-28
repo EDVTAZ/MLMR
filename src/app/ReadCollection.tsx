@@ -37,6 +37,8 @@ function ReadCollectionUnstyled({ ...rest }) {
   const localStorageCurrentPage =
     useCollectionPositionLocalStorage(collectionName);
 
+  const [zoom, setZoom] = useState(90);
+
   const originalCount = useCollectionLocalStorage(collectionName);
   const { worker, needed, progress } = useContext(WorkerContext);
 
@@ -51,8 +53,8 @@ function ReadCollectionUnstyled({ ...rest }) {
       if (ev.key === 'v') switchLanguage();
       // else if (ev.key === 'ArrowLeft' || ev.key === 'a') step(1);
       // else if (ev.key === 'ArrowRight' || ev.key === 'd') step(-1);
-      // else if (ev.key === '+') setZoom((z) => Math.min(z + 10, 100));
-      // else if (ev.key === '-') setZoom((z) => Math.max(z - 10, 10));
+      else if (ev.key === '+') setZoom((z) => Math.min(z + 10, 200));
+      else if (ev.key === '-') setZoom((z) => Math.max(z - 10, 10));
       // else if (ev.key === 'i') setOffset((o) => o + 1);
       // else if (ev.key === 'o') setOffset((o) => o - 1);
       else return;
@@ -151,60 +153,67 @@ function ReadCollectionUnstyled({ ...rest }) {
   ]);
 
   return (
-    <div ref={containerRef} {...rest}>
-      {collectionName &&
-        new Array(originalCount.value).fill(0).map((_e, index) => {
-          return (
-            <Page
-              collectionName={collectionName}
-              index={index}
-              key={index}
-              language={language}
-              shouldLoad={
-                Math.abs(currentPage.page - index) <= IMAGE_CACHE_RANGE
-              }
-              ref={(node: HTMLDivElement | null) => {
-                pageRefs.current[index] = node;
-              }}
-            />
-          );
-        })}
-      <div
-        style={{
-          position: 'fixed',
-          left: '0px',
-          bottom: '0px',
-          maxWidth: '4vw',
-          zIndex: 2,
-        }}
-      >
-        {`${currentPage.page + 1} / ${originalCount.value}`}
-        <br />
-        {Intl.NumberFormat(navigator.language, { style: 'percent' }).format(
-          currentPage.percentage
-        )}
-      </div>
-      {needed && (
+    <div
+      className={'container'}
+      style={{ alignItems: zoom > 90 ? 'start' : 'center' }}
+      ref={containerRef}
+      {...rest}
+    >
+      <div style={{ width: `${zoom}vw` }}>
+        {collectionName &&
+          new Array(originalCount.value).fill(0).map((_e, index) => {
+            return (
+              <Page
+                collectionName={collectionName}
+                index={index}
+                key={index}
+                language={language}
+                shouldLoad={
+                  Math.abs(currentPage.page - index) <= IMAGE_CACHE_RANGE
+                }
+                ref={(node: HTMLDivElement | null) => {
+                  pageRefs.current[index] = node;
+                }}
+              />
+            );
+          })}
         <div
           style={{
             position: 'fixed',
-            right: '0px',
-            top: '0px',
+            left: '0px',
+            bottom: '0px',
             maxWidth: '4vw',
             zIndex: 2,
           }}
         >
-          {`Loading...`}
+          {`${currentPage.page + 1} / ${originalCount.value}`}
           <br />
-          {`Original: ${Intl.NumberFormat(navigator.language, {
-            style: 'percent',
-          }).format(progress?.orig ?? 0)}`}
-          <br />
-          {`Translation: ${Intl.NumberFormat(navigator.language, {
-            style: 'percent',
-          }).format(progress?.transl ?? 0)}`}
+          {Intl.NumberFormat(navigator.language, { style: 'percent' }).format(
+            currentPage.percentage
+          )}
         </div>
-      )}
+        {needed && (
+          <div
+            style={{
+              position: 'fixed',
+              right: '0px',
+              top: '0px',
+              maxWidth: '4vw',
+              zIndex: 2,
+            }}
+          >
+            {`Loading...`}
+            <br />
+            {`Original: ${Intl.NumberFormat(navigator.language, {
+              style: 'percent',
+            }).format(progress?.orig ?? 0)}`}
+            <br />
+            {`Translation: ${Intl.NumberFormat(navigator.language, {
+              style: 'percent',
+            }).format(progress?.transl ?? 0)}`}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -212,5 +221,4 @@ function ReadCollectionUnstyled({ ...rest }) {
 export const ReadCollection = styled(ReadCollectionUnstyled)`
   display: flex;
   flex-direction: column;
-  align-items: center;
 `;
