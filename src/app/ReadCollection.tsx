@@ -5,7 +5,13 @@ import {
 } from './storage';
 import { Page } from './Page';
 import styled from 'styled-components';
-import { useContext, useEffect, useRef, useState } from 'react';
+import {
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import { WorkerContext } from './AlignerWorker';
 
 const PathNames = {
@@ -32,7 +38,8 @@ function ReadCollectionUnstyled({ ...rest }) {
   const originalCount = useCollectionLocalStorage(collectionName);
   const { worker } = useContext(WorkerContext);
 
-  const pageRefs = useRef<Array<HTMLElement | null>>([]);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const pageRefs = useRef<Array<HTMLDivElement | null>>([]);
 
   useEffect(() => {
     function switchLanguage() {
@@ -96,7 +103,7 @@ function ReadCollectionUnstyled({ ...rest }) {
       setCurrentPage(calculateScroll());
     }
     function scrollendHandler(_event: Event) {
-      localStorageCurrentPage.setValue(JSON.stringify(calculateScroll()));
+      localStorageCurrentPage.setValue(calculateScroll());
     }
 
     window.addEventListener('scroll', scrollHandler);
@@ -107,8 +114,34 @@ function ReadCollectionUnstyled({ ...rest }) {
     };
   }, [originalCount.value]);
 
+  // useLayoutEffect(() => {
+  //   // FIX THIS LOL
+  //   function scrollToSavedPosition(entries) {
+  //     console.log(entries, localStorage[`${collectionName}-position`]);
+  //     const { page, percentage } = JSON.parse(
+  //       localStorage[`${collectionName}-position`]
+  //     );
+  //     const targetDiv = pageRefs.current[page];
+  //     console.log('a', page);
+  //     if (targetDiv) {
+  //       const targetRect = targetDiv.getBoundingClientRect();
+  //       console.log(targetRect.top + targetRect.height * percentage);
+  //       window.scrollBy({
+  //         top: targetRect.top + targetRect.height * percentage,
+  //         behavior: 'instant',
+  //       });
+  //     }
+  //   }
+
+  //   const observer = new ResizeObserver(scrollToSavedPosition);
+  //   if (containerRef.current) observer.observe(containerRef.current);
+  //   return () => {
+  //     observer.disconnect();
+  //   };
+  // }, []);
+
   return (
-    <div {...rest}>
+    <div ref={containerRef} {...rest}>
       {collectionName &&
         new Array(originalCount.value).fill(0).map((_e, index) => {
           return (
@@ -117,7 +150,7 @@ function ReadCollectionUnstyled({ ...rest }) {
               index={index}
               key={index}
               language={language}
-              ref={(node: HTMLElement | null) => {
+              ref={(node: HTMLDivElement | null) => {
                 pageRefs.current[index] = node;
               }}
             />

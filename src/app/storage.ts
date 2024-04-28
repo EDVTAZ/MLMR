@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import type { Dispatch } from 'react';
 
 export function useCollectionLocalStorage(collectionName: string | undefined) {
@@ -8,7 +8,11 @@ export function useCollectionLocalStorage(collectionName: string | undefined) {
 export function useCollectionPositionLocalStorage(
   collectionName: string | undefined
 ) {
-  return useLocalStorage(`${collectionName}-position`);
+  return useLocalStorage<object>(
+    `${collectionName}-position`,
+    JSON.parse,
+    JSON.stringify
+  );
 }
 
 export function useCollectionNamesLocalStorage(): string[] {
@@ -39,23 +43,35 @@ function useLocalStorage<T>(
   value: T | null;
   setValue: Dispatch<T | null>;
 };
-function useLocalStorage<T>(key: string, parse = (param: T) => param) {
+function useLocalStorage<T>(
+  key: string,
+  parse: (param: string) => T,
+  serialize: (param: T) => string
+): {
+  value: T | null;
+  setValue: Dispatch<T | null>;
+};
+function useLocalStorage<T = string>(
+  key: string,
+  parse = (param: T) => param,
+  serialize = (param: T) => param
+) {
   const [value, setValue] = useState<T | null>(null);
   const safeSetValue = (v: T | null) => {
     if (v !== null) setValue(v);
   };
 
-  useEffect(() => {
+  // make sure we read everything before rendering
+  useLayoutEffect(() => {
     try {
-      const loadedValue = parse(localStorage[key]);
-      safeSetValue(loadedValue);
+      safeSetValue(parse(localStorage[key]));
     } catch (e) {
       /* empty */
     }
   }, [key]);
 
   useEffect(() => {
-    if (value !== null) localStorage[key] = value;
+    if (value !== null) localStorage[key] = serialize(value);
   }, [key, value]);
 
   return {
