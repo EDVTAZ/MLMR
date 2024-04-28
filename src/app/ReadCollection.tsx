@@ -14,6 +14,8 @@ import {
 } from 'react';
 import { WorkerContext } from './AlignerWorker';
 
+const IMAGE_CACHE_RANGE = 10;
+
 const PathNames = {
   collectionName: '/read/:collectionName',
 } as const;
@@ -158,6 +160,9 @@ function ReadCollectionUnstyled({ ...rest }) {
               index={index}
               key={index}
               language={language}
+              shouldLoad={
+                Math.abs(currentPage.page - index) <= IMAGE_CACHE_RANGE
+              }
               ref={(node: HTMLDivElement | null) => {
                 pageRefs.current[index] = node;
               }}

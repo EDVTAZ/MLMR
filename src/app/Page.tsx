@@ -21,21 +21,24 @@ type PageProps = {
   collectionName: string;
   index: number;
   language: 'orig' | 'transl';
+  shouldLoad: boolean;
 };
 
 export const Page = forwardRef<HTMLDivElement | null, PageProps>(function Page(
-  { collectionName, index, language, ...rest },
+  { collectionName, index, language, shouldLoad, ...rest },
   ref
 ) {
   const { blobURL: originalPage } = useIDBImage(
     collectionName,
     'out_orig',
-    index
+    index,
+    shouldLoad
   );
   const { blobURL: translatedPage, refresh: refreshTransl } = useIDBImage(
     collectionName,
     'out_transl',
-    index
+    index,
+    shouldLoad
   );
   const { ratio } = useIDBImageInfo(collectionName, 'out_orig', index);
   const effectiveLanguage = translatedPage === '' ? 'orig' : language;

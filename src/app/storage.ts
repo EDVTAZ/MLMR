@@ -114,12 +114,14 @@ function getFileDataFromIDB(
 export function useIDBImage(
   collectionName: string,
   type: 'out_orig' | 'out_transl',
-  index: number
+  index: number,
+  shouldLoad: boolean
 ) {
   const [blobURL, setBlobURL] = useState('');
   const [cacheV, setCacheV] = useState(0);
 
   useEffect(() => {
+    if (!shouldLoad) return;
     getFileDataFromIDB(
       `/idbfs/${collectionName}`,
       `${type}/${getFileName(index, 'png')}`,
@@ -132,13 +134,14 @@ export function useIDBImage(
         });
       }
     );
+
     return () => {
       setBlobURL((oldBlobURL) => {
         URL.revokeObjectURL(oldBlobURL);
         return '';
       });
     };
-  }, [collectionName, index, type, cacheV]);
+  }, [collectionName, index, type, cacheV, shouldLoad]);
 
   return { blobURL, refresh: () => setCacheV((v) => v + 1) };
 }
