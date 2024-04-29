@@ -215,11 +215,11 @@ function ReadCollectionUnstyled({ ...rest }) {
             <br />
             {`Original: ${Intl.NumberFormat(navigator.language, {
               style: 'percent',
-            }).format(progress?.orig ?? 0)}`}
+            }).format(progress.orig)}`}
             <br />
             {`Translation: ${Intl.NumberFormat(navigator.language, {
               style: 'percent',
-            }).format(progress?.transl ?? 0)}`}
+            }).format(progress.transl)}`}
           </div>
         )}
       </div>

@@ -9,8 +9,8 @@ type WorkerProviderType = {
   setWorker: Dispatch<SetStateAction<null | Worker>>;
   needed: boolean;
   setNeeded: Dispatch<SetStateAction<boolean>>;
-  progress: null | ProgressType;
-  setProgress: Dispatch<SetStateAction<null | ProgressType>>;
+  progress: ProgressType;
+  setProgress: Dispatch<SetStateAction<ProgressType>>;
 };
 
 export const WorkerContext = createContext<WorkerProviderType>({
@@ -18,14 +18,21 @@ export const WorkerContext = createContext<WorkerProviderType>({
   setWorker: (_w) => {},
   needed: false,
   setNeeded: (_n) => {},
-  progress: null,
+  progress: { orig: 0, transl: 0 },
   setProgress: (_p) => {},
 });
 
 export function WorkerProvider({ children }: PropsWithChildren) {
   const [worker, setWorker] = useState<null | Worker>(null);
   const [needed, setNeeded] = useState(false);
-  const [progress, setProgress] = useState<null | ProgressType>(null);
+  const [progress, setProgress] = useState<ProgressType>({
+    orig: 0,
+    transl: 0,
+  });
+
+  useEffect(() => {
+    setProgress({ orig: 0, transl: 0 });
+  }, [needed]);
 
   return (
     <WorkerContext.Provider
@@ -58,18 +65,18 @@ function AlignerWorker() {
       }
       if (data['msg'] === 'orig-written') {
         localStorage[`${data['collectionName']}-orig`] = data['count'];
-        setProgress((prev: null | ProgressType) => {
+        setProgress((prev: ProgressType) => {
           return {
+            ...prev,
             orig: data['progressIndex'] / data['progressMax'],
-            transl: prev?.transl ?? 0,
           };
         });
       }
       if (data['msg'] === 'transl-written') {
-        setProgress((prev: null | ProgressType) => {
+        setProgress((prev: ProgressType) => {
           return {
+            ...prev,
             transl: data['progressIndex'] / data['progressMax'],
-            orig: prev?.orig ?? 0,
           };
         });
         // pass
