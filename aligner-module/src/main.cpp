@@ -220,9 +220,9 @@ void checkHomography(int inlier_count, cv::Mat &aligim, cv::Mat &refim, cv::Mat 
     }
 }
 
-cv::Mat align(cv::Mat &to_align_color, cv::Mat &to_align_grey, cv::Mat &refim_color, cv::Mat &refim_grey)
+cv::Mat align(cv::Mat &to_align_color, cv::Mat &to_align_grey, cv::Mat &refim_color, cv::Mat &refim_grey, int orb_count = 10000)
 {
-    cv::Ptr<cv::ORB> orb_detector = cv::ORB::create(10000);
+    cv::Ptr<cv::ORB> orb_detector = cv::ORB::create(orb_count);
     std::vector<cv::KeyPoint> ref_keypoints, alig_keypoints;
     cv::Mat ref_descriptors, alig_descriptors;
 
@@ -286,7 +286,7 @@ int add_orig(std::string src_path, std::string dst_path, int resize, bool do_spl
     return cnt;
 }
 
-int find_pairing(std::string dst_path, int transl_index)
+int find_pairing(std::string dst_path, int transl_index, int orb_count)
 {
     int cnt = 0;
     bool no_more = false;
@@ -294,7 +294,7 @@ int find_pairing(std::string dst_path, int transl_index)
     {
         try
         {
-            cv::Mat aligned = align(transls[transl_index], transls_grey[transl_index], origs[orig_index + i], origs_grey[orig_index + i]);
+            cv::Mat aligned = align(transls[transl_index], transls_grey[transl_index], origs[orig_index + i], origs_grey[orig_index + i], orb_count);
             cnt += 1;
             if (!first_match && i == 0)
             {
@@ -351,13 +351,13 @@ int find_pairing(std::string dst_path, int transl_index)
     return 0;
 }
 
-int add_transl(std::string src_path, std::string dst_path, int resize, bool do_split, bool do_crop, bool right2left)
+int add_transl(std::string src_path, std::string dst_path, int resize, bool do_split, bool do_crop, bool right2left, int orb_count)
 {
     int loaded_cnt = load_and_preproc(src_path, transls, transls_grey, resize, do_split, do_crop, right2left);
     int total_cnt = 0;
     for (int i = loaded_cnt; i > 0; --i)
     {
-        total_cnt += find_pairing(dst_path, transls.size() - i);
+        total_cnt += find_pairing(dst_path, transls.size() - i, orb_count);
     }
     return total_cnt;
 }

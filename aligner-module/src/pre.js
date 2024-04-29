@@ -147,7 +147,8 @@ async function runAlignment(
       transl_settings['resize'],
       transl_settings['do_split'],
       transl_settings['do_crop'],
-      transl_settings['right2left']
+      transl_settings['right2left'],
+      transl_settings['orb_count']
     );
     await syncToIDB();
     postMessage({

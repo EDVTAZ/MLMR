@@ -62,6 +62,7 @@ export function CreateCollection({ ...rest }) {
           do_split: true,
           do_crop: true,
           right2left: true,
+          orb_count: 10000,
         },
       },
       filesContent
