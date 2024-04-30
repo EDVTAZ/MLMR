@@ -14,7 +14,7 @@ import {
 } from 'react';
 import { WorkerContext } from './AlignerWorker';
 
-const IMAGE_CACHE_RANGE = 10;
+const IMAGE_CACHE_RANGE = 3;
 
 const PathNames = {
   collectionName: '/read/:collectionName',
@@ -44,6 +44,7 @@ function ReadCollectionUnstyled({ ...rest }) {
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const pageRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const scrollingRef = useRef(false);
 
   useEffect(() => {
     function switchLanguage() {
@@ -114,9 +115,11 @@ function ReadCollectionUnstyled({ ...rest }) {
 
     function scrollHandler(_event: Event) {
       setCurrentPage(calculateScroll());
+      scrollingRef.current = true;
     }
     function scrollendHandler(_event: Event) {
       localStorageCurrentPage.setValue(calculateScroll());
+      scrollingRef.current = false;
     }
 
     window.addEventListener('scroll', scrollHandler);
@@ -140,7 +143,7 @@ function ReadCollectionUnstyled({ ...rest }) {
         return;
 
       const targetDiv = pageRefs.current[localStorageCurrentPage.value.page];
-      if (targetDiv) {
+      if (targetDiv && (!needed || !scrollingRef.current)) {
         const targetRect = containers[localStorageCurrentPage.value.page];
         window.scrollBy({
           top:
@@ -159,6 +162,7 @@ function ReadCollectionUnstyled({ ...rest }) {
   }, [
     localStorageCurrentPage.value?.page,
     localStorageCurrentPage.value?.percentage,
+    needed,
   ]);
 
   return (
