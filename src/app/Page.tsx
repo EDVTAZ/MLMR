@@ -64,7 +64,7 @@ export const Page = forwardRef<HTMLDivElement | null, PageProps>(function Page(
       style={{
         aspectRatio: ratio,
         width: '100%',
-        margin: '8px',
+        margin: '8px 0',
         position: 'relative',
       }}
       ref={ref}
