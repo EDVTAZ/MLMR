@@ -92,12 +92,11 @@ function ImportImages({
   return (
     <div>
       <button onClick={openFilePicker}>Import images</button>
-      <label htmlFor={`resize-to${id}`}>Resize</label>
+      <label htmlFor={`resize-to${id}`}>{' | Resize:'}</label>
       <input
         id={`resize-to${id}`}
         name="resizeTo"
         type="number"
-        min="10000"
         value={settings.resize}
         onInput={(e) =>
           setSettings((prev) => {
@@ -108,7 +107,6 @@ function ImportImages({
           })
         }
       />
-      <label htmlFor={`do-crop${id}`}>Crop pages</label>
       <input
         id={`do-crop${id}`}
         name="doCrop"
@@ -123,7 +121,7 @@ function ImportImages({
           })
         }
       />
-      <label htmlFor={`do-split${id}`}>Split double pages</label>
+      <label htmlFor={`do-crop${id}`}>{'Crop pages]'}</label>
       <input
         id={`do-split${id}`}
         name="doSplit"
@@ -138,7 +136,7 @@ function ImportImages({
           })
         }
       />
-      <label htmlFor={`right-to-left${id}`}>Right to left if checked</label>
+      <label htmlFor={`do-split${id}`}>{'Split double pages]'}</label>
       <input
         id={`right-to-left${id}`}
         name="rightToLeft"
@@ -153,6 +151,9 @@ function ImportImages({
           })
         }
       />
+      <label htmlFor={`right-to-left${id}`}>
+        {'Right to left if checked]'}
+      </label>
     </div>
   );
 }
