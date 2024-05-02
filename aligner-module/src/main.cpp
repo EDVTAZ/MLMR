@@ -112,6 +112,7 @@ int load_and_preproc(std::string img_path, std::vector<cv::Mat> &color_acc, std:
     cv::Mat img_color = cv::imread(img_path);
     cv::Mat img_grey;
     cv::cvtColor(img_color, img_grey, cv::COLOR_BGR2GRAY);
+    cv::cvtColor(img_color, img_color, cv::COLOR_BGR2BGRA);
 
     if (do_crop)
     {
@@ -268,7 +269,9 @@ cv::Mat align(cv::Mat &to_align_color, cv::Mat &to_align_grey, cv::Mat &refim_co
     checkHomography(inlier_count, to_align_grey, refim_grey, homography);
 
     cv::Mat warped_color;
-    cv::warpPerspective(to_align_color, warped_color, homography, cv::Size(refim_color.cols, refim_color.rows), 1, cv::BorderTypes::BORDER_CONSTANT, refim_color.at<cv::Vec3b>(0, 0));
+    cv::warpPerspective(to_align_color, warped_color, homography,
+                        cv::Size(refim_color.cols, refim_color.rows), cv::INTER_LINEAR,
+                        cv::BorderTypes::BORDER_CONSTANT, cv::Vec4b(0, 0, 0, 0));
 
     return warped_color;
 }
