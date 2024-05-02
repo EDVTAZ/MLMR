@@ -85,10 +85,13 @@ async function writeImages(type, images) {
   }
 }
 
-function getFileIndexes(dir) {
+function getUpdatedIndexes(dir, time) {
   const files = FS.readdir(dir).filter((e) => e !== '.' && e !== '..');
+  const newFiles = files.filter((path) => {
+    return FS.stat(`${dir}/${path}`).mtime > time;
+  });
   return new Set(
-    Array.from(files, (v) => parseInt(v.slice(0, -4)) - (INDEX_BASE + 1))
+    Array.from(newFiles, (v) => parseInt(v.slice(0, -4)) - (INDEX_BASE + 1))
   );
 }
 
@@ -111,7 +114,7 @@ async function runAlignment(
 
   console.log('Processing orig images');
   for (let i = 0; i < orig_imgs.length; ++i) {
-    const old_indexes = getFileIndexes(`${FSmounted}/out_orig`);
+    const startTime = new Date();
     Module['add_orig'](
       `${FSmounted}/in_orig/${i + INDEX_BASE}.${orig_imgs[i].name
         .split('.')
@@ -129,16 +132,14 @@ async function runAlignment(
       count: (FS.readdir(`${FSmounted}/out_orig`).length - 2) / 2,
       progressIndex: i + 1,
       progressMax: orig_imgs.length,
-      newIndexes: getFileIndexes(`${FSmounted}/out_orig`).difference(
-        old_indexes
-      ),
+      newIndexes: getUpdatedIndexes(`${FSmounted}/out_orig`, startTime),
     });
     console.log(`Processed orig image no.${i}`);
   }
 
   console.log('Processing transl images');
   for (let i = 0; i < transl_imgs.length; ++i) {
-    const old_indexes = getFileIndexes(`${FSmounted}/out_transl`);
+    const startTime = new Date();
     Module['add_transl'](
       `${FSmounted}/in_transl/${i + INDEX_BASE}.${transl_imgs[i].name
         .split('.')
@@ -157,9 +158,7 @@ async function runAlignment(
       count: (FS.readdir(`${FSmounted}/out_transl`).length - 2) / 2,
       progressIndex: i + 1,
       progressMax: transl_imgs.length,
-      newIndexes: getFileIndexes(`${FSmounted}/out_transl`).difference(
-        old_indexes
-      ),
+      newIndexes: getUpdatedIndexes(`${FSmounted}/out_transl`, startTime),
     });
     console.log(`Processed transl image no.${i}`);
   }

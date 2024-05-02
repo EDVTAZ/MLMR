@@ -11,4 +11,3 @@
 - smaller subfolders for reduced memory footprint
 - add support for various file formats (canvas for images, ?? for zip, pdf, etc.)
 - service worker / PWA
-- fix double paged import half of images not loading automatically --- actually not even getting properly aligned... because of borders?
