@@ -1,6 +1,5 @@
 # TODO
 
-- worker -> shared worker
 - memory management
 - turn off debug mode compilation flags
 - more efficiont scroll position calc
