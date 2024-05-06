@@ -173,7 +173,8 @@ export function CreateCollection({ ...rest }) {
     settings: settingsTransl,
   } = useImportImages();
   const [orbCount, setOrbCount] = useState(10000);
-  const { worker, setNeeded } = useContext(WorkerContext);
+  const { worker, setNeeded, inProgress, setInProgress } =
+    useContext(WorkerContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -183,7 +184,7 @@ export function CreateCollection({ ...rest }) {
   useEffect(() => {
     if (!worker) return;
     function messageHandler({ data }: MessageEvent) {
-      if (data['msg'] === 'orig-written' || data['msg'] === 'transl-written') {
+      if (data['msg'] === 'orig-written') {
         localStorage[`${data['collectionName']}-orig`] = data['count'];
         navigate(`/read/${collectionName}`);
       }
@@ -196,54 +197,61 @@ export function CreateCollection({ ...rest }) {
 
   return (
     <>
-      <ImportImages
-        openFilePicker={openFilePickerOrig}
-        settings={settingsOrig}
-        setSettings={setSettingsOrig}
-      />
-      <ImportImages
-        openFilePicker={openFilePickerTransl}
-        settings={settingsTransl}
-        setSettings={setSettingsTransl}
-      />
-      <label htmlFor="orb-count">ORB count</label>
-      <input
-        id="orb-count"
-        name="orbCount"
-        type="number"
-        min="100"
-        value={orbCount}
-        onInput={(e) =>
-          setOrbCount(parseInt((e.target as HTMLInputElement).value))
-        }
-      />
-      {filesContentOrig.length > 0 && filesContentTransl.length > 0 && (
+      {(inProgress && (
+        <div>{`Another alignment (${inProgress}) is already in progress, please wait until it finishes...`}</div>
+      )) || (
         <>
-          <div>{`Loaded ${filesContentOrig.length}+${filesContentTransl.length} images!`}</div>
-          <form
-            onSubmit={(ev) => {
-              ev.preventDefault();
-              startAlignment(
-                worker,
-                collectionName,
-                filesContentOrig,
-                settingsOrig,
-                filesContentTransl,
-                settingsTransl,
-                orbCount
-              );
-            }}
-          >
-            <label htmlFor="collection-name">{'Collection Name:'}</label>
-            <input
-              id="collection-name"
-              name="collectionName"
-              onInput={(e) =>
-                setCollectionName((e.target as HTMLInputElement).value)
-              }
-            />
-            <button>{'Start'}</button>
-          </form>
+          <ImportImages
+            openFilePicker={openFilePickerOrig}
+            settings={settingsOrig}
+            setSettings={setSettingsOrig}
+          />
+          <ImportImages
+            openFilePicker={openFilePickerTransl}
+            settings={settingsTransl}
+            setSettings={setSettingsTransl}
+          />
+          <label htmlFor="orb-count">ORB count</label>
+          <input
+            id="orb-count"
+            name="orbCount"
+            type="number"
+            min="100"
+            value={orbCount}
+            onInput={(e) =>
+              setOrbCount(parseInt((e.target as HTMLInputElement).value))
+            }
+          />
+          {filesContentOrig.length > 0 && filesContentTransl.length > 0 && (
+            <>
+              <div>{`Loaded ${filesContentOrig.length}+${filesContentTransl.length} images!`}</div>
+              <form
+                onSubmit={(ev) => {
+                  ev.preventDefault();
+                  setInProgress(collectionName);
+                  startAlignment(
+                    worker,
+                    collectionName,
+                    filesContentOrig,
+                    settingsOrig,
+                    filesContentTransl,
+                    settingsTransl,
+                    orbCount
+                  );
+                }}
+              >
+                <label htmlFor="collection-name">{'Collection Name:'}</label>
+                <input
+                  id="collection-name"
+                  name="collectionName"
+                  onInput={(e) =>
+                    setCollectionName((e.target as HTMLInputElement).value)
+                  }
+                />
+                <button>{'Start'}</button>
+              </form>
+            </>
+          )}
         </>
       )}
       <Link to={'/'}>

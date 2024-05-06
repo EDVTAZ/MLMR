@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { Dispatch, PropsWithChildren, SetStateAction } from 'react';
+import { useAlignmentInProgressLocalStorage } from './storage';
 
 type ProgressType = { orig: number; transl: number };
 
@@ -11,6 +12,8 @@ type WorkerProviderType = {
   setNeeded: Dispatch<SetStateAction<boolean>>;
   progress: ProgressType;
   setProgress: Dispatch<SetStateAction<ProgressType>>;
+  inProgress: null | false | string;
+  setInProgress: Dispatch<SetStateAction<null | false | string>>;
 };
 
 export const WorkerContext = createContext<WorkerProviderType>({
@@ -20,6 +23,8 @@ export const WorkerContext = createContext<WorkerProviderType>({
   setNeeded: (_n) => {},
   progress: { orig: 0, transl: 0 },
   setProgress: (_p) => {},
+  inProgress: null,
+  setInProgress: (_p) => {},
 });
 
 export function WorkerProvider({ children }: PropsWithChildren) {
@@ -29,6 +34,14 @@ export function WorkerProvider({ children }: PropsWithChildren) {
     orig: 0,
     transl: 0,
   });
+  const { value: inProgress, setValue: setInProgress } =
+    useAlignmentInProgressLocalStorage();
+
+  useEffect(() => {
+    if (inProgress !== null && inProgress !== false) {
+      setNeeded(true);
+    }
+  }, [inProgress]);
 
   useEffect(() => {
     setProgress({ orig: 0, transl: 0 });
@@ -36,7 +49,16 @@ export function WorkerProvider({ children }: PropsWithChildren) {
 
   return (
     <WorkerContext.Provider
-      value={{ worker, setWorker, needed, setNeeded, progress, setProgress }}
+      value={{
+        worker,
+        setWorker,
+        needed,
+        setNeeded,
+        progress,
+        setProgress,
+        inProgress,
+        setInProgress,
+      }}
     >
       {needed && <AlignerWorker />}
       {children}
@@ -45,7 +67,7 @@ export function WorkerProvider({ children }: PropsWithChildren) {
 }
 
 function AlignerWorker() {
-  const { worker, setWorker, setNeeded, setProgress } =
+  const { worker, setWorker, setNeeded, setProgress, setInProgress } =
     useContext(WorkerContext);
 
   useEffect(() => {
@@ -62,6 +84,7 @@ function AlignerWorker() {
     function messageHandler({ data }: MessageEvent) {
       if (data['msg'] === 'done') {
         setNeeded(false);
+        setInProgress(false);
       }
       if (data['msg'] === 'orig-written') {
         localStorage[`${data['collectionName']}-orig`] = data['count'];
@@ -79,7 +102,6 @@ function AlignerWorker() {
             transl: data['progressIndex'] / data['progressMax'],
           };
         });
-        // pass
       }
     }
     if (worker) {

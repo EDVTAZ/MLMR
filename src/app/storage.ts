@@ -1,6 +1,12 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 
+export function useAlignmentInProgressLocalStorage() {
+  return useLocalStorage(`alignment-in-progress`, (v) =>
+    v === 'false' ? false : v
+  );
+}
+
 export function useCollectionLocalStorage(collectionName: string | undefined) {
   return useLocalStorage(`${collectionName}-orig`, parseInt);
 }

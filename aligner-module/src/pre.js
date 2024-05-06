@@ -5,6 +5,7 @@ const imageDirs = ['in_transl', 'out_transl', 'in_orig', 'out_orig'];
 const INDEX_BASE = 1000000;
 let FSsyncInProgress = false;
 let FSmounted = false;
+let progress = false;
 
 async function syncFromIDB() {
   await syncIDB('from');
@@ -102,6 +103,11 @@ async function runAlignment(
   transl_imgs,
   transl_settings
 ) {
+  if (progress !== false) {
+    console.log('Alignment already in progress, cannot start new!');
+  }
+
+  progress = true;
   console.log('Starting alignment with...');
 
   console.log('Cleaning up');
@@ -170,6 +176,7 @@ async function runAlignment(
 
   console.log('IDB FS unmounted!');
 
+  progress = false;
   postMessage({
     msg: 'done',
   });
@@ -181,7 +188,7 @@ if (
 ) {
   Module['onRuntimeInitialized'] = function () {
     console.log('Aligner module loded!');
-    postMessage('loaded');
+    postMessage({ msg: 'loaded', progress });
   };
   onmessage = async ({ data: msg }) => {
     console.log(`Aligner module received message: ${msg}`);

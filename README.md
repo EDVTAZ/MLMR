@@ -11,3 +11,5 @@
 - smaller subfolders for reduced memory footprint
 - add support for various file formats (canvas for images, ?? for zip, pdf, etc.)
 - service worker / PWA
+- test suite for alignment
+- implement deleting collections and cancelling import
