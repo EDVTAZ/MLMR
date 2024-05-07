@@ -40,7 +40,7 @@ function ReadCollectionUnstyled({ ...rest }) {
   const [zoom, setZoom] = useState(90);
 
   const originalCount = useCollectionLocalStorage(collectionName);
-  const { worker, needed, progress } = useContext(WorkerContext);
+  const { worker, inProgress, progress } = useContext(WorkerContext);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const pageRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -143,7 +143,10 @@ function ReadCollectionUnstyled({ ...rest }) {
         return;
 
       const targetDiv = pageRefs.current[localStorageCurrentPage.value.page];
-      if (targetDiv && (!needed || !scrollingRef.current)) {
+      if (
+        targetDiv &&
+        (inProgress !== collectionName || !scrollingRef.current)
+      ) {
         const targetRect = containers[localStorageCurrentPage.value.page];
         window.scrollBy({
           top:
@@ -162,7 +165,7 @@ function ReadCollectionUnstyled({ ...rest }) {
   }, [
     localStorageCurrentPage.value?.page,
     localStorageCurrentPage.value?.percentage,
-    needed,
+    inProgress,
   ]);
 
   return (
@@ -205,7 +208,7 @@ function ReadCollectionUnstyled({ ...rest }) {
             currentPage.percentage
           )}
         </div>
-        {needed && (
+        {inProgress === collectionName && (
           <div
             style={{
               position: 'fixed',

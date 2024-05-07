@@ -12,3 +12,7 @@
 - service worker / PWA
 - test suite for alignment
 - implement deleting collections and cancelling import
+- dimming option
+- window title based on collection name
+- syncing
+- jitter when scrolling
