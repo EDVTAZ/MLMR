@@ -64,7 +64,7 @@ function useLocalStorage<T = string>(
 ) {
   const [value, setValue] = useState<T | null>(null);
   const safeSetValue = (v: T | null) => {
-    if (v !== null) setValue(v);
+    if (v !== null && v !== undefined) setValue(v);
   };
 
   // make sure we read everything before rendering
