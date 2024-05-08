@@ -24,4 +24,4 @@
   - https://developers.cloudflare.com/r2/examples/aws/aws-sdk-js-v3/#configure-aws-sdk-js-v3-for-r2
   - https://developers.cloudflare.com/r2/api/s3/tokens/
   - https://github.com/dropbox/dropbox-sdk-js
-- jitter when scrolling (caused by scrollend, probably)
+- missing backtrack on page 74 (vol 11)

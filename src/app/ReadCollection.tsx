@@ -12,6 +12,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import type { MutableRefObject } from 'react';
 import { WorkerContext } from './AlignerWorker';
 
 const IMAGE_CACHE_RANGE = 3;
@@ -26,6 +27,45 @@ export function readCollectionLoader({
   params: Params<ParamParseKey<typeof PathNames.collectionName>>;
 }) {
   return { collectionName: params.collectionName };
+}
+
+function calculateScroll(
+  pageRefs: MutableRefObject<(HTMLDivElement | null)[]>
+) {
+  const page = pageRefs.current.reduce((prev, v, i): number => {
+    if ((v?.getBoundingClientRect().bottom ?? 0) > 0) {
+      return Math.min(prev, i);
+    }
+    return prev;
+  }, pageRefs.current?.length ?? 0);
+
+  const { top, bottom } = pageRefs.current[page]?.getBoundingClientRect() ?? {
+    top: 0,
+    bottom: 0,
+  };
+  const percentage = top >= 0 ? 0 : top / (top - bottom);
+  return { page, percentage };
+}
+
+function scrollToPosition(
+  page: number,
+  percentage: number,
+  pageRefs: MutableRefObject<(HTMLDivElement | null)[]>
+) {
+  const containers = pageRefs.current.map(
+    (element) =>
+      element?.getBoundingClientRect() ?? { top: 0, bottom: 0, height: 0 }
+  );
+  if (containers.some((rect) => rect.height === 0)) return;
+
+  const targetDiv = pageRefs.current[page];
+  if (targetDiv) {
+    const targetRect = containers[page];
+    window.scrollBy({
+      top: targetRect.top + targetRect.height * percentage,
+      behavior: 'instant',
+    });
+  }
 }
 
 function ReadCollectionUnstyled({ ...rest }) {
@@ -51,15 +91,15 @@ function ReadCollectionUnstyled({ ...rest }) {
       setLanguage((v) => (v === 'orig' ? 'transl' : 'orig'));
     }
     function step(amount: number) {
-      localStorageCurrentPage.setValue((prev) => {
-        return {
-          page: Math.min(
-            Math.max(0, (prev?.page ?? 0) + amount),
-            (originalCount.value ?? 1) - 1
-          ),
-          percentage: 0,
-        };
-      });
+      const calculatedPosition = calculateScroll(pageRefs);
+      scrollToPosition(
+        Math.min(
+          Math.max(0, calculatedPosition.page + amount),
+          (originalCount.value ?? 1) - 1
+        ),
+        0,
+        pageRefs
+      );
     }
     function keyPressHandler(ev: KeyboardEvent) {
       if (ev.key === 'v') switchLanguage();
@@ -98,27 +138,12 @@ function ReadCollectionUnstyled({ ...rest }) {
   }, [worker, originalCount.setValue]);
 
   useEffect(() => {
-    function calculateScroll() {
-      const page = pageRefs.current.reduce((prev, v, i): number => {
-        if ((v?.getBoundingClientRect().bottom ?? 0) > 0) {
-          return Math.min(prev, i);
-        }
-        return prev;
-      }, originalCount.value ?? 0);
-
-      const { top, bottom } = pageRefs.current[
-        page
-      ]?.getBoundingClientRect() ?? { top: 0, bottom: 0 };
-      const percentage = top >= 0 ? 0 : top / (top - bottom);
-      return { page, percentage };
-    }
-
     function scrollHandler(_event: Event) {
-      setCurrentPage(calculateScroll());
+      setCurrentPage(calculateScroll(pageRefs));
       scrollingRef.current = true;
     }
     function scrollendHandler(_event: Event) {
-      localStorageCurrentPage.setValue(calculateScroll());
+      localStorageCurrentPage.setValue(calculateScroll(pageRefs));
       scrollingRef.current = false;
     }
 
@@ -131,30 +156,25 @@ function ReadCollectionUnstyled({ ...rest }) {
   }, [originalCount.value]);
 
   useLayoutEffect(() => {
+    let firstCall = true;
     function scrollToSavedPosition() {
-      const containers = pageRefs.current.map(
-        (element) =>
-          element?.getBoundingClientRect() ?? { top: 0, bottom: 0, height: 0 }
-      );
-      if (
-        containers.some((rect) => rect.height === 0) ||
-        localStorageCurrentPage.value === null
-      )
+      if (firstCall) {
+        firstCall = false;
         return;
-
-      const targetDiv = pageRefs.current[localStorageCurrentPage.value.page];
-      if (
-        targetDiv &&
-        (inProgress !== collectionName || !scrollingRef.current)
-      ) {
-        const targetRect = containers[localStorageCurrentPage.value.page];
-        window.scrollBy({
-          top:
-            targetRect.top +
-            targetRect.height * localStorageCurrentPage.value.percentage,
-          behavior: 'instant',
-        });
       }
+
+      if (
+        localStorageCurrentPage.value === null ||
+        (inProgress === collectionName && scrollingRef.current)
+      ) {
+        return;
+      }
+
+      scrollToPosition(
+        localStorageCurrentPage.value.page,
+        localStorageCurrentPage.value.percentage,
+        pageRefs
+      );
     }
 
     const observer = new ResizeObserver(scrollToSavedPosition);
@@ -163,6 +183,7 @@ function ReadCollectionUnstyled({ ...rest }) {
       observer.disconnect();
     };
   }, [
+    collectionName,
     localStorageCurrentPage.value?.page,
     localStorageCurrentPage.value?.percentage,
     inProgress,
