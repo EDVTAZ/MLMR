@@ -18,7 +18,9 @@ std::vector<cv::Mat> transls_grey;
 int transl_backtrack_count = 0;
 int orig_index = 0;
 cv::Mat last_aligned;
+cv::Mat last_homography;
 bool first_match = true;
+cv::Ptr<cv::Formatter> formatter = cv::Formatter::get(cv::Formatter::FMT_PYTHON);
 
 bool double_page(cv::Mat img)
 {
@@ -174,7 +176,7 @@ void write_im_and_info(std::string name, cv::Mat &image)
     }
     else
     {
-        std::cout << "Error opening image info file for write: " << name << std::endl;
+        std::cout << "[AA] Error opening image info file for write: " << name << std::endl;
     }
 }
 
@@ -263,13 +265,13 @@ cv::Mat align(cv::Mat &to_align_color, cv::Mat &to_align_grey, cv::Mat &refim_co
         ref_matched.push_back(ref_keypoints[good_matches[i].trainIdx].pt);
     }
 
-    cv::Mat homography = cv::findHomography(alig_matched, ref_matched, mask, cv::RANSAC);
+    last_homography = cv::findHomography(alig_matched, ref_matched, mask, cv::RANSAC);
     int inlier_count = std::accumulate(mask.begin(), mask.end(), 0);
 
-    checkHomography(inlier_count, to_align_grey, refim_grey, homography);
+    checkHomography(inlier_count, to_align_grey, refim_grey, last_homography);
 
     cv::Mat warped_color;
-    cv::warpPerspective(to_align_color, warped_color, homography,
+    cv::warpPerspective(to_align_color, warped_color, last_homography,
                         cv::Size(refim_color.cols, refim_color.rows), cv::INTER_LINEAR,
                         cv::BorderTypes::BORDER_CONSTANT, cv::Vec4b(0, 0, 0, 0));
 
@@ -280,10 +282,12 @@ int add_orig(std::string src_path, std::string dst_path, int resize, bool do_spl
 {
     int cnt = load_and_preproc(src_path, origs, origs_grey, resize, do_split, do_crop, right2left);
 
+    std::cout << "[AA] ORIG-" << origs.size() - 1 << " added" << std::endl;
     write_im_and_info(std::filesystem::path(dst_path) / (std::to_string(origs.size() + 1000000)), origs.back());
 
     if (cnt > 1)
     {
+        std::cout << "[AA] ORIG-" << origs.size() - 2 << " split off previous and added" << std::endl;
         write_im_and_info(std::filesystem::path(dst_path) / (std::to_string(origs.size() - 1 + 1000000)), origs[origs.size() - 2]);
     }
     return cnt;
@@ -302,11 +306,13 @@ int find_pairing(std::string dst_path, int transl_index, int orb_count)
             if (!first_match && i == 0)
             {
                 cv::add(last_aligned, aligned, last_aligned);
+                std::cout << "[AA] TRANSL-" << transl_index << " additionally overlaid onto ORIG-" << orig_index + i << " // homography: " << formatter->format(last_homography) << std::endl;
             }
             else
             {
                 last_aligned = aligned;
                 first_match = false;
+                std::cout << "[AA] TRANSL-" << transl_index << " primarily overlaid onto ORIG-" << orig_index + i << " // homography: " << formatter->format(last_homography) << std::endl;
             }
             write_im_and_info(std::filesystem::path(dst_path) / (std::to_string(orig_index + i + 1000001)), last_aligned);
             for (int j = 0; j < transl_backtrack_count && j < i; ++j)
@@ -319,6 +325,8 @@ int find_pairing(std::string dst_path, int transl_index, int orb_count)
                 cv::Mat resized;
                 cv::resize(transls[bt_transl_index], resized, cv::Size(origs[bt_orig_index].cols, origs[bt_orig_index].rows), 0, 0, cv::INTER_AREA);
                 cnt += 1;
+
+                std::cout << "[AA] TRANSL-" << bt_transl_index << " backtrack paired with ORIG-" << bt_orig_index << std::endl;
                 write_im_and_info(std::filesystem::path(dst_path) / (std::to_string(bt_orig_index + 1000001)), resized);
             }
             // if this is single page or both are double no need to search for more matching translations
@@ -374,6 +382,7 @@ void clean()
     transl_backtrack_count = 0;
     orig_index = 0;
     first_match = true;
+    formatter->setMultiline(false);
 }
 
 EMSCRIPTEN_BINDINGS(aligner_module)

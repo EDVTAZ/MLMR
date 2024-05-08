@@ -15,4 +15,13 @@
 - dimming option
 - window title based on collection name
 - syncing
-- jitter when scrolling
+  - https://www.dropbox.com/developers/documentation
+  - https://developers.google.com/drive/api/guides/about-sdk
+  - https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/welcome.html
+  - https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/s3-browser-examples.html
+  - https://developers.cloudflare.com/r2/
+  - https://developers.cloudflare.com/images/upload-images/direct-creator-upload/
+  - https://developers.cloudflare.com/r2/examples/aws/aws-sdk-js-v3/#configure-aws-sdk-js-v3-for-r2
+  - https://developers.cloudflare.com/r2/api/s3/tokens/
+  - https://github.com/dropbox/dropbox-sdk-js
+- jitter when scrolling (caused by scrollend, probably)
