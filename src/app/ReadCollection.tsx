@@ -52,15 +52,9 @@ function scrollToPosition(
   percentage: number,
   pageRefs: MutableRefObject<(HTMLDivElement | null)[]>
 ) {
-  const containers = pageRefs.current.map(
-    (element) =>
-      element?.getBoundingClientRect() ?? { top: 0, bottom: 0, height: 0 }
-  );
-  if (containers.some((rect) => rect.height === 0)) return;
-
   const targetDiv = pageRefs.current[page];
   if (targetDiv) {
-    const targetRect = containers[page];
+    const targetRect = targetDiv.getBoundingClientRect();
     window.scrollBy({
       top: targetRect.top + targetRect.height * percentage,
       behavior: 'instant',
@@ -84,7 +78,7 @@ function ReadCollectionUnstyled({ ...rest }) {
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const pageRefs = useRef<Array<HTMLDivElement | null>>([]);
-  const scrollingRef = useRef(false);
+  const scrollingRef = useRef({ scrolling: false, adjusting: false });
 
   useEffect(() => {
     function switchLanguage() {
@@ -140,11 +134,13 @@ function ReadCollectionUnstyled({ ...rest }) {
   useEffect(() => {
     function scrollHandler(_event: Event) {
       setCurrentPage(calculateScroll(pageRefs));
-      scrollingRef.current = true;
+      scrollingRef.current.scrolling = true;
     }
     function scrollendHandler(_event: Event) {
-      localStorageCurrentPage.setValue(calculateScroll(pageRefs));
-      scrollingRef.current = false;
+      if (!scrollingRef.current.adjusting) {
+        localStorageCurrentPage.setValue(calculateScroll(pageRefs));
+      }
+      scrollingRef.current = { scrolling: false, adjusting: false };
     }
 
     window.addEventListener('scroll', scrollHandler);
@@ -163,12 +159,20 @@ function ReadCollectionUnstyled({ ...rest }) {
         return;
       }
 
+      scrollingRef.current.adjusting = true;
+
       if (
         localStorageCurrentPage.value === null ||
-        (inProgress === collectionName && scrollingRef.current)
+        (inProgress === collectionName && scrollingRef.current.scrolling)
       ) {
         return;
       }
+
+      const containers = pageRefs.current.map(
+        (element) =>
+          element?.getBoundingClientRect() ?? { top: 0, bottom: 0, height: 0 }
+      );
+      if (containers.some((rect) => rect.height === 0)) return;
 
       scrollToPosition(
         localStorageCurrentPage.value.page,
