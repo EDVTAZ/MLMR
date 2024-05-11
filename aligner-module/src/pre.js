@@ -187,7 +187,7 @@ if (
   self instanceof WorkerGlobalScope
 ) {
   Module['onRuntimeInitialized'] = function () {
-    console.log('Aligner module loded!');
+    console.log('Aligner module loaded!');
     postMessage({ msg: 'loaded', progress });
   };
   onmessage = async ({ data: msg }) => {

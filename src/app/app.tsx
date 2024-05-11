@@ -10,6 +10,10 @@ const router = createBrowserRouter([
     element: <MainMenu />,
   },
   {
+    path: 'index.html',
+    element: <MainMenu />,
+  },
+  {
     path: 'import',
     element: <CreateCollection />,
   },

@@ -81,20 +81,29 @@ type ImportImagesProps = {
   openFilePicker: () => void;
   settings: ImageImportConfigType;
   setSettings: Dispatch<SetStateAction<ImageImportConfigType>>;
+  idBase: string;
+  disabled: boolean;
 };
 
 function ImportImages({
   openFilePicker,
   settings,
   setSettings,
+  idBase,
+  disabled,
 }: ImportImagesProps) {
-  const id = useId();
   return (
     <div>
-      <button onClick={openFilePicker}>Import images</button>
-      <label htmlFor={`resize-to${id}`}>{' | Resize:'}</label>
+      <button
+        id={`upload-images-${idBase}`}
+        onClick={openFilePicker}
+        disabled={disabled}
+      >
+        Import images
+      </button>
+      <label htmlFor={`resize-to-${idBase}`}>{' | Resize:'}</label>
       <input
-        id={`resize-to${id}`}
+        id={`resize-to-${idBase}`}
         name="resizeTo"
         type="number"
         value={settings.resize}
@@ -106,9 +115,10 @@ function ImportImages({
             };
           })
         }
+        disabled={disabled}
       />
       <input
-        id={`do-crop${id}`}
+        id={`do-crop-${idBase}`}
         name="doCrop"
         type="checkbox"
         checked={settings.do_crop}
@@ -120,10 +130,11 @@ function ImportImages({
             };
           })
         }
+        disabled={disabled}
       />
-      <label htmlFor={`do-crop${id}`}>{'Crop pages]'}</label>
+      <label htmlFor={`do-crop-${idBase}`}>{'Crop pages]'}</label>
       <input
-        id={`do-split${id}`}
+        id={`do-split-${idBase}`}
         name="doSplit"
         type="checkbox"
         checked={settings.do_split}
@@ -135,10 +146,11 @@ function ImportImages({
             };
           })
         }
+        disabled={disabled}
       />
-      <label htmlFor={`do-split${id}`}>{'Split double pages]'}</label>
+      <label htmlFor={`do-split-${idBase}`}>{'Split double pages]'}</label>
       <input
-        id={`right-to-left${id}`}
+        id={`right-to-left-${idBase}`}
         name="rightToLeft"
         type="checkbox"
         checked={settings.right2left}
@@ -150,8 +162,9 @@ function ImportImages({
             };
           })
         }
+        disabled={disabled}
       />
-      <label htmlFor={`right-to-left${id}`}>
+      <label htmlFor={`right-to-left-${idBase}`}>
         {'Right to left if checked]'}
       </label>
     </div>
@@ -197,63 +210,72 @@ export function CreateCollection({ ...rest }) {
 
   return (
     <>
-      {(inProgress && (
+      {inProgress && (
         <div>{`Another alignment (${inProgress}) is already in progress, please wait until it finishes...`}</div>
-      )) || (
-        <>
-          <ImportImages
-            openFilePicker={openFilePickerOrig}
-            settings={settingsOrig}
-            setSettings={setSettingsOrig}
-          />
-          <ImportImages
-            openFilePicker={openFilePickerTransl}
-            settings={settingsTransl}
-            setSettings={setSettingsTransl}
-          />
-          <label htmlFor="orb-count">ORB count</label>
-          <input
-            id="orb-count"
-            name="orbCount"
-            type="number"
-            min="100"
-            value={orbCount}
-            onInput={(e) =>
-              setOrbCount(parseInt((e.target as HTMLInputElement).value))
-            }
-          />
-          {filesContentOrig.length > 0 && filesContentTransl.length > 0 && (
-            <>
-              <div>{`Loaded ${filesContentOrig.length}+${filesContentTransl.length} images!`}</div>
-              <form
-                onSubmit={(ev) => {
-                  ev.preventDefault();
-                  setInProgress(collectionName);
-                  startAlignment(
-                    worker,
-                    collectionName,
-                    filesContentOrig,
-                    settingsOrig,
-                    filesContentTransl,
-                    settingsTransl,
-                    orbCount
-                  );
-                }}
-              >
-                <label htmlFor="collection-name">{'Collection Name:'}</label>
-                <input
-                  id="collection-name"
-                  name="collectionName"
-                  onInput={(e) =>
-                    setCollectionName((e.target as HTMLInputElement).value)
-                  }
-                />
-                <button>{'Start'}</button>
-              </form>
-            </>
-          )}
-        </>
       )}
+      <ImportImages
+        openFilePicker={openFilePickerOrig}
+        settings={settingsOrig}
+        setSettings={setSettingsOrig}
+        idBase="orig"
+        disabled={!!inProgress}
+      />
+      <ImportImages
+        openFilePicker={openFilePickerTransl}
+        settings={settingsTransl}
+        setSettings={setSettingsTransl}
+        idBase="transl"
+        disabled={!!inProgress}
+      />
+      <label htmlFor="orb-count">ORB count</label>
+      <input
+        id="orb-count"
+        name="orbCount"
+        type="number"
+        min="100"
+        value={orbCount}
+        onInput={(e) =>
+          setOrbCount(parseInt((e.target as HTMLInputElement).value))
+        }
+        disabled={!!inProgress}
+      />
+      <div>{`Loaded ${filesContentOrig.length}+${filesContentTransl.length} images!`}</div>
+      <form
+        onSubmit={(ev) => {
+          ev.preventDefault();
+          setInProgress(collectionName);
+          startAlignment(
+            worker,
+            collectionName,
+            filesContentOrig,
+            settingsOrig,
+            filesContentTransl,
+            settingsTransl,
+            orbCount
+          );
+        }}
+      >
+        <label htmlFor="collection-name">{'Collection Name:'}</label>
+        <input
+          id="collection-name"
+          name="collectionName"
+          onInput={(e) =>
+            setCollectionName((e.target as HTMLInputElement).value)
+          }
+          disabled={!!inProgress}
+        />
+        <button
+          id={'start-import'}
+          disabled={
+            !!inProgress ||
+            filesContentOrig.length <= 0 ||
+            filesContentTransl.length <= 0 ||
+            collectionName.length === 0
+          }
+        >
+          {'Start'}
+        </button>
+      </form>
       <Link to={'/'}>
         <button>Back to home</button>
       </Link>

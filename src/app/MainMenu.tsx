@@ -7,7 +7,7 @@ export function MainMenu({ ...rest }) {
   return (
     <>
       <Link to={'/import'}>
-        <button>{'Import new collection'}</button>
+        <button id="import-button">{'Import new collection'}</button>
       </Link>
       {collectionNames.map((collectionName) => (
         <Link to={`/read/${collectionName}`} key={collectionName}>
