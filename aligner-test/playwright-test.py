@@ -8,11 +8,11 @@ LOG_ALIG_DONE = "Alignment done!"
 LOG_MARKER = "[AA]"
 
 
-def do_screenshot():
+def do_screenshot(fullscreen=True):
     global screenshot_cntr
     page.screenshot(
         path=f"/src/data/out/screenshot-{screenshot_cntr:02}.png",
-        full_page=True,
+        full_page=fullscreen,
     )
     screenshot_cntr += 1
 
@@ -36,7 +36,8 @@ def log_handler(msg, logs):
 
 with sync_playwright() as playwright:
     browser = playwright.chromium.launch(
-        headless=True, args=["--enable-features=SharedArrayBuffer"]
+        headless=True,
+        args=["--enable-features=SharedArrayBuffer"],
     )
     context = browser.new_context(
         ignore_https_errors=True,
@@ -49,6 +50,12 @@ with sync_playwright() as playwright:
 
     page = context.new_page()
     print("Browser version:", browser.version)
+
+    cdp_client = context.new_cdp_session(page)
+    cdp_client.send(
+        "Storage.overrideQuotaForOrigin",
+        {"origin": "http://localhost:4200", "quotaSize": 1024 * 1024 * 1024 * 4},
+    )
 
     logs = []
     page.on("console", lambda msg: log_handler(msg.text, logs))
@@ -65,12 +72,19 @@ with sync_playwright() as playwright:
     upload_files(
         page,
         "#upload-images-orig",
-        [f"/src/data/in_orig/{file}" for file in os.listdir("/src/data/in_orig")],
+        sorted(
+            [f"/src/data/in_orig/{file}" for file in os.listdir("/src/data/in_orig")]
+        ),
     )
     upload_files(
         page,
         "#upload-images-transl",
-        [f"/src/data/in_transl/{file}" for file in os.listdir("/src/data/in_transl")],
+        sorted(
+            [
+                f"/src/data/in_transl/{file}"
+                for file in os.listdir("/src/data/in_transl")
+            ]
+        ),
     )
 
     page.locator("#collection-name").fill(COLLECTION_NAME)
@@ -84,20 +98,20 @@ with sync_playwright() as playwright:
 
     page.wait_for_url(f"**/read/{COLLECTION_NAME}", wait_until="load")
     do_screenshot()
-    time.sleep(1)
+    page.wait_for_timeout(1000)
 
     do_screenshot()
 
     while not finished:
-        time.sleep(1)
+        page.wait_for_timeout(1000)
 
     print(f"Alignment finished in {time.time()-start_time} seconds")
 
     logs = sorted(logs)
     with open("/src/data/out/alignment-out.txt", "w") as f:
-        f.writelines(logs)
+        f.write("\n".join(logs))
 
-    page.mouse.click()
-    time.sleep(1)
+    page.mouse.click(100, 100)
+    page.wait_for_timeout(1000)
 
-    do_screenshot()
+    do_screenshot(False)
