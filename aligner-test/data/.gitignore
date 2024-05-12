@@ -1,5 +1,3 @@
 in_orig
 in_transl
 build
-out/*
-!out/expected-alignment-out.txt

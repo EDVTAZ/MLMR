@@ -11,7 +11,7 @@ LOG_MARKER = "[AA]"
 def do_screenshot(fullscreen=True):
     global screenshot_cntr
     page.screenshot(
-        path=f"/src/data/out/screenshot-{screenshot_cntr:02}.png",
+        path=f"/src/data/out/{sys.argv[3]}/screenshot-{screenshot_cntr:02}.png",
         full_page=fullscreen,
     )
     screenshot_cntr += 1
@@ -48,6 +48,13 @@ with sync_playwright() as playwright:
         },
     )
 
+    print("Args:", sys.argv)
+    orig_folder = sys.argv[1]
+    transl_folder = sys.argv[2]
+    out_dir = sys.argv[3]
+    split_orig = "split_orig" in sys.argv
+    split_transl = "split_transl" in sys.argv
+
     page = context.new_page()
     print("Browser version:", browser.version)
 
@@ -73,7 +80,10 @@ with sync_playwright() as playwright:
         page,
         "#upload-images-orig",
         sorted(
-            [f"/src/data/in_orig/{file}" for file in os.listdir("/src/data/in_orig")]
+            [
+                f"/src/data/{orig_folder}/{file}"
+                for file in os.listdir(f"/src/data/{orig_folder}")
+            ]
         ),
     )
     upload_files(
@@ -81,11 +91,16 @@ with sync_playwright() as playwright:
         "#upload-images-transl",
         sorted(
             [
-                f"/src/data/in_transl/{file}"
-                for file in os.listdir("/src/data/in_transl")
+                f"/src/data/{transl_folder}/{file}"
+                for file in os.listdir(f"/src/data/{transl_folder}")
             ]
         ),
     )
+
+    if not split_orig:
+        page.locator("#do-split-orig").click()
+    if not split_transl:
+        page.locator("#do-split-transl").click()
 
     page.locator("#collection-name").fill(COLLECTION_NAME)
 
@@ -108,7 +123,7 @@ with sync_playwright() as playwright:
     print(f"Alignment finished in {time.time()-start_time} seconds")
 
     logs = sorted(logs)
-    with open("/src/data/out/alignment-out.txt", "w") as f:
+    with open(f"/src/data/out/{out_dir}/alignment-out.txt", "w") as f:
         f.write("\n".join(logs))
 
     page.mouse.click(100, 100)
