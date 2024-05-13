@@ -5,12 +5,11 @@
 - more efficiont scroll position calc
 - add loading state to reader so we can block scrolling and avoid overwriting stored position
 - allow importing only originals
-- have in progress state for worker to avoid starting two imports at the same time
 - resume import if interrupted
 - smaller subfolders for reduced memory footprint
 - add support for various file formats (canvas for images, ?? for zip, pdf, etc.)
 - service worker / PWA
-- test suite for alignment
+- testing UI and additional e2e tests
 - implement deleting collections and cancelling import
 - dimming option
 - window title based on collection name
@@ -24,4 +23,4 @@
   - https://developers.cloudflare.com/r2/examples/aws/aws-sdk-js-v3/#configure-aws-sdk-js-v3-for-r2
   - https://developers.cloudflare.com/r2/api/s3/tokens/
   - https://github.com/dropbox/dropbox-sdk-js
-- missing backtrack on page 74 (vol 11)
+- have wrap up function to match remaining backtrack stack

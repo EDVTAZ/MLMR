@@ -1,6 +1,7 @@
 #include <numeric>
 #include <filesystem>
 #include <fstream>
+#include <deque>
 #include "opencv2/opencv.hpp"
 
 #include <emscripten/bind.h>
@@ -11,15 +12,21 @@ const double RATIO_LOWER = 2 / 3 - EPS;
 const double RATIO_HIGHER = 2 / 3 + EPS;
 const int SEARCH_RANGE = 10;
 
-std::vector<cv::Mat> origs;
-std::vector<cv::Mat> transls;
-std::vector<cv::Mat> origs_grey;
-std::vector<cv::Mat> transls_grey;
-int transl_backtrack_count = 0;
-int orig_index = 0;
+struct PageImage
+{
+    int index;
+    cv::Mat img;
+    cv::Mat img_grey;
+    bool previously_aligned;
+};
+
+std::deque<PageImage> origs;
+std::deque<PageImage> transls;
+int orig_count = 0;
+int transl_count = 0;
+
 cv::Mat last_aligned;
 cv::Mat last_homography;
-bool first_match = true;
 cv::Ptr<cv::Formatter> formatter = cv::Formatter::get(cv::Formatter::FMT_PYTHON);
 
 bool double_page(cv::Mat img)
@@ -109,7 +116,7 @@ bool same_color_col(cv::Mat &img, int colnum)
     return cv::checkRange(img.col(colnum), true, NULL, top, top + 1);
 }
 
-int load_and_preproc(std::string img_path, std::vector<cv::Mat> &color_acc, std::vector<cv::Mat> &grey_acc, int resize, bool do_split, bool do_crop, bool right2left)
+int load_and_preproc(std::string img_path, std::deque<PageImage> &acc, int &acc_count, int resize, bool do_split, bool do_crop, bool right2left)
 {
     cv::Mat img_color = cv::imread(img_path);
     cv::Mat img_grey;
@@ -141,25 +148,45 @@ int load_and_preproc(std::string img_path, std::vector<cv::Mat> &color_acc, std:
 
         if (right2left)
         {
-            grey_acc.push_back(downscale(tmp2_grey, resize));
-            grey_acc.push_back(downscale(tmp1_grey, resize));
-            color_acc.push_back(downscale(tmp2_color, resize));
-            color_acc.push_back(downscale(tmp1_color, resize));
+            acc.push_back({
+                .index = acc_count++,
+                .img = downscale(tmp2_color, resize),
+                .img_grey = downscale(tmp2_grey, resize),
+                .previously_aligned = false,
+            });
+            acc.push_back({
+                .index = acc_count++,
+                .img = downscale(tmp1_color, resize),
+                .img_grey = downscale(tmp1_grey, resize),
+                .previously_aligned = false,
+            });
         }
         else
         {
-            grey_acc.push_back(downscale(tmp1_grey, resize));
-            grey_acc.push_back(downscale(tmp2_grey, resize));
-            color_acc.push_back(downscale(tmp1_color, resize));
-            color_acc.push_back(downscale(tmp2_color, resize));
+            acc.push_back({
+                .index = acc_count++,
+                .img = downscale(tmp1_color, resize),
+                .img_grey = downscale(tmp1_grey, resize),
+                .previously_aligned = false,
+            });
+            acc.push_back({
+                .index = acc_count++,
+                .img = downscale(tmp2_color, resize),
+                .img_grey = downscale(tmp2_grey, resize),
+                .previously_aligned = false,
+            });
         }
 
         return 2;
     }
     else
     {
-        grey_acc.push_back(downscale(img_grey, resize));
-        color_acc.push_back(downscale(img_color, resize));
+        acc.push_back({
+            .index = acc_count++,
+            .img = downscale(img_color, resize),
+            .img_grey = downscale(img_grey, resize),
+            .previously_aligned = false,
+        });
         return 1;
     }
 }
@@ -280,15 +307,15 @@ cv::Mat align(cv::Mat &to_align_color, cv::Mat &to_align_grey, cv::Mat &refim_co
 
 int add_orig(std::string src_path, std::string dst_path, int resize, bool do_split, bool do_crop, bool right2left)
 {
-    int cnt = load_and_preproc(src_path, origs, origs_grey, resize, do_split, do_crop, right2left);
+    int cnt = load_and_preproc(src_path, origs, orig_count, resize, do_split, do_crop, right2left);
 
-    std::cout << "[AA] ORIG-" << origs.size() - 1 << " added" << std::endl;
-    write_im_and_info(std::filesystem::path(dst_path) / (std::to_string(origs.size() + 1000000)), origs.back());
+    std::cout << "[AA] ORIG-" << origs.back().index << " added" << std::endl;
+    write_im_and_info(std::filesystem::path(dst_path) / (std::to_string(origs.back().index + 1000001)), origs.back().img);
 
     if (cnt > 1)
     {
-        std::cout << "[AA] ORIG-" << origs.size() - 2 << " split off previous and added" << std::endl;
-        write_im_and_info(std::filesystem::path(dst_path) / (std::to_string(origs.size() - 1 + 1000000)), origs[origs.size() - 2]);
+        std::cout << "[AA] ORIG-" << origs[origs.size() - 2].index << " split off previous and added" << std::endl;
+        write_im_and_info(std::filesystem::path(dst_path) / (std::to_string(origs[origs.size() - 2].index + 1000001)), origs[origs.size() - 2].img);
     }
     return cnt;
 }
@@ -296,75 +323,84 @@ int add_orig(std::string src_path, std::string dst_path, int resize, bool do_spl
 int find_pairing(std::string dst_path, int transl_index, int orb_count)
 {
     int cnt = 0;
-    bool no_more = false;
-    for (int i = 0; i < SEARCH_RANGE && orig_index + i < origs.size(); ++i)
+    for (int i = 0; i < SEARCH_RANGE && i < origs.size(); ++i)
     {
         try
         {
-            cv::Mat aligned = align(transls[transl_index], transls_grey[transl_index], origs[orig_index + i], origs_grey[orig_index + i], orb_count);
+            cv::Mat aligned = align(transls[transl_index].img, transls[transl_index].img_grey, origs[i].img, origs[i].img_grey, orb_count);
             cnt += 1;
-            if (!first_match && i == 0)
+            if (origs[i].previously_aligned)
             {
+                if (i != 0)
+                {
+                    std::cout << "[AA] Unexpected, multioverlay at i=" << i << " ORIG-" << origs[i].index << " / TRANSL-" << transls[transl_index].index << std::endl;
+                }
                 cv::add(last_aligned, aligned, last_aligned);
-                std::cout << "[AA] TRANSL-" << transl_index << " additionally overlaid onto ORIG-" << orig_index + i << " // homography: " << formatter->format(last_homography) << std::endl;
+                std::cout << "[AA] TRANSL-" << transls[transl_index].index << " additionally overlaid onto ORIG-" << origs[i].index << " // homography: " << formatter->format(last_homography) << std::endl;
             }
             else
             {
                 last_aligned = aligned;
-                first_match = false;
-                std::cout << "[AA] TRANSL-" << transl_index << " primarily overlaid onto ORIG-" << orig_index + i << " // homography: " << formatter->format(last_homography) << std::endl;
+                std::cout << "[AA] TRANSL-" << transls[transl_index].index << " primarily overlaid onto ORIG-" << origs[i].index << " // homography: " << formatter->format(last_homography) << std::endl;
             }
-            write_im_and_info(std::filesystem::path(dst_path) / (std::to_string(orig_index + i + 1000001)), last_aligned);
-            for (int j = 0; j < transl_backtrack_count && j < i; ++j)
-            {
-                int bt_orig_index = orig_index + i - (j + 1);
-                int bt_transl_index = transl_index - (j + 1);
-                if (bt_orig_index <= orig_index && !first_match)
-                    break;
+            origs[i].previously_aligned = true;
+            write_im_and_info(std::filesystem::path(dst_path) / (std::to_string(origs[i].index + 1000001)), last_aligned);
 
+            for (int bt_orig_index = i - 1, bt_transl_index = transl_index - 1;
+                 0 <= bt_orig_index && 0 <= bt_transl_index && !origs[bt_orig_index].previously_aligned && !transls[bt_transl_index].previously_aligned;
+                 --bt_orig_index, --bt_transl_index)
+            {
                 cv::Mat resized;
-                cv::resize(transls[bt_transl_index], resized, cv::Size(origs[bt_orig_index].cols, origs[bt_orig_index].rows), 0, 0, cv::INTER_AREA);
+                cv::resize(transls[bt_transl_index].img, resized, cv::Size(origs[bt_orig_index].img.cols, origs[bt_orig_index].img.rows), 0, 0, cv::INTER_AREA);
                 cnt += 1;
 
-                std::cout << "[AA] TRANSL-" << bt_transl_index << " backtrack paired with ORIG-" << bt_orig_index << std::endl;
-                write_im_and_info(std::filesystem::path(dst_path) / (std::to_string(bt_orig_index + 1000001)), resized);
+                std::cout << "[AA] TRANSL-" << transls[bt_transl_index].index << " backtrack paired with ORIG-" << origs[bt_orig_index].index << std::endl;
+                write_im_and_info(std::filesystem::path(dst_path) / (std::to_string(origs[bt_orig_index].index + 1000001)), resized);
             }
-            // if this is single page or both are double no need to search for more matching translations
-            bool orig_double_page = double_page(origs_grey[orig_index + i]);
-            bool transl_double_page = double_page(transls_grey[transl_index]);
+
+            bool orig_double_page = double_page(origs[i].img_grey);
+            bool transl_double_page = double_page(transls[transl_index].img_grey);
+
+            // pop all skipped/backtracked images
+            if (i > 0)
+            {
+                origs.erase(origs.begin(), origs.begin() + i);
+            }
+            i = -1; // because for cycle will bump it to 0...
+            if (transl_index > 0)
+            {
+                transls.erase(transls.begin(), transls.begin() + transl_index);
+                transl_index = 0;
+            }
+            // if orig is single page or both are double no need to search for more matching translations // (although if both are double paged we might need to keep if there is a mismatch in even and odd pages...)
             if (!orig_double_page || (orig_double_page && transl_double_page))
             {
-                orig_index += 1;
-                first_match = true;
+                // std::cout << "[DEBUG] ORIG-" << origs[0].index << " popped" << std::endl;
+                origs.pop_front();
             }
-            transl_backtrack_count = 0;
-
-            if (!no_more && !orig_double_page && transl_double_page)
+            // if orig was a single page and translation a double and not aligned before, the other half may still be useful, so we need to continue
+            if (transls[transl_index].previously_aligned == false && !orig_double_page && transl_double_page)
             {
-                no_more = true;
-                orig_index -= 1;
+                transls[transl_index].previously_aligned = true;
                 continue;
             }
 
-            orig_index += i;
-
+            // if translation was a single page, or double page but already used once, we are done and can return
+            // std::cout << "[DEBUG] TRANSL-" << transls[0].index << " popped" << std::endl;
+            transls.pop_front();
             return cnt;
         }
         catch (const std::runtime_error &error)
         {
-            // std::cout << "Failed alignment: " << error.what() << std::endl;
+            // std::cout << "[DEBUG] TRANSL-" << transls[transl_index].index << " couldn't be aligned to ORIG-" << origs[i].index << " // " << error.what() << std::endl;
         }
-    }
-    if (!no_more)
-    {
-        transl_backtrack_count += 1;
     }
     return 0;
 }
 
 int add_transl(std::string src_path, std::string dst_path, int resize, bool do_split, bool do_crop, bool right2left, int orb_count)
 {
-    int loaded_cnt = load_and_preproc(src_path, transls, transls_grey, resize, do_split, do_crop, right2left);
+    int loaded_cnt = load_and_preproc(src_path, transls, transl_count, resize, do_split, do_crop, right2left);
     int total_cnt = 0;
     for (int i = loaded_cnt; i > 0; --i)
     {
@@ -377,11 +413,8 @@ void clean()
 {
     origs.clear();
     transls.clear();
-    origs_grey.clear();
-    transls_grey.clear();
-    transl_backtrack_count = 0;
-    orig_index = 0;
-    first_match = true;
+    orig_count = 0;
+    transl_count = 0;
     formatter->setMultiline(false);
 }
 
