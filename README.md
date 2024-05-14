@@ -11,7 +11,6 @@
 - service worker / PWA
 - testing UI and additional e2e tests
 - implement deleting collections and cancelling import
-- dimming option
 - window title based on collection name
 - syncing
   - https://www.dropbox.com/developers/documentation
@@ -24,3 +23,4 @@
   - https://developers.cloudflare.com/r2/api/s3/tokens/
   - https://github.com/dropbox/dropbox-sdk-js
 - have wrap up function to match remaining backtrack stack
+- cancel image IDB loading during fast scroll

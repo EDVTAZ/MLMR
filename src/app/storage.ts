@@ -1,6 +1,10 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 
+export function useBrightnessLocalStorage() {
+  return useLocalStorage(`brightness`, (v) => (v ? parseFloat(v) : null));
+}
+
 export function useAlignmentInProgressLocalStorage() {
   return useLocalStorage(`alignment-in-progress`, (v) =>
     v === 'false' ? false : v
