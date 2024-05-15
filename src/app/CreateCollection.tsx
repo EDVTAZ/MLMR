@@ -10,6 +10,7 @@ import { useFilePicker } from 'use-file-picker';
 import { FileContent } from 'use-file-picker/types';
 import { WorkerContext } from './AlignerWorker';
 import { Link, useNavigate } from 'react-router-dom';
+import JSZip from 'jszip';
 
 type ImageImportConfigType = {
   resize: number;
@@ -60,12 +61,54 @@ function startAlignment(
   );
 }
 
+async function unzipImages(fileContent: FileContent<ArrayBuffer>) {
+  const jszip = new JSZip();
+  const zip = await jszip.loadAsync(fileContent.content);
+  const returnFiles: FileContent<ArrayBuffer>[] = [];
+  for (const filename in zip.files) {
+    const file = zip.files[filename];
+    const inflatedFile: FileContent<ArrayBuffer> = {
+      name: file.name,
+      lastModified: file.date.getTime(),
+      content: await file.async('arraybuffer'),
+      //TODO handle type error (for now I'm more/less sure it won't cause problems...)
+    };
+    returnFiles.push(inflatedFile);
+  }
+  returnFiles.sort((a, b) => {
+    if (a.name < b.name) return -1;
+    if (a.name > b.name) return 1;
+    return 0;
+  });
+  return returnFiles;
+}
+
 function useImportImages() {
+  const [processedFilesContent, setProcessedFilesContent] = useState<
+    FileContent<ArrayBuffer>[]
+  >([]);
   // TODO handle loading state and errors
-  const { openFilePicker, filesContent } = useFilePicker({
+  const { openFilePicker } = useFilePicker({
     readAs: 'ArrayBuffer',
-    accept: 'image/*',
+    accept: ['image/*', '.zip', '.cbz'],
     multiple: true,
+    onFilesSuccessfullySelected: async ({ plainFiles, filesContent }) => {
+      // this callback is called when there were no validation errors
+      let newProcessedFiles: FileContent<ArrayBuffer>[] = [];
+      for (const fileContent of filesContent) {
+        if (
+          fileContent.name.endsWith('.zip') ||
+          fileContent.name.endsWith('.cbz')
+        ) {
+          newProcessedFiles = newProcessedFiles.concat(
+            await unzipImages(fileContent)
+          );
+        } else {
+          newProcessedFiles.push(fileContent);
+        }
+      }
+      setProcessedFilesContent(newProcessedFiles);
+    },
   });
   const [settings, setSettings] = useState<ImageImportConfigType>({
     resize: 2000000,
@@ -74,7 +117,12 @@ function useImportImages() {
     right2left: true,
   });
 
-  return { openFilePicker, filesContent, settings, setSettings };
+  return {
+    openFilePicker,
+    filesContent: processedFilesContent,
+    settings,
+    setSettings,
+  };
 }
 
 type ImportImagesProps = {

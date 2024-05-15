@@ -23,3 +23,6 @@
   - https://github.com/dropbox/dropbox-sdk-js
 - have wrap up function to match remaining backtrack stack
 - better IDB handling for faster image loads
+- avoid flashing on load before dim
+- shut down worker after inactivity
+- import file ordering options
