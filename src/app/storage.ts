@@ -166,20 +166,24 @@ export function useIDBImage(
 
   useEffect(() => {
     if (!shouldLoad) return;
-    getFileDataFromIDB(
-      `/idbfs/${collectionName}`,
-      `${type}/${getFileName(index, 'png')}`,
-      (imageData) => {
-        setBlobURL((oldBlobURL) => {
-          URL.revokeObjectURL(oldBlobURL);
-          return URL.createObjectURL(
-            new Blob([imageData], { type: 'image/*' })
-          );
-        });
-      }
-    );
+
+    const timeoutID = setTimeout(() => {
+      getFileDataFromIDB(
+        `/idbfs/${collectionName}`,
+        `${type}/${getFileName(index, 'png')}`,
+        (imageData) => {
+          setBlobURL((oldBlobURL) => {
+            URL.revokeObjectURL(oldBlobURL);
+            return URL.createObjectURL(
+              new Blob([imageData], { type: 'image/*' })
+            );
+          });
+        }
+      );
+    }, 200);
 
     return () => {
+      clearTimeout(timeoutID);
       setBlobURL((oldBlobURL) => {
         URL.revokeObjectURL(oldBlobURL);
         return '';

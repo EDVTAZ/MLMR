@@ -22,4 +22,4 @@
   - https://developers.cloudflare.com/r2/api/s3/tokens/
   - https://github.com/dropbox/dropbox-sdk-js
 - have wrap up function to match remaining backtrack stack
-- cancel image IDB loading during fast scroll
+- better IDB handling for faster image loads
