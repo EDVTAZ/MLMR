@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 
+const REFRESH_MOD = 10;
+
 export function useBrightnessLocalStorage() {
   return useLocalStorage(`brightness`, (v) => (v ? parseFloat(v) : null));
 }
@@ -25,8 +27,12 @@ export function useCollectionPositionLocalStorage(
   );
 }
 
-export function useCollectionNamesLocalStorage(): string[] {
+export function useCollectionNamesLocalStorage(): {
+  collections: string[];
+  refresh: () => void;
+} {
   const [collections, setCollections] = useState<string[]>([]);
+  const [cacheV, setCacheV] = useState(0);
 
   useEffect(() => {
     const newCollections: string[] = [];
@@ -37,14 +43,18 @@ export function useCollectionNamesLocalStorage(): string[] {
       }
     }
     setCollections(newCollections);
-  }, []);
+  }, [cacheV]);
 
-  return collections;
+  return {
+    collections,
+    refresh: () => setCacheV((v) => (v + 1) % REFRESH_MOD),
+  };
 }
 
 function useLocalStorage(key: string): {
   value: string | null;
   setValue: Dispatch<SetStateAction<string | null>>;
+  refresh: () => void;
 };
 function useLocalStorage<T>(
   key: string,
@@ -52,6 +62,7 @@ function useLocalStorage<T>(
 ): {
   value: T | null;
   setValue: Dispatch<SetStateAction<T | null>>;
+  refresh: () => void;
 };
 function useLocalStorage<T>(
   key: string,
@@ -60,6 +71,7 @@ function useLocalStorage<T>(
 ): {
   value: T | null;
   setValue: Dispatch<SetStateAction<T | null>>;
+  refresh: () => void;
 };
 function useLocalStorage<T = string>(
   key: string,
@@ -67,6 +79,7 @@ function useLocalStorage<T = string>(
   serialize = (param: T) => param
 ) {
   const [value, setValue] = useState<T | null>(null);
+  const [cacheV, setCacheV] = useState(0);
   const safeSetValue = (v: T | null) => {
     if (v !== null && v !== undefined) setValue(v);
   };
@@ -78,7 +91,7 @@ function useLocalStorage<T = string>(
     } catch (e) {
       /* empty */
     }
-  }, [key]);
+  }, [key, cacheV]);
 
   useEffect(() => {
     if (value !== null) localStorage[key] = serialize(value);
@@ -87,6 +100,27 @@ function useLocalStorage<T = string>(
   return {
     value,
     setValue: safeSetValue,
+    refresh: () => setCacheV((v) => (v + 1) % REFRESH_MOD),
+  };
+}
+
+export function deleteCollection(collectionName: string) {
+  localStorage.removeItem(`${collectionName}-orig`);
+  localStorage.removeItem(`${collectionName}-position`);
+  deleteIDB(collectionName);
+}
+
+function deleteIDB(collectionName: string) {
+  const DBDeleteRequest = indexedDB.deleteDatabase(`/idbfs/${collectionName}`);
+
+  DBDeleteRequest.onerror = (event) => {
+    console.error(`Error deleting ${collectionName} database. `, event);
+    setTimeout(() => {
+      deleteIDB(collectionName);
+    }, 100);
+  };
+  DBDeleteRequest.onsuccess = (event) => {
+    console.log(`${collectionName} database deleted successfully!`);
   };
 }
 
@@ -153,7 +187,7 @@ export function useIDBImage(
     };
   }, [collectionName, index, type, cacheV, shouldLoad]);
 
-  return { blobURL, refresh: () => setCacheV((v) => v + 1) };
+  return { blobURL, refresh: () => setCacheV((v) => (v + 1) % REFRESH_MOD) };
 }
 
 export function useIDBImageInfo(
@@ -177,5 +211,5 @@ export function useIDBImageInfo(
     );
   }, [collectionName, index, type, cacheV]);
 
-  return { ratio, refresh: () => setCacheV((v) => v + 1) };
+  return { ratio, refresh: () => setCacheV((v) => (v + 1) % REFRESH_MOD) };
 }

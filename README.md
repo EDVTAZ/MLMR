@@ -10,7 +10,6 @@
 - add support for various file formats (canvas for images, ?? for zip, pdf, etc.)
 - service worker / PWA
 - testing UI and additional e2e tests
-- implement deleting collections and cancelling import
 - window title based on collection name
 - syncing
   - https://www.dropbox.com/developers/documentation

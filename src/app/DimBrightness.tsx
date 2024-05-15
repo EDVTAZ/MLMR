@@ -22,10 +22,11 @@ export function DimBrightness() {
     }
 
     function keyPressHandler(ev: KeyboardEvent) {
+      if (ev.target.nodeName === 'INPUT') return;
+
       if (ev.key === 'm') stepBrightness(1);
       else if (ev.key === 'n') stepBrightness(-1);
       else return;
-      ev.preventDefault();
     }
     document.addEventListener('keydown', keyPressHandler);
     return () => {
