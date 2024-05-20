@@ -2,8 +2,10 @@ import { Link } from 'react-router-dom';
 import { deleteCollection, useCollectionNamesLocalStorage } from './storage';
 import { useContext } from 'react';
 import { WorkerContext } from './AlignerWorker';
+import { useAuth } from 'react-oidc-context';
 
 export function MainMenu({ ...rest }) {
+  const dropBoxAuth = useAuth();
   const { collections: collectionNames, refresh: refreshCollectionNames } =
     useCollectionNamesLocalStorage();
   const { setNeeded, inProgress, setInProgress } = useContext(WorkerContext);
@@ -23,6 +25,15 @@ export function MainMenu({ ...rest }) {
         <Link to={'/import'}>
           <button id="import-button">{'Import new collection'}</button>
         </Link>
+        <hr />
+        <button
+          onClick={() => {
+            dropBoxAuth.signinRedirect();
+          }}
+          disabled={dropBoxAuth.isAuthenticated}
+        >
+          Log in with DropBox
+        </button>
         <hr />
       </div>
       {collectionNames.map((collectionName) => (

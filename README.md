@@ -21,8 +21,10 @@
   - https://developers.cloudflare.com/r2/examples/aws/aws-sdk-js-v3/#configure-aws-sdk-js-v3-for-r2
   - https://developers.cloudflare.com/r2/api/s3/tokens/
   - https://github.com/dropbox/dropbox-sdk-js
+  - NANGO
 - have wrap up function to match remaining backtrack stack
 - better IDB handling for faster image loads
 - avoid flashing on load before dim
 - shut down worker after inactivity
 - import file ordering options
+- ability to show only a small portion of translation (e.g. by rightclick)

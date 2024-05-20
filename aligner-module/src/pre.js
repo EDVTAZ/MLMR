@@ -1,5 +1,5 @@
-/* eslint-disable no-restricted-globals */
-/* eslint-disable no-undef */
+/* global FS, IDBFS, Module, WorkerGlobalScope */
+
 const mountpointBase = '/idbfs';
 const imageDirs = ['in_transl', 'out_transl', 'in_orig', 'out_orig'];
 const INDEX_BASE = 1000000;
@@ -55,8 +55,8 @@ async function mountFS(mountpoint) {
     FS.mount(IDBFS, null, absmp);
     FSmounted = absmp;
     await syncFromIDB();
-    for (dir of imageDirs) {
-      dirToCheck = `${absmp}/${dir}`;
+    for (const dir of imageDirs) {
+      const dirToCheck = `${absmp}/${dir}`;
       if (!FS.analyzePath(dirToCheck).exists) {
         FS.mkdir(dirToCheck);
       }
@@ -184,7 +184,7 @@ async function runAlignment(
 
 if (
   typeof WorkerGlobalScope != 'undefined' &&
-  self instanceof WorkerGlobalScope
+  window.self instanceof WorkerGlobalScope
 ) {
   Module['onRuntimeInitialized'] = function () {
     console.log('Aligner module loaded!');
