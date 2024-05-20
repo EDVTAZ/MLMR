@@ -124,13 +124,13 @@ function deleteIDB(collectionName: string) {
   };
 }
 
-function getFileName(index: number, ext = 'png', indexBase = 1000000) {
+export function getFileName(index: number, ext = 'png', indexBase = 1000000) {
   return `${indexBase + index + 1}.${ext}`;
 }
 
 const FILE_DATA = 'FILE_DATA';
 const READONLY = 'readonly';
-function getFileDataFromIDB(
+export function getFileDataFromIDB(
   dbName: string,
   file: string,
   callback: (imageData: ArrayBuffer) => void

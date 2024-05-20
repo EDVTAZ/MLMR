@@ -28,3 +28,4 @@
 - shut down worker after inactivity
 - import file ordering options
 - ability to show only a small portion of translation (e.g. by rightclick)
+- delete inputs after import is done
