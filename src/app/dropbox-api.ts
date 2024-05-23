@@ -87,16 +87,15 @@ export async function uploadFolderDropBox(
 ) {
   const pageCount = parseInt(localStorage[`${collectionName}-orig`]);
   for (let index = 0; index < pageCount; index++) {
-    getFileDataFromIDB(
+    const imageData = await getFileDataFromIDB(
       `/idbfs/${collectionName}`,
-      `out_${type}/${getFileName(index)}`,
-      (imageData) => {
-        uploadSingleDropBox(
-          `/${collectionName}/${type}/${getFileName(index)}`,
-          imageData,
-          accessToken
-        );
-      }
+      `out_${type}/${getFileName(index)}`
+    );
+
+    uploadSingleDropBox(
+      `/${collectionName}/${type}/${getFileName(index)}`,
+      imageData,
+      accessToken
     );
   }
 }

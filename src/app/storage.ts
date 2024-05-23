@@ -130,7 +130,7 @@ export function getFileName(index: number, ext = 'png', indexBase = 1000000) {
 
 const FILE_DATA = 'FILE_DATA';
 const READONLY = 'readonly';
-export function getFileDataFromIDB(
+function getFileDataFromIDB_CB(
   dbName: string,
   file: string,
   callback: (imageData: ArrayBuffer) => void
@@ -155,6 +155,15 @@ export function getFileDataFromIDB(
   };
 }
 
+export function getFileDataFromIDB(
+  dbName: string,
+  file: string
+): Promise<ArrayBuffer> {
+  return new Promise((resolve) => {
+    getFileDataFromIDB_CB(dbName, file, resolve);
+  });
+}
+
 export function useIDBImage(
   collectionName: string,
   type: 'out_orig' | 'out_transl',
@@ -170,16 +179,15 @@ export function useIDBImage(
     const timeoutID = setTimeout(() => {
       getFileDataFromIDB(
         `/idbfs/${collectionName}`,
-        `${type}/${getFileName(index, 'png')}`,
-        (imageData) => {
-          setBlobURL((oldBlobURL) => {
-            URL.revokeObjectURL(oldBlobURL);
-            return URL.createObjectURL(
-              new Blob([imageData], { type: 'image/*' })
-            );
-          });
-        }
-      );
+        `${type}/${getFileName(index, 'png')}`
+      ).then((imageData) => {
+        setBlobURL((oldBlobURL) => {
+          URL.revokeObjectURL(oldBlobURL);
+          return URL.createObjectURL(
+            new Blob([imageData], { type: 'image/*' })
+          );
+        });
+      });
     }, 200);
 
     return () => {
@@ -206,13 +214,12 @@ export function useIDBImageInfo(
   useEffect(() => {
     getFileDataFromIDB(
       `/idbfs/${collectionName}`,
-      `${type}/${getFileName(index, 'txt')}`,
-      (data) => {
-        const dataString = new TextDecoder('utf-8').decode(data);
-        const [width, height] = dataString.split(':').map((i) => parseInt(i));
-        setRatio(width / height);
-      }
-    );
+      `${type}/${getFileName(index, 'txt')}`
+    ).then((data) => {
+      const dataString = new TextDecoder('utf-8').decode(data);
+      const [width, height] = dataString.split(':').map((i) => parseInt(i));
+      setRatio(width / height);
+    });
   }, [collectionName, index, type, cacheV]);
 
   return { ratio, refresh: () => setCacheV((v) => (v + 1) % REFRESH_MOD) };
