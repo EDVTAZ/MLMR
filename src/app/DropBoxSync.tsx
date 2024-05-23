@@ -7,6 +7,7 @@ import {
   listFolderDropBox,
   uploadFolderDropBox,
 } from './dropbox-api';
+import { AccessTokenEvents } from 'oidc-client-ts';
 
 const authConfig: AuthProviderProps = {
   authority: 'https://www.dropbox.com',
@@ -23,23 +24,26 @@ type DropBoxButtonProps = {
   collectionName: string;
   authenticated: boolean;
   accessToken: undefined | string;
-  refresh: number;
+  refresh: () => void;
+  uploaded: boolean;
 };
 
-function useDropBoxIsUploaded(
-  collectionName: string,
-  accessToken: string,
-  refresh: number
-) {
-  const [uploaded, setUploaded] = useState(false);
+function useDropBoxCollectionNames(accessToken: string) {
+  const [dropBopxCollectionNames, setCollectionNames] = useState<string[]>([]);
+  const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
-    listFolderDropBox(`/${collectionName}`, accessToken ?? '').then(
-      (entries: string[]) => setUploaded(entries.length > 0)
+    listFolderDropBox(`/`, accessToken ?? '').then((entries: string[]) =>
+      setCollectionNames(entries)
     );
-  }, [accessToken, collectionName, refresh]);
+  }, [accessToken, refresh]);
 
-  return uploaded;
+  return {
+    dropBopxCollectionNames,
+    refresh: () => {
+      setRefresh((prev) => (prev + 1) % 10);
+    },
+  };
 }
 
 function DropBoxUploadButton({
@@ -47,13 +51,9 @@ function DropBoxUploadButton({
   authenticated,
   accessToken,
   refresh,
+  uploaded,
 }: DropBoxButtonProps) {
   const [inProgress, setInProgress] = useState(false);
-  const uploaded = useDropBoxIsUploaded(
-    collectionName,
-    accessToken ?? '',
-    refresh
-  );
 
   return (
     <button
@@ -63,8 +63,9 @@ function DropBoxUploadButton({
         await createFolderDropBox(`/${collectionName}`, accessToken);
         await createFolderDropBox(`/${collectionName}/orig`, accessToken);
         await createFolderDropBox(`/${collectionName}/transl`, accessToken);
-        uploadFolderDropBox(collectionName, 'orig', accessToken);
-        uploadFolderDropBox(collectionName, 'transl', accessToken);
+        await uploadFolderDropBox(collectionName, 'orig', accessToken);
+        await uploadFolderDropBox(collectionName, 'transl', accessToken);
+        refresh();
         setInProgress(false); // not accurate, uploads started but may be in progress
       }}
       disabled={!authenticated || inProgress || uploaded}
@@ -77,13 +78,9 @@ function DropBoxDeleteButton({
   authenticated,
   accessToken,
   refresh,
+  uploaded,
 }: DropBoxButtonProps) {
   const [inProgress, setInProgress] = useState(false);
-  const uploaded = useDropBoxIsUploaded(
-    collectionName,
-    accessToken ?? '',
-    refresh
-  );
 
   return (
     <button
@@ -91,6 +88,7 @@ function DropBoxDeleteButton({
         if (!accessToken) return;
         setInProgress(true);
         await deleteDropBox(`/${collectionName}`, accessToken);
+        refresh();
         setInProgress(false);
       }}
       disabled={!authenticated || inProgress || !uploaded}
@@ -100,20 +98,10 @@ function DropBoxDeleteButton({
 
 export function DropBoxSyncPage() {
   const dropBoxAuth = useAuth();
-  const { collections: collectionNames, refresh: refreshCollectionNames } =
-    useCollectionNamesLocalStorage();
-  const [dropBoxRefresh, setDropBoxRefresh] = useState(0);
-
-  // useEffect(() => {
-  //   // TODO proper solution for updating dropbox buttons instead of polling...
-  //   if (dropBoxAuth.isAuthenticated) {
-  //     const token = setInterval(
-  //       () => setDropBoxRefresh((prev) => (prev + 1) % 10),
-  //       10000
-  //     );
-  //     return () => clearInterval(token);
-  //   }
-  // }, [dropBoxAuth.isAuthenticated]);
+  const { collections: collectionNames } = useCollectionNamesLocalStorage();
+  const { dropBopxCollectionNames, refresh } = useDropBoxCollectionNames(
+    dropBoxAuth.user?.access_token ?? ''
+  );
 
   return (
     <AuthProvider {...authConfig}>
@@ -126,19 +114,26 @@ export function DropBoxSyncPage() {
         Log in with DropBox
       </button>
       <hr />
-      {collectionNames.map((collectionName) => (
+      {collectionNames.concat(dropBopxCollectionNames).map((collectionName) => (
         <div key={collectionName}>
+          {`${
+            dropBopxCollectionNames.includes(collectionName) ? '' : 'not '
+          }uploaded // locally ${
+            collectionNames.includes(collectionName) ? '' : 'not '
+          }available`}
           <DropBoxUploadButton
             collectionName={collectionName}
             authenticated={dropBoxAuth.isAuthenticated}
             accessToken={dropBoxAuth.user?.access_token}
-            refresh={dropBoxRefresh}
+            uploaded={dropBopxCollectionNames.includes(collectionName)}
+            refresh={refresh}
           />
           <DropBoxDeleteButton
             collectionName={collectionName}
             authenticated={dropBoxAuth.isAuthenticated}
             accessToken={dropBoxAuth.user?.access_token}
-            refresh={dropBoxRefresh}
+            uploaded={dropBopxCollectionNames.includes(collectionName)}
+            refresh={refresh}
           />
         </div>
       ))}

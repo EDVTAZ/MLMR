@@ -52,7 +52,7 @@ export async function listFolderDropBox(path: string, accessToken: string) {
   return result;
 }
 
-export async function uploadSingleDropBox(
+async function uploadSingleDropBox(
   path: string,
   data: ArrayBuffer,
   accessToken: string
@@ -70,14 +70,18 @@ export async function uploadSingleDropBox(
         body: data,
       }
     );
+    // TODO better error handling
     if (result.status === 200) return;
   } catch (e) {
     console.log(e);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        uploadSingleDropBox(path, data, accessToken).then((_) =>
+          resolve(undefined)
+        );
+      }, 100);
+    });
   }
-  // TODO proper error handling and retry
-  setTimeout(() => {
-    uploadSingleDropBox(path, data, accessToken);
-  }, Math.random() * 900 + 100);
 }
 
 export async function uploadFolderDropBox(
@@ -92,7 +96,7 @@ export async function uploadFolderDropBox(
       `out_${type}/${getFileName(index)}`
     );
 
-    uploadSingleDropBox(
+    await uploadSingleDropBox(
       `/${collectionName}/${type}/${getFileName(index)}`,
       imageData,
       accessToken
