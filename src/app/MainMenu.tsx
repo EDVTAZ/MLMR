@@ -24,6 +24,10 @@ export function MainMenu({ ...rest }) {
           <button id="import-button">{'Import new collection'}</button>
         </Link>
         <hr />
+        <Link to={'/sync'}>
+          <button id="sync-button">{'Synchronize collections'}</button>
+        </Link>
+        <hr />
       </div>
       {collectionNames.map((collectionName) => (
         <div key={collectionName}>

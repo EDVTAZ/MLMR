@@ -11,17 +11,6 @@
 - service worker / PWA
 - testing UI and additional e2e tests
 - window title based on collection name
-- syncing
-  - https://www.dropbox.com/developers/documentation
-  - https://developers.google.com/drive/api/guides/about-sdk
-  - https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/welcome.html
-  - https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/s3-browser-examples.html
-  - https://developers.cloudflare.com/r2/
-  - https://developers.cloudflare.com/images/upload-images/direct-creator-upload/
-  - https://developers.cloudflare.com/r2/examples/aws/aws-sdk-js-v3/#configure-aws-sdk-js-v3-for-r2
-  - https://developers.cloudflare.com/r2/api/s3/tokens/
-  - https://github.com/dropbox/dropbox-sdk-js
-  - NANGO
 - have wrap up function to match remaining backtrack stack
 - better IDB handling for faster image loads
 - avoid flashing on load before dim
@@ -29,3 +18,4 @@
 - import file ordering options
 - ability to show only a small portion of translation (e.g. by rightclick)
 - delete inputs after import is done
+- solve useEffect dependency lint warnings, useCallback

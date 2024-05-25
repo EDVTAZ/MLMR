@@ -69,16 +69,18 @@ async function mountFS(mountpoint) {
   }
 }
 
-async function writeImages(type, images) {
+async function writeImages(type, images, reindex = true) {
   if (!FSmounted) {
     console.log('Not mounted yet!');
     throw new Error('Not mounted yet!');
   } else {
     images.forEach((file, index) => {
+      let filename = file.name;
+      if (reindex) {
+        filename = `${index + INDEX_BASE}.${file.name.split('.').at(-1)}`;
+      }
       FS.writeFile(
-        `${FSmounted}/${type}/${index + INDEX_BASE}.${file.name
-          .split('.')
-          .at(-1)}`,
+        `${FSmounted}/${type}/${filename}`,
         new Uint8Array(file.content)
       );
     });
@@ -182,9 +184,36 @@ async function runAlignment(
   });
 }
 
+async function runImport(name, orig_imgs, transl_imgs) {
+  if (progress !== false) {
+    console.log('Alignment already in progress, cannot start new!');
+  }
+
+  progress = true;
+  console.log('Starting alignment with...');
+
+  console.log('Saving images');
+  await mountFS(name);
+  await writeImages('out_orig', orig_imgs, false);
+  await writeImages('out_transl', transl_imgs, false);
+
+  console.log('Import done!');
+
+  FS.unmount(FSmounted);
+  FSmounted = false;
+
+  console.log('IDB FS unmounted!');
+
+  progress = false;
+  postMessage({
+    msg: 'done',
+  });
+}
+
 if (
   typeof WorkerGlobalScope != 'undefined' &&
-  window.self instanceof WorkerGlobalScope
+  // eslint-disable-next-line no-restricted-globals
+  self instanceof WorkerGlobalScope
 ) {
   Module['onRuntimeInitialized'] = function () {
     console.log('Aligner module loaded!');
@@ -204,6 +233,9 @@ if (
           msg['transl_imgs'],
           msg['transl_settings']
         );
+        break;
+      case 'direct-import':
+        runImport(msg['name'], msg['orig_imgs'], msg['transl_imgs']);
         break;
       default:
         console.log('Unkown command for aligner module!');

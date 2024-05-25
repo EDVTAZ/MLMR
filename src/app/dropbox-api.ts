@@ -1,3 +1,4 @@
+import { unzipImages } from './CreateCollection';
 import { getFileDataFromIDB, getFileName } from './storage';
 
 async function dropBoxPost(url: string, body: string, accessToken: string) {
@@ -37,7 +38,7 @@ export async function listFolderDropBox(path: string, accessToken: string) {
 
   if (response.status !== 200) return result;
   let responseData = await response.json();
-  result = result.concat(responseData['entries']);
+  result = result.concat(responseData['entries'].map((e: any) => e['name']));
 
   while (responseData['has_more']) {
     response = await dropBoxPost(
@@ -46,7 +47,7 @@ export async function listFolderDropBox(path: string, accessToken: string) {
       accessToken
     );
     responseData = await response.json();
-    result = result.concat(responseData['entries']);
+    result = result.concat(responseData['entries'].map((e: any) => e['name']));
   }
 
   return result;
@@ -93,13 +94,38 @@ export async function uploadFolderDropBox(
   for (let index = 0; index < pageCount; index++) {
     const imageData = await getFileDataFromIDB(
       `/idbfs/${collectionName}`,
-      `out_${type}/${getFileName(index)}`
+      `out_${type}/${getFileName(index, 'png')}`
+    );
+    const infoData = await getFileDataFromIDB(
+      `/idbfs/${collectionName}`,
+      `out_${type}/${getFileName(index, 'txt')}`
     );
 
     await uploadSingleDropBox(
-      `/${collectionName}/${type}/${getFileName(index)}`,
+      `/${collectionName}/${type}/${getFileName(index, 'png')}`,
       imageData,
       accessToken
     );
+    await uploadSingleDropBox(
+      `/${collectionName}/${type}/${getFileName(index, 'txt')}`,
+      infoData,
+      accessToken
+    );
   }
+}
+
+export async function downloadFolderDropBox(path: string, accessToken: string) {
+  const response = await fetch(
+    'https://content.dropboxapi.com/2/files/download_zip',
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/octet-stream',
+        'Dropbox-API-Arg': JSON.stringify({ path }),
+      },
+      method: 'POST',
+    }
+  );
+
+  return unzipImages(await response.arrayBuffer());
 }

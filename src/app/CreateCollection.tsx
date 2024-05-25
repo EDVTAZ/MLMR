@@ -61,12 +61,13 @@ function startAlignment(
   );
 }
 
-async function unzipImages(fileContent: FileContent<ArrayBuffer>) {
+export async function unzipImages(fileContent: ArrayBuffer) {
   const jszip = new JSZip();
-  const zip = await jszip.loadAsync(fileContent.content);
+  const zip = await jszip.loadAsync(fileContent);
   const returnFiles: FileContent<ArrayBuffer>[] = [];
   for (const filename in zip.files) {
     const file = zip.files[filename];
+    if (file.dir) continue;
     const inflatedFile: FileContent<ArrayBuffer> = {
       name: file.name,
       lastModified: file.date.getTime(),
@@ -101,7 +102,7 @@ function useImportImages() {
           fileContent.name.endsWith('.cbz')
         ) {
           newProcessedFiles = newProcessedFiles.concat(
-            await unzipImages(fileContent)
+            await unzipImages(fileContent.content)
           );
         } else {
           newProcessedFiles.push(fileContent);
@@ -324,6 +325,7 @@ export function CreateCollection({ ...rest }) {
           {'Start'}
         </button>
       </form>
+      <hr />
       <Link to={'/'}>
         <button>Back to home</button>
       </Link>
