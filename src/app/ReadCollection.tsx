@@ -80,6 +80,22 @@ function ReadCollectionUnstyled({ ...rest }) {
   const pageRefs = useRef<Array<HTMLDivElement | null>>([]);
   const scrollingRef = useRef({ scrolling: false, adjusting: false });
 
+  const [peeking, setPeeking] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    if (!peeking) return;
+
+    function getMousePos(ev: MouseEvent) {
+      setMousePos({ x: ev.clientX, y: ev.clientY });
+    }
+
+    document.addEventListener('mousemove', getMousePos);
+    return () => {
+      document.removeEventListener('mousemove', getMousePos);
+    };
+  }, [peeking]);
+
   useEffect(() => {
     document.title = `${collectionName} - MLMR`;
   }, [collectionName]);
@@ -113,12 +129,25 @@ function ReadCollectionUnstyled({ ...rest }) {
         switchLanguage();
         ev.preventDefault();
       }
+      if (ev.button === 2) {
+        setMousePos({ x: ev.clientX, y: ev.clientY });
+        setPeeking(true);
+        ev.preventDefault();
+      }
+    }
+    function clickReleaseHandler(ev: MouseEvent) {
+      if (ev.button === 2) {
+        setPeeking(false);
+        ev.preventDefault();
+      }
     }
     document.addEventListener('keydown', keyPressHandler);
     document.addEventListener('mousedown', clickHandler);
+    document.addEventListener('mouseup', clickReleaseHandler);
     return () => {
       document.removeEventListener('keydown', keyPressHandler);
       document.removeEventListener('mousedown', clickHandler);
+      document.removeEventListener('mouseup', clickReleaseHandler);
     };
   }, [originalCount]);
 
@@ -216,6 +245,8 @@ function ReadCollectionUnstyled({ ...rest }) {
                 shouldLoad={
                   Math.abs(currentPage.page - index) <= IMAGE_CACHE_RANGE
                 }
+                peeking={peeking}
+                mousePos={mousePos}
                 ref={(node: HTMLDivElement | null) => {
                   pageRefs.current[index] = node;
                 }}

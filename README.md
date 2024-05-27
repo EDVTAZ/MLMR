@@ -15,7 +15,7 @@
 - avoid flashing on load before dim
 - shut down worker after inactivity
 - import file ordering options --------------<<<<1>>>>
-- ability to show only a small portion of translation (e.g. by rightclick) --------------<<<<1>>>>
+- option to configure switching left/right mouse click behavior
 - delete inputs after import is done
 - solve useEffect dependency lint warnings, useCallback
 - dropbox progress bar
