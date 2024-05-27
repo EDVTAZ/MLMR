@@ -11,7 +11,6 @@
 - remove file formats other than png from opencv build
 - service worker / PWA
 - testing UI and additional e2e tests
-- window title based on collection name
 - have wrap up function to match remaining backtrack stack
 - better IDB handling for faster image loads
 - avoid flashing on load before dim
@@ -20,3 +19,4 @@
 - ability to show only a small portion of translation (e.g. by rightclick)
 - delete inputs after import is done
 - solve useEffect dependency lint warnings, useCallback
+- dropbox progress bar

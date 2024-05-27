@@ -81,6 +81,10 @@ function ReadCollectionUnstyled({ ...rest }) {
   const scrollingRef = useRef({ scrolling: false, adjusting: false });
 
   useEffect(() => {
+    document.title = `${collectionName} - MLMR`;
+  }, [collectionName]);
+
+  useEffect(() => {
     function switchLanguage() {
       setLanguage((v) => (v === 'orig' ? 'transl' : 'orig'));
     }
