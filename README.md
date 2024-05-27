@@ -7,7 +7,8 @@
 - allow importing only originals
 - resume import if interrupted
 - smaller subfolders for reduced memory footprint
-- add support for various file formats (canvas for images, ?? for zip, pdf, etc.)
+- add support for various file formats (?? for rar, pdf, etc.)
+- remove file formats other than png from opencv build
 - service worker / PWA
 - testing UI and additional e2e tests
 - window title based on collection name

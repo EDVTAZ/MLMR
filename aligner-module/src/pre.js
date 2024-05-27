@@ -69,21 +69,38 @@ async function mountFS(mountpoint) {
   }
 }
 
+async function loadImageWithCanvas(file) {
+  const bitmap = await createImageBitmap(
+    new Blob([file.content], { type: 'image/*' })
+  );
+  const width = bitmap.width;
+  const height = bitmap.height;
+
+  const canvas = new OffscreenCanvas(width, height);
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(bitmap, 0, 0);
+
+  const imgData = ctx.getImageData(0, 0, width, height);
+  FS.writeFile(`/rawdata`, imgData.data);
+
+  return { width, height };
+}
+
 async function writeImages(type, images, reindex = true) {
   if (!FSmounted) {
     console.log('Not mounted yet!');
     throw new Error('Not mounted yet!');
   } else {
-    images.forEach((file, index) => {
-      let filename = file.name;
+    for (let index = 0; index < images.length; ++index) {
+      const file = images[index];
       if (reindex) {
-        filename = `${index + INDEX_BASE}.${file.name.split('.').at(-1)}`;
+        file.name = `${index + INDEX_BASE}.${file.name.split('.').at(-1)}`;
       }
       FS.writeFile(
-        `${FSmounted}/${type}/${filename}`,
+        `${FSmounted}/${type}/${file.name}`,
         new Uint8Array(file.content)
       );
-    });
+    }
     await syncToIDB();
   }
 }
@@ -123,11 +140,11 @@ async function runAlignment(
   console.log('Processing orig images');
   for (let i = 0; i < orig_imgs.length; ++i) {
     const startTime = new Date();
+    const { width, height } = await loadImageWithCanvas(orig_imgs[i]);
     Module['add_orig'](
-      `${FSmounted}/in_orig/${i + INDEX_BASE}.${orig_imgs[i].name
-        .split('.')
-        .at(-1)}`,
       `${FSmounted}/out_orig/`,
+      width,
+      height,
       orig_settings['resize'],
       orig_settings['do_split'],
       orig_settings['do_crop'],
@@ -148,11 +165,11 @@ async function runAlignment(
   console.log('Processing transl images');
   for (let i = 0; i < transl_imgs.length; ++i) {
     const startTime = new Date();
+    const { width, height } = await loadImageWithCanvas(transl_imgs[i]);
     Module['add_transl'](
-      `${FSmounted}/in_transl/${i + INDEX_BASE}.${transl_imgs[i].name
-        .split('.')
-        .at(-1)}`,
       `${FSmounted}/out_transl/`,
+      width,
+      height,
       transl_settings['resize'],
       transl_settings['do_split'],
       transl_settings['do_crop'],

@@ -91,7 +91,7 @@ function useImportImages() {
   // TODO handle loading state and errors
   const { openFilePicker } = useFilePicker({
     readAs: 'ArrayBuffer',
-    accept: ['image/*', '.zip', '.cbz'],
+    accept: ['.avif', 'image/*', '.zip', '.cbz'],
     multiple: true,
     onFilesSuccessfullySelected: async ({ plainFiles, filesContent }) => {
       // this callback is called when there were no validation errors

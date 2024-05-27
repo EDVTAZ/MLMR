@@ -106,7 +106,7 @@ void crop_safe(cv::Mat &img_color, cv::Mat &img_grey)
     }
     else
     {
-        cv::cvtColor(img_color, img_grey, cv::COLOR_BGR2GRAY);
+        cv::cvtColor(img_color, img_grey, cv::COLOR_BGRA2GRAY);
     }
 }
 
@@ -116,13 +116,8 @@ bool same_color_col(cv::Mat &img, int colnum)
     return cv::checkRange(img.col(colnum), true, NULL, top, top + 1);
 }
 
-int load_and_preproc(std::string img_path, std::deque<PageImage> &acc, int &acc_count, int resize, bool do_split, bool do_crop, bool right2left)
+int load_and_preproc(cv::Mat &img_color, cv::Mat &img_grey, std::deque<PageImage> &acc, int &acc_count, int resize, bool do_split, bool do_crop, bool right2left)
 {
-    cv::Mat img_color = cv::imread(img_path);
-    cv::Mat img_grey;
-    cv::cvtColor(img_color, img_grey, cv::COLOR_BGR2GRAY);
-    cv::cvtColor(img_color, img_color, cv::COLOR_BGR2BGRA);
-
     if (do_crop)
     {
         crop_safe(img_color, img_grey);
@@ -189,6 +184,19 @@ int load_and_preproc(std::string img_path, std::deque<PageImage> &acc, int &acc_
         });
         return 1;
     }
+}
+
+int load_raw(int width, int height, std::deque<PageImage> &acc, int &acc_count, int resize, bool do_split, bool do_crop, bool right2left)
+{
+    cv::Mat img_color(height, width, CV_8UC4);
+    std::ifstream ifs("/rawdata", std::ios::binary);
+    ifs.read((char *)img_color.data, height * width * 4);
+    cv::cvtColor(img_color, img_color, cv::COLOR_RGBA2BGRA);
+
+    cv::Mat img_grey;
+    cv::cvtColor(img_color, img_grey, cv::COLOR_BGRA2GRAY);
+
+    return load_and_preproc(img_color, img_grey, acc, acc_count, resize, do_split, do_crop, right2left);
 }
 
 void write_im_and_info(std::string name, cv::Mat &image)
@@ -305,9 +313,9 @@ cv::Mat align(cv::Mat &to_align_color, cv::Mat &to_align_grey, cv::Mat &refim_co
     return warped_color;
 }
 
-int add_orig(std::string src_path, std::string dst_path, int resize, bool do_split, bool do_crop, bool right2left)
+int add_orig(std::string dst_path, int width, int height, int resize, bool do_split, bool do_crop, bool right2left)
 {
-    int cnt = load_and_preproc(src_path, origs, orig_count, resize, do_split, do_crop, right2left);
+    int cnt = load_raw(width, height, origs, orig_count, resize, do_split, do_crop, right2left);
 
     std::cout << "[AA] ORIG-" << origs.back().index << " added" << std::endl;
     write_im_and_info(std::filesystem::path(dst_path) / (std::to_string(origs.back().index + 1000001)), origs.back().img);
@@ -398,9 +406,9 @@ int find_pairing(std::string dst_path, int transl_index, int orb_count)
     return 0;
 }
 
-int add_transl(std::string src_path, std::string dst_path, int resize, bool do_split, bool do_crop, bool right2left, int orb_count)
+int add_transl(std::string dst_path, int width, int height, int resize, bool do_split, bool do_crop, bool right2left, int orb_count)
 {
-    int loaded_cnt = load_and_preproc(src_path, transls, transl_count, resize, do_split, do_crop, right2left);
+    int loaded_cnt = load_raw(width, height, transls, transl_count, resize, do_split, do_crop, right2left);
     int total_cnt = 0;
     for (int i = loaded_cnt; i > 0; --i)
     {
