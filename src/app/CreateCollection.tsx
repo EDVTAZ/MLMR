@@ -127,6 +127,7 @@ function useImportImages() {
 }
 
 type ImportImagesProps = {
+  typeName: 'original' | 'translation';
   openFilePicker: () => void;
   settings: ImageImportConfigType;
   setSettings: Dispatch<SetStateAction<ImageImportConfigType>>;
@@ -135,6 +136,7 @@ type ImportImagesProps = {
 };
 
 function ImportImages({
+  typeName,
   openFilePicker,
   settings,
   setSettings,
@@ -148,7 +150,7 @@ function ImportImages({
         onClick={openFilePicker}
         disabled={disabled}
       >
-        Import images
+        Import {typeName}
       </button>
       <label htmlFor={`resize-to-${idBase}`}>{' | Resize:'}</label>
       <input
@@ -235,6 +237,7 @@ export function CreateCollection({ ...rest }) {
     settings: settingsTransl,
   } = useImportImages();
   const [orbCount, setOrbCount] = useState(10000);
+  const [onlyOrig, setOnlyOrig] = useState(false);
   const { worker, setNeeded, inProgress, setInProgress } =
     useContext(WorkerContext);
   const navigate = useNavigate();
@@ -263,6 +266,7 @@ export function CreateCollection({ ...rest }) {
         <div>{`Another alignment (${inProgress}) is already in progress, please wait until it finishes...`}</div>
       )}
       <ImportImages
+        typeName={'original'}
         openFilePicker={openFilePickerOrig}
         settings={settingsOrig}
         setSettings={setSettingsOrig}
@@ -270,11 +274,12 @@ export function CreateCollection({ ...rest }) {
         disabled={!!inProgress}
       />
       <ImportImages
+        typeName={'translation'}
         openFilePicker={openFilePickerTransl}
         settings={settingsTransl}
         setSettings={setSettingsTransl}
         idBase="transl"
-        disabled={!!inProgress}
+        disabled={!!inProgress || onlyOrig}
       />
       <label htmlFor="orb-count">ORB count</label>
       <input
@@ -288,6 +293,15 @@ export function CreateCollection({ ...rest }) {
         }
         disabled={!!inProgress}
       />
+      <input
+        id={`only-orig`}
+        name="onlyOrig"
+        type="checkbox"
+        checked={onlyOrig}
+        onChange={(e) => setOnlyOrig(e.target.checked)}
+        disabled={!!inProgress}
+      />
+      <label htmlFor={`only-orig`}>{'Only import originals]'}</label>
       <div>{`Loaded ${filesContentOrig.length}+${filesContentTransl.length} images!`}</div>
       <form
         onSubmit={(ev) => {
@@ -298,7 +312,7 @@ export function CreateCollection({ ...rest }) {
             collectionName,
             filesContentOrig,
             settingsOrig,
-            filesContentTransl,
+            onlyOrig ? [] : filesContentTransl,
             settingsTransl,
             orbCount
           );
@@ -318,7 +332,7 @@ export function CreateCollection({ ...rest }) {
           disabled={
             !!inProgress ||
             filesContentOrig.length <= 0 ||
-            filesContentTransl.length <= 0 ||
+            (filesContentTransl.length <= 0 && !onlyOrig) ||
             collectionName.length === 0
           }
         >

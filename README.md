@@ -4,7 +4,6 @@
 - turn off debug mode compilation flags
 - more efficiont scroll position calc
 - add loading state to reader so we can block scrolling and avoid overwriting stored position
-- allow importing only originals
 - resume import if interrupted
 - smaller subfolders for reduced memory footprint
 - add support for various file formats (?? for rar, pdf, etc.)
@@ -15,8 +14,13 @@
 - better IDB handling for faster image loads
 - avoid flashing on load before dim
 - shut down worker after inactivity
-- import file ordering options
-- ability to show only a small portion of translation (e.g. by rightclick)
+- import file ordering options --------------<<<<1>>>>
+- ability to show only a small portion of translation (e.g. by rightclick) --------------<<<<1>>>>
 - delete inputs after import is done
 - solve useEffect dependency lint warnings, useCallback
 - dropbox progress bar
+- controls for mobile/keyboardless --------------<<<<2>>>>
+- check for existing collections when importing, regex rule for valid names
+- refactor --------------<<<<3>>>>
+- styling --------------<<<<4>>>>
+- use redux --------------<<<<5>>>>
