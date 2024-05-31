@@ -27,7 +27,7 @@ function getStyle(
   }
   if (peeking && elem) {
     const rect = elem.getBoundingClientRect();
-    const r = Math.floor(window.innerWidth * 0.1);
+    const r = Math.floor(window.innerWidth * 0.05);
     const left = mousePos.x - rect.left;
     const top = mousePos.y - r - rect.top;
     if (

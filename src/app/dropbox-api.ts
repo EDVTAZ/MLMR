@@ -127,5 +127,5 @@ export async function downloadFolderDropBox(path: string, accessToken: string) {
     }
   );
 
-  return unzipImages(await response.arrayBuffer());
+  return unzipImages(path, await response.arrayBuffer());
 }

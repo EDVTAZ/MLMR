@@ -1,6 +1,10 @@
 # TODO
 
+- consider internet archive bookreader
+- goto page option
 - memory management
+- still jittering during load+scroll
+- look for unnecessary useEffect usages
 - turn off debug mode compilation flags
 - more efficiont scroll position calc
 - add loading state to reader so we can block scrolling and avoid overwriting stored position
@@ -20,6 +24,8 @@
 - solve useEffect dependency lint warnings, useCallback
 - dropbox progress bar
 - controls for mobile/keyboardless --------------<<<<2>>>>
+  - https://www.npmjs.com/package/long-press-event
+  - https://www.npmjs.com/package/use-long-press
 - check for existing collections when importing, regex rule for valid names
 - refactor --------------<<<<3>>>>
 - styling --------------<<<<4>>>>

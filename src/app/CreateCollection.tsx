@@ -12,6 +12,12 @@ import { WorkerContext } from './AlignerWorker';
 import { Link, useNavigate } from 'react-router-dom';
 import JSZip from 'jszip';
 
+function stringCompare(a: string, b: string) {
+  if (a < b) return -1;
+  if (a > b) return 1;
+  return 0;
+}
+
 type ImageImportConfigType = {
   resize: number;
   do_split: boolean;
@@ -61,7 +67,10 @@ function startAlignment(
   );
 }
 
-export async function unzipImages(fileContent: ArrayBuffer) {
+export async function unzipImages(
+  zipFilename: string,
+  fileContent: ArrayBuffer
+) {
   const jszip = new JSZip();
   const zip = await jszip.loadAsync(fileContent);
   const returnFiles: FileContent<ArrayBuffer>[] = [];
@@ -69,18 +78,14 @@ export async function unzipImages(fileContent: ArrayBuffer) {
     const file = zip.files[filename];
     if (file.dir) continue;
     const inflatedFile: FileContent<ArrayBuffer> = {
-      name: file.name,
+      name: `${zipFilename}|${file.name}`,
       lastModified: file.date.getTime(),
       content: await file.async('arraybuffer'),
       //TODO handle type error (for now I'm more/less sure it won't cause problems...)
     };
     returnFiles.push(inflatedFile);
   }
-  returnFiles.sort((a, b) => {
-    if (a.name < b.name) return -1;
-    if (a.name > b.name) return 1;
-    return 0;
-  });
+  returnFiles.sort((a, b) => stringCompare(a.name, b.name));
   return returnFiles;
 }
 
@@ -102,7 +107,7 @@ function useImportImages() {
           fileContent.name.endsWith('.cbz')
         ) {
           newProcessedFiles = newProcessedFiles.concat(
-            await unzipImages(fileContent.content)
+            await unzipImages(fileContent.name, fileContent.content)
           );
         } else {
           newProcessedFiles.push(fileContent);
@@ -222,6 +227,62 @@ function ImportImages({
   );
 }
 
+function PageOrdering({
+  type,
+  files,
+  reorder,
+  setReorder,
+}: {
+  type: string;
+  files: FileContent<ArrayBuffer>[];
+  reorder: false | string;
+  setReorder: Dispatch<SetStateAction<false | string>>;
+}) {
+  const orderedFiles = files.map((e) => e.name);
+  if (reorder !== false) {
+    orderedFiles.sort((a, b) => {
+      try {
+        const aGroups = a.match(reorder)?.groups;
+        const bGroups = b.match(reorder)?.groups;
+
+        if (!aGroups || !bGroups) return 0; //TODO
+
+        for (let i = 0; `int${i}` in aGroups || `string${i}` in aGroups; ++i) {
+          let comp = 0;
+          if (`int${i}` in aGroups) {
+            comp = parseInt(aGroups[`int${i}`]) - parseInt(bGroups[`int${i}`]);
+          } else if (`string${i}` in aGroups) {
+            comp = stringCompare(aGroups[`string${i}`], bGroups[`string${i}`]);
+          }
+          if (comp !== 0) return comp;
+        }
+        return 0; // tDOO
+      } catch (e) {
+        return 0; // TOIDO
+      }
+    });
+  }
+
+  return (
+    <details>
+      <summary>
+        {type} file ordering: {reorder ? reorder.toString() : 'original'}
+      </summary>
+      <input
+        onChange={(e) => {
+          const val = (e.target as HTMLInputElement).value;
+          setReorder(val.length > 0 ? val : false);
+        }}
+      />
+      <ul>
+        {orderedFiles.map((fileName) => (
+          <li key={fileName}>{fileName}</li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
 export function CreateCollection({ ...rest }) {
   const [collectionName, setCollectionName] = useState<string>('');
   const {
@@ -236,6 +297,8 @@ export function CreateCollection({ ...rest }) {
     setSettings: setSettingsTransl,
     settings: settingsTransl,
   } = useImportImages();
+  const [origReorder, setOrigReorder] = useState<false | string>(false);
+  const [translReorder, setTranslReorder] = useState<false | string>(false);
   const [orbCount, setOrbCount] = useState(10000);
   const [onlyOrig, setOnlyOrig] = useState(false);
   const { worker, setNeeded, inProgress, setInProgress } =
@@ -303,10 +366,23 @@ export function CreateCollection({ ...rest }) {
       />
       <label htmlFor={`only-orig`}>{'Only import originals]'}</label>
       <div>{`Loaded ${filesContentOrig.length}+${filesContentTransl.length} images!`}</div>
+      <PageOrdering
+        type={'orig'}
+        files={filesContentOrig}
+        reorder={origReorder}
+        setReorder={setOrigReorder}
+      />
+      <PageOrdering
+        type={'transl'}
+        files={filesContentTransl}
+        reorder={translReorder}
+        setReorder={setTranslReorder}
+      />
       <form
         onSubmit={(ev) => {
           ev.preventDefault();
           setInProgress(collectionName);
+          // tODO order files
           startAlignment(
             worker,
             collectionName,
