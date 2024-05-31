@@ -6,6 +6,8 @@
 
 #include <emscripten/bind.h>
 
+// #define ALIGN_DEBUG
+
 const double EPS = 0.1;
 const int PIXEL_EPS = 10;
 const double RATIO_LOWER = 2 / 3 - EPS;
@@ -16,6 +18,9 @@ struct PageImage
 {
     int index;
     cv::Mat img;
+#ifdef ALIGN_DEBUG
+    cv::Mat img_kp;
+#endif
     cv::Mat img_grey;
     bool previously_aligned;
 };
@@ -29,6 +34,11 @@ cv::Mat last_aligned;
 cv::Mat last_homography;
 cv::Ptr<cv::Formatter> formatter = cv::Formatter::get(cv::Formatter::FMT_PYTHON);
 
+#ifdef ALIGN_DEBUG
+cv::Mat debug_orig;
+cv::Mat debug_transl;
+#endif
+
 bool double_page(cv::Mat img)
 {
     double ratio = img.cols / img.rows;
@@ -39,9 +49,9 @@ bool double_page(cv::Mat img)
     return true;
 }
 
-cv::Mat downscale(cv::Mat &img, int target_size)
+cv::Mat downscale(cv::Mat &img, int target_size, bool force = false)
 {
-    if (target_size > 0 && target_size < img.cols * img.rows)
+    if (target_size > 0 && (target_size < img.cols * img.rows || force))
     {
         if (double_page(img))
         {
@@ -145,14 +155,14 @@ int load_and_preproc(cv::Mat &img_color, cv::Mat &img_grey, std::deque<PageImage
         {
             acc.push_back({
                 .index = acc_count++,
-                .img = downscale(tmp2_color, resize),
-                .img_grey = downscale(tmp2_grey, resize),
+                .img = downscale(tmp2_color, resize, true),
+                .img_grey = downscale(tmp2_grey, resize, true),
                 .previously_aligned = false,
             });
             acc.push_back({
                 .index = acc_count++,
-                .img = downscale(tmp1_color, resize),
-                .img_grey = downscale(tmp1_grey, resize),
+                .img = downscale(tmp1_color, resize, true),
+                .img_grey = downscale(tmp1_grey, resize, true),
                 .previously_aligned = false,
             });
         }
@@ -160,14 +170,14 @@ int load_and_preproc(cv::Mat &img_color, cv::Mat &img_grey, std::deque<PageImage
         {
             acc.push_back({
                 .index = acc_count++,
-                .img = downscale(tmp1_color, resize),
-                .img_grey = downscale(tmp1_grey, resize),
+                .img = downscale(tmp1_color, resize, true),
+                .img_grey = downscale(tmp1_grey, resize, true),
                 .previously_aligned = false,
             });
             acc.push_back({
                 .index = acc_count++,
-                .img = downscale(tmp2_color, resize),
-                .img_grey = downscale(tmp2_grey, resize),
+                .img = downscale(tmp2_color, resize, true),
+                .img_grey = downscale(tmp2_grey, resize, true),
                 .previously_aligned = false,
             });
         }
@@ -178,8 +188,8 @@ int load_and_preproc(cv::Mat &img_color, cv::Mat &img_grey, std::deque<PageImage
     {
         acc.push_back({
             .index = acc_count++,
-            .img = downscale(img_color, resize),
-            .img_grey = downscale(img_grey, resize),
+            .img = downscale(img_color, resize, true),
+            .img_grey = downscale(img_grey, resize, true),
             .previously_aligned = false,
         });
         return 1;
@@ -267,6 +277,11 @@ cv::Mat align(cv::Mat &to_align_color, cv::Mat &to_align_grey, cv::Mat &refim_co
     orb_detector->detectAndCompute(refim_grey, cv::noArray(), ref_keypoints, ref_descriptors);
     orb_detector->detectAndCompute(to_align_grey, cv::noArray(), alig_keypoints, alig_descriptors);
 
+#ifdef ALIGN_DEBUG
+    cv::drawKeypoints(to_align_color, alig_keypoints, debug_transl, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+    cv::drawKeypoints(refim_color, ref_keypoints, debug_orig, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+#endif
+
     if (ref_keypoints.size() == 0 || alig_keypoints.size() == 0)
     {
         throw std::runtime_error("No keypoints!");
@@ -304,6 +319,9 @@ cv::Mat align(cv::Mat &to_align_color, cv::Mat &to_align_grey, cv::Mat &refim_co
     int inlier_count = std::accumulate(mask.begin(), mask.end(), 0);
 
     checkHomography(inlier_count, to_align_grey, refim_grey, last_homography);
+#ifdef ALIGN_DEBUG
+    cv::drawKeypoints(to_align_color, alig_keypoints, to_align_color, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+#endif
 
     cv::Mat warped_color;
     cv::warpPerspective(to_align_color, warped_color, last_homography,
@@ -359,7 +377,12 @@ int find_pairing(std::string dst_path, int transl_index, int orb_count)
                  --bt_orig_index, --bt_transl_index)
             {
                 cv::Mat resized;
+
+#ifndef ALIGN_DEBUG
                 cv::resize(transls[bt_transl_index].img, resized, cv::Size(origs[bt_orig_index].img.cols, origs[bt_orig_index].img.rows), 0, 0, cv::INTER_AREA);
+#else
+                cv::resize(transls[bt_transl_index].img_kp, resized, cv::Size(origs[bt_orig_index].img.cols, origs[bt_orig_index].img.rows), 0, 0, cv::INTER_AREA);
+#endif
                 cnt += 1;
 
                 std::cout << "[AA] TRANSL-" << transls[bt_transl_index].index << " backtrack paired with ORIG-" << origs[bt_orig_index].index << std::endl;
@@ -400,8 +423,15 @@ int find_pairing(std::string dst_path, int transl_index, int orb_count)
         }
         catch (const std::runtime_error &error)
         {
-            // std::cout << "[DEBUG] TRANSL-" << transls[transl_index].index << " couldn't be aligned to ORIG-" << origs[i].index << " // " << error.what() << std::endl;
+#ifdef ALIGN_DEBUG
+            std::cout << "[DEBUG] TRANSL-" << transls[transl_index].index << " couldn't be aligned to ORIG-" << origs[i].index << " // " << error.what() << std::endl;
+            transls[transl_index].img_kp = debug_transl;
+#endif
         }
+
+#ifdef ALIGN_DEBUG
+        write_im_and_info(std::filesystem::path(dst_path).parent_path().parent_path() / "out_orig" / (std::to_string(origs[i].index + 1000001)), debug_orig);
+#endif
     }
     return 0;
 }

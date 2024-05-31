@@ -1,5 +1,6 @@
 # TODO
 
+- alignment: bettersize matching (patchsize or other parameters instead of scaling image?)
 - consider internet archive bookreader
 - goto page option
 - memory management
