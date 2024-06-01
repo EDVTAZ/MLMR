@@ -19,15 +19,14 @@
 - better IDB handling for faster image loads
 - avoid flashing on load before dim
 - shut down worker after inactivity
-- import file ordering options --------------<<<<1>>>>
 - option to configure switching left/right mouse click behavior
 - delete inputs after import is done
 - solve useEffect dependency lint warnings, useCallback
 - dropbox progress bar
-- controls for mobile/keyboardless --------------<<<<2>>>>
+- controls for mobile/keyboardless --------------<<<<1>>>>
   - https://www.npmjs.com/package/long-press-event
   - https://www.npmjs.com/package/use-long-press
 - check for existing collections when importing, regex rule for valid names
-- refactor --------------<<<<3>>>>
-- styling --------------<<<<4>>>>
-- use redux --------------<<<<5>>>>
+- refactor --------------<<<<2>>>>
+- styling --------------<<<<3>>>>
+- use redux? --------------<<<<4>>>>

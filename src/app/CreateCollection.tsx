@@ -3,7 +3,6 @@ import {
   SetStateAction,
   useContext,
   useEffect,
-  useId,
   useState,
 } from 'react';
 import { useFilePicker } from 'use-file-picker';
@@ -16,6 +15,32 @@ function stringCompare(a: string, b: string) {
   if (a < b) return -1;
   if (a > b) return 1;
   return 0;
+}
+
+function getRegexComparer(regex: string) {
+  return (a: string, b: string) => {
+    try {
+      const aGroups = a.match(regex)?.groups;
+      const bGroups = b.match(regex)?.groups;
+
+      if (!aGroups && !bGroups) return 0;
+      if (!aGroups) return 1;
+      if (!bGroups) return -1;
+
+      for (let i = 0; `int${i}` in aGroups || `string${i}` in aGroups; ++i) {
+        let comp = 0;
+        if (`int${i}` in aGroups) {
+          comp = parseInt(aGroups[`int${i}`]) - parseInt(bGroups[`int${i}`]);
+        } else if (`string${i}` in aGroups) {
+          comp = stringCompare(aGroups[`string${i}`], bGroups[`string${i}`]);
+        }
+        if (comp !== 0) return comp;
+      }
+      return 0;
+    } catch (e) {
+      return 1;
+    }
+  };
 }
 
 type ImageImportConfigType = {
@@ -39,11 +64,26 @@ function startAlignment(
   dirname: string,
   filesContentOrig: FileContent<ArrayBuffer>[],
   settingsOrig: ImageImportConfigType,
+  origOrder: string | false,
   filesContentTransl: FileContent<ArrayBuffer>[],
   settingsTransl: ImageImportConfigType,
+  translOrder: string | false,
   orbCount: number
 ) {
   if (!worker) return;
+
+  if (origOrder) {
+    const comparer = getRegexComparer(origOrder);
+    filesContentOrig = [...filesContentOrig].sort((a, b) =>
+      comparer(a.name, b.name)
+    );
+  }
+  if (translOrder) {
+    const comparer = getRegexComparer(translOrder);
+    filesContentTransl = [...filesContentTransl].sort((a, b) =>
+      comparer(a.name, b.name)
+    );
+  }
 
   const data: StartImportType = {
     cmd: 'start',
@@ -99,7 +139,6 @@ function useImportImages() {
     accept: ['.avif', 'image/*', '.zip', '.cbz'],
     multiple: true,
     onFilesSuccessfullySelected: async ({ plainFiles, filesContent }) => {
-      // this callback is called when there were no validation errors
       let newProcessedFiles: FileContent<ArrayBuffer>[] = [];
       for (const fileContent of filesContent) {
         if (
@@ -240,27 +279,7 @@ function PageOrdering({
 }) {
   const orderedFiles = files.map((e) => e.name);
   if (reorder !== false) {
-    orderedFiles.sort((a, b) => {
-      try {
-        const aGroups = a.match(reorder)?.groups;
-        const bGroups = b.match(reorder)?.groups;
-
-        if (!aGroups || !bGroups) return 0; //TODO
-
-        for (let i = 0; `int${i}` in aGroups || `string${i}` in aGroups; ++i) {
-          let comp = 0;
-          if (`int${i}` in aGroups) {
-            comp = parseInt(aGroups[`int${i}`]) - parseInt(bGroups[`int${i}`]);
-          } else if (`string${i}` in aGroups) {
-            comp = stringCompare(aGroups[`string${i}`], bGroups[`string${i}`]);
-          }
-          if (comp !== 0) return comp;
-        }
-        return 0; // tDOO
-      } catch (e) {
-        return 0; // TOIDO
-      }
-    });
+    orderedFiles.sort(getRegexComparer(reorder));
   }
 
   return (
@@ -269,11 +288,18 @@ function PageOrdering({
         {type} file ordering: {reorder ? reorder.toString() : 'original'}
       </summary>
       <input
+        list="prepared-regexes"
+        placeholder="original"
         onChange={(e) => {
           const val = (e.target as HTMLInputElement).value;
-          setReorder(val.length > 0 ? val : false);
+          setReorder(val.length > 0 && val !== 'original' ? val : false);
         }}
       />
+      <datalist id="prepared-regexes">
+        <option value="original" />
+        <option value="^(?<int0>[0-9]+)\.\w+$" label="numbered" />
+        <option value="^(?<string0>.*)\.\w+$" label="string" />
+      </datalist>
       <ul>
         {orderedFiles.map((fileName) => (
           <li key={fileName}>{fileName}</li>
@@ -382,14 +408,15 @@ export function CreateCollection({ ...rest }) {
         onSubmit={(ev) => {
           ev.preventDefault();
           setInProgress(collectionName);
-          // tODO order files
           startAlignment(
             worker,
             collectionName,
             filesContentOrig,
             settingsOrig,
+            origReorder,
             onlyOrig ? [] : filesContentTransl,
             settingsTransl,
+            translReorder,
             orbCount
           );
         }}
