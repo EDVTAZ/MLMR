@@ -2,7 +2,6 @@
 
 - alignment: bettersize matching (patchsize or other parameters instead of scaling image?)
 - consider internet archive bookreader
-- goto page option
 - memory management
 - still jittering during load+scroll
 - look for unnecessary useEffect usages
@@ -23,9 +22,8 @@
 - delete inputs after import is done
 - solve useEffect dependency lint warnings, useCallback
 - dropbox progress bar
-- controls for mobile/keyboardless --------------<<<<1>>>>
-  - https://www.npmjs.com/package/long-press-event
-  - https://www.npmjs.com/package/use-long-press
+- goto page option
+- better mobile peeking
 - check for existing collections when importing, regex rule for valid names
 - refactor --------------<<<<2>>>>
 - styling --------------<<<<3>>>>

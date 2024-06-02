@@ -71,6 +71,7 @@ function ReadCollectionUnstyled({ ...rest }) {
   const localStorageCurrentPage =
     useCollectionPositionLocalStorage(collectionName);
 
+  const [zoomSlider, setZoomSlider] = useState(false);
   const [zoom, setZoom] = useState(90);
 
   const originalCount = useCollectionLocalStorage(collectionName);
@@ -81,6 +82,7 @@ function ReadCollectionUnstyled({ ...rest }) {
   const scrollingRef = useRef({ scrolling: false, adjusting: false });
 
   const [peeking, setPeeking] = useState(false);
+  const [switchMC, setSwitchMC] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -90,9 +92,9 @@ function ReadCollectionUnstyled({ ...rest }) {
       setMousePos({ x: ev.clientX, y: ev.clientY });
     }
 
-    document.addEventListener('mousemove', getMousePos);
+    document.addEventListener('pointermove', getMousePos);
     return () => {
-      document.removeEventListener('mousemove', getMousePos);
+      document.removeEventListener('pointermove', getMousePos);
     };
   }, [peeking]);
 
@@ -125,31 +127,68 @@ function ReadCollectionUnstyled({ ...rest }) {
       ev.preventDefault();
     }
     function clickHandler(ev: MouseEvent) {
-      if (ev.button === 0) {
+      if (
+        ev.button === (switchMC ? 2 : 0) &&
+        (ev.target as HTMLElement)?.id !== 'page-counter' &&
+        (ev.target as HTMLElement)?.id !== 'switch-peek'
+      ) {
         switchLanguage();
         ev.preventDefault();
       }
-      if (ev.button === 2) {
+      if (ev.button === (switchMC ? 0 : 2)) {
         setMousePos({ x: ev.clientX, y: ev.clientY });
         setPeeking(true);
         ev.preventDefault();
       }
     }
     function clickReleaseHandler(ev: MouseEvent) {
-      if (ev.button === 2) {
+      if (ev.button === (switchMC ? 0 : 2)) {
         setPeeking(false);
         ev.preventDefault();
       }
     }
+
+    function touchStartHandler(ev: TouchEvent) {
+      if (switchMC) {
+        setMousePos({
+          x: ev.changedTouches[0].clientX,
+          y: ev.changedTouches[0].clientY,
+        });
+        setPeeking(true);
+      }
+    }
+    function touchMoveHandler(ev: TouchEvent) {
+      if (switchMC) {
+        setMousePos({
+          x: ev.changedTouches[0].clientX,
+          y: ev.changedTouches[0].clientY,
+        });
+      }
+    }
+
+    function touchEndHandler(ev: Event) {
+      if (switchMC) {
+        setPeeking(false);
+      }
+    }
+
     document.addEventListener('keydown', keyPressHandler);
     document.addEventListener('mousedown', clickHandler);
     document.addEventListener('mouseup', clickReleaseHandler);
+    document.addEventListener('touchstart', touchStartHandler);
+    document.addEventListener('touchmove', touchMoveHandler);
+    document.addEventListener('touchend', touchEndHandler);
+    document.addEventListener('touchcancel', touchEndHandler);
     return () => {
       document.removeEventListener('keydown', keyPressHandler);
       document.removeEventListener('mousedown', clickHandler);
       document.removeEventListener('mouseup', clickReleaseHandler);
+      document.removeEventListener('touchstart', touchStartHandler);
+      document.removeEventListener('touchmove', touchMoveHandler);
+      document.removeEventListener('touchend', touchEndHandler);
+      document.removeEventListener('touchcancel', touchEndHandler);
     };
-  }, [originalCount]);
+  }, [originalCount, switchMC]);
 
   useEffect(() => {
     if (!worker) return;
@@ -254,6 +293,12 @@ function ReadCollectionUnstyled({ ...rest }) {
             );
           })}
         <div
+          onClick={(ev) => {
+            setZoomSlider((prev) => !prev);
+            ev.preventDefault();
+            return false;
+          }}
+          id="page-counter"
           style={{
             position: 'fixed',
             left: '0px',
@@ -289,6 +334,51 @@ function ReadCollectionUnstyled({ ...rest }) {
             }).format(progress.transl)}`}
           </div>
         )}
+        {zoomSlider && (
+          <>
+            <input
+              type="range"
+              list="tickmarks"
+              min="10"
+              max="100"
+              step="10"
+              id="zoom"
+              name="zoom"
+              value={zoom}
+              onChange={(ev) => setZoom(parseInt(ev.target.value))}
+              style={{
+                position: 'fixed',
+                bottom: '5vh',
+                left: '50%',
+                transform: 'translate(-50%, 0)',
+                width: '40vw',
+                zIndex: 2,
+              }}
+            />
+            <datalist id="tickmarks">
+              {Array(10)
+                .fill(1)
+                .map((_, index) => (
+                  <option value={(index + 1) * 10} key={index}></option>
+                ))}
+            </datalist>
+          </>
+        )}
+      </div>
+      <div
+        onClick={(ev) => {
+          setSwitchMC((prev) => !prev);
+        }}
+        id="switch-peek"
+        style={{
+          position: 'fixed',
+          right: '0px',
+          bottom: '0px',
+          maxWidth: '4vw',
+          zIndex: 2,
+        }}
+      >
+        Switch Peek
       </div>
     </div>
   );
