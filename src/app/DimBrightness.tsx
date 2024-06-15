@@ -1,5 +1,5 @@
 import { useEffect, type PropsWithChildren } from 'react';
-import { useBrightnessLocalStorage } from './storage';
+import { useBrightnessLocalStorage } from './util/storage';
 
 const BRIGHTNESS_FRACTION = 10;
 

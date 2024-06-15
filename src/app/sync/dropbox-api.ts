@@ -1,5 +1,5 @@
-import { unzipImages } from './CreateCollection';
-import { getFileDataFromIDB, getFileName } from './storage';
+import { unzipImages } from './../import/CreateCollection';
+import { getFileDataFromIDB, getFileName } from '../util/storage';
 
 async function dropBoxPost(url: string, body: string, accessToken: string) {
   return await fetch(url, {

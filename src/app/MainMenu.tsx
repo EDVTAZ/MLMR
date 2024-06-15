@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom';
-import { deleteCollection, useCollectionNamesLocalStorage } from './storage';
-import { useContext, useEffect, useState } from 'react';
+import {
+  deleteCollection,
+  useCollectionNamesLocalStorage,
+} from './util/storage';
+import { useContext } from 'react';
 import { WorkerContext } from './AlignerWorker';
 
 export function MainMenu({ ...rest }) {

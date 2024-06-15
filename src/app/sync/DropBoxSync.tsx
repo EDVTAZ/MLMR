@@ -1,5 +1,5 @@
 import { AuthProvider, AuthProviderProps, useAuth } from 'react-oidc-context';
-import { useCollectionNamesLocalStorage } from './storage';
+import { useCollectionNamesLocalStorage } from '../util/storage';
 import { useContext, useEffect, useState } from 'react';
 import {
   createFolderDropBox,
@@ -8,7 +8,7 @@ import {
   listFolderDropBox,
   uploadFolderDropBox,
 } from './dropbox-api';
-import { WorkerContext } from './AlignerWorker';
+import { WorkerContext } from '../AlignerWorker';
 import { Link } from 'react-router-dom';
 import { FileContent } from 'use-file-picker/types';
 

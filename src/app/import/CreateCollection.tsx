@@ -7,7 +7,7 @@ import {
 } from 'react';
 import { useFilePicker } from 'use-file-picker';
 import { FileContent } from 'use-file-picker/types';
-import { WorkerContext } from './AlignerWorker';
+import { WorkerContext } from '../AlignerWorker';
 import { Link, useNavigate } from 'react-router-dom';
 import JSZip from 'jszip';
 

@@ -2,7 +2,7 @@ import { ParamParseKey, Params, useLoaderData } from 'react-router-dom';
 import {
   useCollectionLocalStorage,
   useCollectionPositionLocalStorage,
-} from './storage';
+} from '../util/storage';
 import { Page } from './Page';
 import styled from 'styled-components';
 import {
@@ -13,7 +13,7 @@ import {
   useState,
 } from 'react';
 import type { MutableRefObject } from 'react';
-import { WorkerContext } from './AlignerWorker';
+import { WorkerContext } from '../AlignerWorker';
 
 const IMAGE_CACHE_RANGE = 3;
 

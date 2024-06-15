@@ -25,6 +25,11 @@
 - goto page option
 - better mobile peeking
 - check for existing collections when importing, regex rule for valid names
+- dictionary overlay
+  - https://github.com/eidoriantan/kanji.js
+  - https://github.com/bryanjenningz/japanese-dictionary
+  - https://github.com/asdfjkl/kanjicanvas
+  - https://github.com/ZacharyRead/jlect-jhr
 - refactor --------------<<<<2>>>>
 - styling --------------<<<<3>>>>
-- use redux? --------------<<<<4>>>>
+- use redux? effect? remeda?

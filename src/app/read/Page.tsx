@@ -5,8 +5,8 @@ import {
   useImperativeHandle,
   useRef,
 } from 'react';
-import { useIDBImage, useIDBImageInfo } from './storage';
-import { WorkerContext } from './AlignerWorker';
+import { useIDBImage, useIDBImageInfo } from '../util/storage';
+import { WorkerContext } from '../AlignerWorker';
 
 function getStyle(
   show: boolean,
