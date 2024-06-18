@@ -4,7 +4,7 @@ import {
   useCollectionNamesLocalStorage,
 } from './util/storage';
 import { useContext } from 'react';
-import { WorkerContext } from './AlignerWorker';
+import { WorkerContext } from './aligner-worker/AlignerWorker';
 
 export function MainMenu({ ...rest }) {
   const { collections: collectionNames, refresh: refreshCollectionNames } =

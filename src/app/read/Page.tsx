@@ -6,7 +6,7 @@ import {
   useRef,
 } from 'react';
 import { useIDBImage, useIDBImageInfo } from '../util/storage';
-import { WorkerContext } from '../AlignerWorker';
+import { WorkerContext } from '../aligner-worker/AlignerWorker';
 
 function getStyle(
   show: boolean,

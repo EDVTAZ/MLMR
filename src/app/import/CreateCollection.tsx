@@ -1,313 +1,23 @@
-import {
-  Dispatch,
-  SetStateAction,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
-import { useFilePicker } from 'use-file-picker';
-import { FileContent } from 'use-file-picker/types';
-import { WorkerContext } from '../AlignerWorker';
+import { useContext, useEffect, useState } from 'react';
+import { WorkerContext } from '../aligner-worker/AlignerWorker';
 import { Link, useNavigate } from 'react-router-dom';
-import JSZip from 'jszip';
+import { PageOrdering } from './PageOrdering';
+import { useUploadImages } from './useUploadImages';
+import { ImageImportConfigType } from './types';
+import { UploadImages } from './UploadImages';
+import { startAlignment } from '../aligner-worker/start-alignment';
+import { orderFiles } from '../util/filename-compare';
+import {
+  useLoadAlignerWorker,
+  useRedirectToInProgressImport,
+} from '../aligner-worker/useAlignerworker';
 
-function stringCompare(a: string, b: string) {
-  if (a < b) return -1;
-  if (a > b) return 1;
-  return 0;
-}
-
-function getRegexComparer(regex: string) {
-  return (a: string, b: string) => {
-    try {
-      const aGroups = a.match(regex)?.groups;
-      const bGroups = b.match(regex)?.groups;
-
-      if (!aGroups && !bGroups) return 0;
-      if (!aGroups) return 1;
-      if (!bGroups) return -1;
-
-      for (let i = 0; `int${i}` in aGroups || `string${i}` in aGroups; ++i) {
-        let comp = 0;
-        if (`int${i}` in aGroups) {
-          comp = parseInt(aGroups[`int${i}`]) - parseInt(bGroups[`int${i}`]);
-        } else if (`string${i}` in aGroups) {
-          comp = stringCompare(aGroups[`string${i}`], bGroups[`string${i}`]);
-        }
-        if (comp !== 0) return comp;
-      }
-      return 0;
-    } catch (e) {
-      return 1;
-    }
-  };
-}
-
-type ImageImportConfigType = {
-  resize: number;
-  do_split: boolean;
-  do_crop: boolean;
-  right2left: boolean;
+const defaultImportSettings: ImageImportConfigType = {
+  resize: 2000000,
+  do_split: true,
+  do_crop: true,
+  right2left: true,
 };
-
-type StartImportType = {
-  cmd: 'start';
-  name: string;
-  orig_imgs: FileContent<ArrayBuffer>[];
-  orig_settings: ImageImportConfigType;
-  transl_imgs: FileContent<ArrayBuffer>[];
-  transl_settings: ImageImportConfigType & { orb_count: number };
-};
-
-function startAlignment(
-  worker: Worker | null,
-  dirname: string,
-  filesContentOrig: FileContent<ArrayBuffer>[],
-  settingsOrig: ImageImportConfigType,
-  origOrder: string | false,
-  filesContentTransl: FileContent<ArrayBuffer>[],
-  settingsTransl: ImageImportConfigType,
-  translOrder: string | false,
-  orbCount: number
-) {
-  if (!worker) return;
-
-  if (origOrder) {
-    const comparer = getRegexComparer(origOrder);
-    filesContentOrig = [...filesContentOrig].sort((a, b) =>
-      comparer(a.name, b.name)
-    );
-  }
-  if (translOrder) {
-    const comparer = getRegexComparer(translOrder);
-    filesContentTransl = [...filesContentTransl].sort((a, b) =>
-      comparer(a.name, b.name)
-    );
-  }
-
-  const data: StartImportType = {
-    cmd: 'start',
-    name: dirname,
-    orig_imgs: filesContentOrig,
-    orig_settings: settingsOrig,
-    transl_imgs: filesContentTransl,
-    transl_settings: { ...settingsTransl, orb_count: orbCount },
-  };
-  worker.postMessage(
-    data,
-    filesContentOrig
-      .map((file) => {
-        return file.content;
-      })
-      .concat(
-        filesContentTransl.map((file) => {
-          return file.content;
-        })
-      )
-  );
-}
-
-export async function unzipImages(
-  zipFilename: string,
-  fileContent: ArrayBuffer
-) {
-  const jszip = new JSZip();
-  const zip = await jszip.loadAsync(fileContent);
-  const returnFiles: FileContent<ArrayBuffer>[] = [];
-  for (const filename in zip.files) {
-    const file = zip.files[filename];
-    if (file.dir) continue;
-    const inflatedFile: FileContent<ArrayBuffer> = {
-      name: `${zipFilename}|${file.name}`,
-      lastModified: file.date.getTime(),
-      content: await file.async('arraybuffer'),
-      //TODO handle type error (for now I'm more/less sure it won't cause problems...)
-    };
-    returnFiles.push(inflatedFile);
-  }
-  returnFiles.sort((a, b) => stringCompare(a.name, b.name));
-  return returnFiles;
-}
-
-function useImportImages() {
-  const [processedFilesContent, setProcessedFilesContent] = useState<
-    FileContent<ArrayBuffer>[]
-  >([]);
-  // TODO handle loading state and errors
-  const { openFilePicker } = useFilePicker({
-    readAs: 'ArrayBuffer',
-    accept: ['.avif', 'image/*', '.zip', '.cbz'],
-    multiple: true,
-    onFilesSuccessfullySelected: async ({ plainFiles, filesContent }) => {
-      let newProcessedFiles: FileContent<ArrayBuffer>[] = [];
-      for (const fileContent of filesContent) {
-        if (
-          fileContent.name.endsWith('.zip') ||
-          fileContent.name.endsWith('.cbz')
-        ) {
-          newProcessedFiles = newProcessedFiles.concat(
-            await unzipImages(fileContent.name, fileContent.content)
-          );
-        } else {
-          newProcessedFiles.push(fileContent);
-        }
-      }
-      setProcessedFilesContent(newProcessedFiles);
-    },
-  });
-  const [settings, setSettings] = useState<ImageImportConfigType>({
-    resize: 2000000,
-    do_split: true,
-    do_crop: true,
-    right2left: true,
-  });
-
-  return {
-    openFilePicker,
-    filesContent: processedFilesContent,
-    settings,
-    setSettings,
-  };
-}
-
-type ImportImagesProps = {
-  typeName: 'original' | 'translation';
-  openFilePicker: () => void;
-  settings: ImageImportConfigType;
-  setSettings: Dispatch<SetStateAction<ImageImportConfigType>>;
-  idBase: string;
-  disabled: boolean;
-};
-
-function ImportImages({
-  typeName,
-  openFilePicker,
-  settings,
-  setSettings,
-  idBase,
-  disabled,
-}: ImportImagesProps) {
-  return (
-    <div>
-      <button
-        id={`upload-images-${idBase}`}
-        onClick={openFilePicker}
-        disabled={disabled}
-      >
-        Import {typeName}
-      </button>
-      <label htmlFor={`resize-to-${idBase}`}>{' | Resize:'}</label>
-      <input
-        id={`resize-to-${idBase}`}
-        name="resizeTo"
-        type="number"
-        value={settings.resize}
-        onInput={(e) =>
-          setSettings((prev) => {
-            return {
-              ...prev,
-              resize: parseInt((e.target as HTMLInputElement).value),
-            };
-          })
-        }
-        disabled={disabled}
-      />
-      <input
-        id={`do-crop-${idBase}`}
-        name="doCrop"
-        type="checkbox"
-        checked={settings.do_crop}
-        onChange={(e) =>
-          setSettings((prev) => {
-            return {
-              ...prev,
-              do_crop: e.target.checked,
-            };
-          })
-        }
-        disabled={disabled}
-      />
-      <label htmlFor={`do-crop-${idBase}`}>{'Crop pages]'}</label>
-      <input
-        id={`do-split-${idBase}`}
-        name="doSplit"
-        type="checkbox"
-        checked={settings.do_split}
-        onChange={(e) =>
-          setSettings((prev) => {
-            return {
-              ...prev,
-              do_split: e.target.checked,
-            };
-          })
-        }
-        disabled={disabled}
-      />
-      <label htmlFor={`do-split-${idBase}`}>{'Split double pages]'}</label>
-      <input
-        id={`right-to-left-${idBase}`}
-        name="rightToLeft"
-        type="checkbox"
-        checked={settings.right2left}
-        onChange={(e) =>
-          setSettings((prev) => {
-            return {
-              ...prev,
-              right2left: e.target.checked,
-            };
-          })
-        }
-        disabled={disabled}
-      />
-      <label htmlFor={`right-to-left-${idBase}`}>
-        {'Right to left if checked]'}
-      </label>
-    </div>
-  );
-}
-
-function PageOrdering({
-  type,
-  files,
-  reorder,
-  setReorder,
-}: {
-  type: string;
-  files: FileContent<ArrayBuffer>[];
-  reorder: false | string;
-  setReorder: Dispatch<SetStateAction<false | string>>;
-}) {
-  const orderedFiles = files.map((e) => e.name);
-  if (reorder !== false) {
-    orderedFiles.sort(getRegexComparer(reorder));
-  }
-
-  return (
-    <details>
-      <summary>
-        {type} file ordering: {reorder ? reorder.toString() : 'original'}
-      </summary>
-      <input
-        list="prepared-regexes"
-        placeholder="original"
-        onChange={(e) => {
-          const val = (e.target as HTMLInputElement).value;
-          setReorder(val.length > 0 && val !== 'original' ? val : false);
-        }}
-      />
-      <datalist id="prepared-regexes">
-        <option value="original" />
-        <option value="^(?<int0>[0-9]+)\.\w+$" label="numbered" />
-        <option value="^(?<string0>.*)\.\w+$" label="string" />
-      </datalist>
-      <ul>
-        {orderedFiles.map((fileName) => (
-          <li key={fileName}>{fileName}</li>
-        ))}
-      </ul>
-    </details>
-  );
-}
 
 export function CreateCollection({ ...rest }) {
   const [collectionName, setCollectionName] = useState<string>('');
@@ -316,45 +26,28 @@ export function CreateCollection({ ...rest }) {
     filesContent: filesContentOrig,
     setSettings: setSettingsOrig,
     settings: settingsOrig,
-  } = useImportImages();
+  } = useUploadImages(defaultImportSettings);
   const {
     openFilePicker: openFilePickerTransl,
     filesContent: filesContentTransl,
     setSettings: setSettingsTransl,
     settings: settingsTransl,
-  } = useImportImages();
+  } = useUploadImages(defaultImportSettings);
   const [origReorder, setOrigReorder] = useState<false | string>(false);
   const [translReorder, setTranslReorder] = useState<false | string>(false);
   const [orbCount, setOrbCount] = useState(10000);
   const [onlyOrig, setOnlyOrig] = useState(false);
-  const { worker, setNeeded, inProgress, setInProgress } =
-    useContext(WorkerContext);
-  const navigate = useNavigate();
+  const { worker, inProgress, setInProgress } = useContext(WorkerContext);
 
-  useEffect(() => {
-    setNeeded(true);
-  }, []);
-
-  useEffect(() => {
-    if (!worker) return;
-    function messageHandler({ data }: MessageEvent) {
-      if (data['msg'] === 'orig-written') {
-        localStorage[`${data['collectionName']}-orig`] = data['count'];
-        navigate(`/read/${collectionName}`);
-      }
-    }
-    worker.addEventListener('message', messageHandler);
-    return () => {
-      worker.removeEventListener('message', messageHandler);
-    };
-  }, [worker, collectionName]);
+  useLoadAlignerWorker();
+  useRedirectToInProgressImport(collectionName);
 
   return (
     <>
       {inProgress && (
         <div>{`Another alignment (${inProgress}) is already in progress, please wait until it finishes...`}</div>
       )}
-      <ImportImages
+      <UploadImages
         typeName={'original'}
         openFilePicker={openFilePickerOrig}
         settings={settingsOrig}
@@ -362,7 +55,7 @@ export function CreateCollection({ ...rest }) {
         idBase="orig"
         disabled={!!inProgress}
       />
-      <ImportImages
+      <UploadImages
         typeName={'translation'}
         openFilePicker={openFilePickerTransl}
         settings={settingsTransl}
@@ -408,15 +101,17 @@ export function CreateCollection({ ...rest }) {
         onSubmit={(ev) => {
           ev.preventDefault();
           setInProgress(collectionName);
+          const orderedOrig = orderFiles(filesContentOrig, origReorder);
+          const orderedTransl = onlyOrig
+            ? []
+            : orderFiles(filesContentTransl, translReorder);
           startAlignment(
             worker,
             collectionName,
-            filesContentOrig,
+            orderedOrig,
             settingsOrig,
-            origReorder,
-            onlyOrig ? [] : filesContentTransl,
+            onlyOrig ? [] : orderedTransl,
             settingsTransl,
-            translReorder,
             orbCount
           );
         }}

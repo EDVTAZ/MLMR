@@ -8,9 +8,10 @@ import {
   listFolderDropBox,
   uploadFolderDropBox,
 } from './dropbox-api';
-import { WorkerContext } from '../AlignerWorker';
+import { WorkerContext } from '../aligner-worker/AlignerWorker';
 import { Link } from 'react-router-dom';
 import { FileContent } from 'use-file-picker/types';
+import { useLoadAlignerWorker } from '../aligner-worker/useAlignerworker';
 
 type DirectImportMessageType = {
   cmd: 'direct-import';
@@ -167,15 +168,13 @@ function DropBoxDownloadButton({
 
 function DropBoxSyncPageInner() {
   const dropBoxAuth = useAuth();
-  const { worker, setNeeded } = useContext(WorkerContext);
+  const { worker } = useContext(WorkerContext);
   const { collections: collectionNames, refresh: refreshLocal } =
     useCollectionNamesLocalStorage();
   const { dropBopxCollectionNames, refresh: refreshDropBox } =
     useDropBoxCollectionNames();
 
-  useEffect(() => {
-    setNeeded(true);
-  }, []);
+  useLoadAlignerWorker();
 
   useEffect(() => {
     if (!worker) return;

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { Dispatch, PropsWithChildren, SetStateAction } from 'react';
-import { useAlignmentInProgressLocalStorage } from './util/storage';
+import { useAlignmentInProgressLocalStorage } from './../util/storage';
 
 type ProgressType = { orig: number; transl: number };
 

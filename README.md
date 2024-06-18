@@ -31,5 +31,6 @@
   - https://github.com/asdfjkl/kanjicanvas
   - https://github.com/ZacharyRead/jlect-jhr
 - refactor --------------<<<<2>>>>
+  - do we need styled components?
 - styling --------------<<<<3>>>>
 - use redux? effect? remeda?

@@ -13,7 +13,7 @@ import {
   useState,
 } from 'react';
 import type { MutableRefObject } from 'react';
-import { WorkerContext } from '../AlignerWorker';
+import { WorkerContext } from '../aligner-worker/AlignerWorker';
 
 const IMAGE_CACHE_RANGE = 3;
 
