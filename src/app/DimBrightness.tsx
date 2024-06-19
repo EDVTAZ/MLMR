@@ -1,5 +1,5 @@
 import { useEffect, type PropsWithChildren } from 'react';
-import { useBrightnessLocalStorage } from './util/storage';
+import { useBrightnessLocalStorage } from './util/useLocalStorage';
 
 const BRIGHTNESS_FRACTION = 10;
 
@@ -22,7 +22,8 @@ export function DimBrightness() {
     }
 
     function keyPressHandler(ev: KeyboardEvent) {
-      if (ev.target.nodeName === 'INPUT') return;
+      if (ev.target instanceof HTMLElement && ev.target.nodeName === 'INPUT')
+        return;
 
       if (ev.key === 'm') stepBrightness(1);
       else if (ev.key === 'n') stepBrightness(-1);

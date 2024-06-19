@@ -2,7 +2,7 @@ import { ParamParseKey, Params, useLoaderData } from 'react-router-dom';
 import {
   useCollectionLocalStorage,
   useCollectionPositionLocalStorage,
-} from '../util/storage';
+} from '../util/useLocalStorage';
 import { Page } from './Page';
 import styled from 'styled-components';
 import {

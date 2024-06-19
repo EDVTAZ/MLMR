@@ -1,10 +1,8 @@
 import { Link } from 'react-router-dom';
-import {
-  deleteCollection,
-  useCollectionNamesLocalStorage,
-} from './util/storage';
+import { deleteCollection } from './util/storage';
 import { useContext } from 'react';
 import { WorkerContext } from './aligner-worker/AlignerWorker';
+import { useCollectionNamesLocalStorage } from './util/useLocalStorage';
 
 export function MainMenu({ ...rest }) {
   const { collections: collectionNames, refresh: refreshCollectionNames } =

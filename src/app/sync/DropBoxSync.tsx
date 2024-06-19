@@ -1,5 +1,5 @@
 import { AuthProvider, AuthProviderProps, useAuth } from 'react-oidc-context';
-import { useCollectionNamesLocalStorage } from '../util/storage';
+import { useCollectionNamesLocalStorage } from '../util/useLocalStorage';
 import { useContext, useEffect, useState } from 'react';
 import {
   createFolderDropBox,

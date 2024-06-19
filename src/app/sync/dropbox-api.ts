@@ -1,4 +1,5 @@
-import { getFileDataFromIDB, getFileName } from '../util/storage';
+import { getFileDataFromIDB } from '../util/indexedDB-storage';
+import { getFileName } from '../util/storage';
 import { unzipImages } from '../util/zip';
 
 async function dropBoxPost(url: string, body: string, accessToken: string) {

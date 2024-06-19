@@ -5,7 +5,7 @@ import {
   useImperativeHandle,
   useRef,
 } from 'react';
-import { useIDBImage, useIDBImageInfo } from '../util/storage';
+import { useIDBImage, useIDBImageInfo } from '../util/useIndexedDB';
 import { WorkerContext } from '../aligner-worker/AlignerWorker';
 
 function getStyle(
