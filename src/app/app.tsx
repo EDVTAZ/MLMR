@@ -1,3 +1,4 @@
+import { ChakraProvider } from '@chakra-ui/react';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { WorkerProvider } from './aligner-worker/AlignerWorker';
 import { DimBrightness } from './DimBrightness';
@@ -31,12 +32,12 @@ const router = createBrowserRouter([
 
 export function App() {
   return (
-    <>
+    <ChakraProvider>
       <WorkerProvider>
         <RouterProvider router={router} />
       </WorkerProvider>
       <DimBrightness />
-    </>
+    </ChakraProvider>
   );
 }
 

@@ -1,3 +1,4 @@
+import { Button, Divider, Flex, Spacer, VStack } from '@chakra-ui/react';
 import { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { WorkerContext } from './aligner-worker/AlignerWorker';
@@ -22,29 +23,26 @@ export function MainMenu() {
   }
 
   return (
-    <>
-      <div>
-        <Link to={'/import'}>
-          <button id="import-button">{'Import new collection'}</button>
-        </Link>
-        <hr />
-        {/* <Link to={'/sync'}>
-          <button id="sync-button">{'Synchronize collections'}</button>
-        </Link>
-        <hr /> */}
-      </div>
+    <VStack spacing={4} align="center" m="3%">
+      <Link to={'/import'}>
+        <Button id="import-button" border="solid">
+          {'Import new collection'}
+        </Button>
+      </Link>
+      <Divider />
       {collectionNames.map((collectionName) => (
-        <div key={collectionName}>
+        <Flex key={collectionName} w="80%" border="solid">
           <Link to={`/read/${collectionName}`}>
-            <button>{`Read ${collectionName}`}</button>
+            <Button>{`Read ${collectionName}`}</Button>
           </Link>
-          <button
+          <Spacer></Spacer>
+          <Button
             onClick={() => {
               deleteCollectionClick(collectionName);
             }}
-          >{`X`}</button>
-        </div>
+          >{`X`}</Button>
+        </Flex>
       ))}
-    </>
+    </VStack>
   );
 }
