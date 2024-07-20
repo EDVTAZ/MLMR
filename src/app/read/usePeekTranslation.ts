@@ -35,12 +35,10 @@ export function usePeekTranslation() {
         (ev.target as HTMLElement)?.id !== 'switch-peek'
       ) {
         switchLanguage();
-        ev.preventDefault();
       }
       if (ev.button === (switchMC ? 0 : 2)) {
         setMousePos({ x: ev.clientX, y: ev.clientY });
         setPeeking(true);
-        ev.preventDefault();
       }
     },
     [switchLanguage, switchMC]

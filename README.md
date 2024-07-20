@@ -30,12 +30,11 @@
   - https://github.com/bryanjenningz/japanese-dictionary
   - https://github.com/asdfjkl/kanjicanvas
   - https://github.com/ZacharyRead/jlect-jhr
-- refactor --------------<<<<2>>>>
+- styling --------------<<<<3>>>>
   - https://fonts.google.com/specimen/Gloria+Hallelujah
   - https://wiredjs.com/
     - https://github.com/rough-stuff/wired-elements-react
   - https://fxaeberhard.github.io/handdrawn.css/
-- styling --------------<<<<3>>>>
 - use redux? effect? remeda?
 - use react compiler
 - use manual indexdDB management instead of wasm filesystem

@@ -1,4 +1,5 @@
 const baseImgStyle: React.CSSProperties = {
+  userSelect: 'none',
   width: '100%',
   height: '100%',
   position: 'absolute',
@@ -58,6 +59,7 @@ export function PageImage({
   return (
     <img
       src={src}
+      draggable={false}
       style={{
         ...baseImgStyle,
         ...getZindexAndClip(active, peeking, mousePos, parent),
