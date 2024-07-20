@@ -14,7 +14,10 @@ import {
 } from 'react';
 import type { MutableRefObject } from 'react';
 import { WorkerContext } from '../aligner-worker/AlignerWorker';
-import { useAddEventListener } from '../util/useAddEventListener';
+import {
+  useAddEventListener,
+  useWorkerMessageListener,
+} from '../util/useAddEventListener';
 
 const IMAGE_CACHE_RANGE = 3;
 
@@ -183,18 +186,12 @@ export function ReadCollection() {
   useAddEventListener('touchend', switchMC ? touchEndHandler : null);
   useAddEventListener('touchcancel', switchMC ? touchEndHandler : null);
 
-  useEffect(() => {
-    if (!worker) return;
-    function messageHandler({ data }: MessageEvent) {
-      if (data['msg'] === 'orig-written') {
-        originalCount.setValue(data['count']);
-      }
+  const messageHandler = useCallback(({ data }: MessageEvent) => {
+    if (data['msg'] === 'orig-written') {
+      originalCount.setValue(data['count']);
     }
-    worker.addEventListener('message', messageHandler);
-    return () => {
-      worker.removeEventListener('message', messageHandler);
-    };
-  }, [worker, originalCount.setValue]);
+  }, []); // originalCount.setValue not needed because it is a state setter
+  useWorkerMessageListener(worker, messageHandler);
 
   const scrollHandler = useCallback((_event: Event) => {
     setCurrentPage(calculateScroll(pageRefs));

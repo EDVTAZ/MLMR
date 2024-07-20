@@ -1,6 +1,7 @@
-import { useContext, useEffect } from 'react';
+import { useCallback, useContext, useEffect } from 'react';
 import { WorkerContext } from './AlignerWorker';
 import { useNavigate } from 'react-router-dom';
+import { useWorkerMessageListener } from '../util/useAddEventListener';
 
 export function useLoadAlignerWorker() {
   const { setNeeded } = useContext(WorkerContext);
@@ -14,17 +15,14 @@ export function useRedirectToInProgressImport(collectionName: string) {
   const navigate = useNavigate();
   const { worker } = useContext(WorkerContext);
 
-  useEffect(() => {
-    if (!worker) return;
-    function messageHandler({ data }: MessageEvent) {
+  const messageHandler = useCallback(
+    ({ data }: MessageEvent) => {
       if (data['msg'] === 'orig-written') {
         localStorage[`${data['collectionName']}-orig`] = data['count'];
         navigate(`/read/${collectionName}`);
       }
-    }
-    worker.addEventListener('message', messageHandler);
-    return () => {
-      worker.removeEventListener('message', messageHandler);
-    };
-  }, [worker, collectionName]);
+    },
+    [collectionName, navigate]
+  );
+  useWorkerMessageListener(worker, messageHandler);
 }

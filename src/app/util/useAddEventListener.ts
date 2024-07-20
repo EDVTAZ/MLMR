@@ -13,3 +13,17 @@ export function useAddEventListener<K extends keyof DocumentEventMap>(
     };
   }, [eventHandler, eventType]);
 }
+
+export function useWorkerMessageListener(
+  worker: null | Worker,
+  listener: null | ((this: Worker, ev: MessageEvent<unknown>) => unknown)
+) {
+  useEffect(() => {
+    if (listener === null || worker === null) return;
+
+    worker.addEventListener('message', listener);
+    return () => {
+      worker.removeEventListener('message', listener);
+    };
+  }, [listener, worker]);
+}

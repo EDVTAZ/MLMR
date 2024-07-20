@@ -1,7 +1,14 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { createContext, useContext, useEffect, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 import type { Dispatch, PropsWithChildren, SetStateAction } from 'react';
 import { useAlignmentInProgressLocalStorage } from './../util/useLocalStorage';
+import { useWorkerMessageListener } from '../util/useAddEventListener';
 
 type ProgressType = { orig: number; transl: number };
 
@@ -80,37 +87,30 @@ function AlignerWorker() {
     };
   }, []);
 
-  useEffect(() => {
-    function messageHandler({ data }: MessageEvent) {
-      if (data['msg'] === 'done') {
-        setNeeded(false);
-        setInProgress(false);
-      }
-      if (data['msg'] === 'orig-written') {
-        localStorage[`${data['collectionName']}-orig`] = data['count'];
-        setProgress((prev: ProgressType) => {
-          return {
-            ...prev,
-            orig: data['progressIndex'] / data['progressMax'],
-          };
-        });
-      }
-      if (data['msg'] === 'transl-written') {
-        setProgress((prev: ProgressType) => {
-          return {
-            ...prev,
-            transl: data['progressIndex'] / data['progressMax'],
-          };
-        });
-      }
+  const messageHandler = useCallback(({ data }: MessageEvent) => {
+    if (data['msg'] === 'done') {
+      setNeeded(false);
+      setInProgress(false);
     }
-    if (worker) {
-      worker.addEventListener('message', messageHandler);
-      return () => {
-        worker.removeEventListener('message', messageHandler);
-      };
+    if (data['msg'] === 'orig-written') {
+      localStorage[`${data['collectionName']}-orig`] = data['count'];
+      setProgress((prev: ProgressType) => {
+        return {
+          ...prev,
+          orig: data['progressIndex'] / data['progressMax'],
+        };
+      });
     }
-  }, [worker]);
+    if (data['msg'] === 'transl-written') {
+      setProgress((prev: ProgressType) => {
+        return {
+          ...prev,
+          transl: data['progressIndex'] / data['progressMax'],
+        };
+      });
+    }
+  }, []); // unneeded [setInProgress, setNeeded, setProgress] because they are state setters
+  useWorkerMessageListener(worker, messageHandler);
 
   return null;
 }

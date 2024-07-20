@@ -1,5 +1,6 @@
 import {
   forwardRef,
+  useCallback,
   useContext,
   useEffect,
   useImperativeHandle,
@@ -8,6 +9,7 @@ import {
 import { useIDBImage, useIDBImageInfo } from '../util/useIndexedDB';
 import { WorkerContext } from '../aligner-worker/AlignerWorker';
 import { PageImage } from './PageImage';
+import { useWorkerMessageListener } from '../util/useAddEventListener';
 
 type PageProps = {
   collectionName: string;
@@ -48,20 +50,16 @@ export const Page = forwardRef<HTMLDivElement | null, PageProps>(function Page(
   }
 
   const { worker } = useContext(WorkerContext);
-  useEffect(() => {
-    if (!worker) return;
 
-    function messageHandler({ data }: MessageEvent) {
+  const messageHandler = useCallback(
+    ({ data }: MessageEvent) => {
       if (data['msg'] === 'transl-written' && data['newIndexes'].has(index)) {
         refreshTransl();
       }
-    }
-
-    worker.addEventListener('message', messageHandler);
-    return () => {
-      worker.removeEventListener('message', messageHandler);
-    };
-  }, [worker, refreshTransl, index]);
+    },
+    [index] // refreshTransl is not using useCallback yet!
+  );
+  useWorkerMessageListener(worker, messageHandler);
 
   return (
     <div
