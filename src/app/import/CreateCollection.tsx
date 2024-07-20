@@ -7,6 +7,7 @@ import {
   useRedirectToInProgressImport,
 } from '../aligner-worker/useAlignerworker';
 import { orderFiles } from '../util/filename-compare';
+import { useSetTitle } from '../util/useSetTitle';
 import { PageOrdering } from './PageOrdering';
 import { ImageImportConfigType } from './types';
 import { UploadImages } from './UploadImages';
@@ -38,6 +39,8 @@ export function CreateCollection() {
   const [orbCount, setOrbCount] = useState(10000);
   const [onlyOrig, setOnlyOrig] = useState(false);
   const { worker, inProgress, setInProgress } = useContext(WorkerContext);
+
+  useSetTitle(`MLMR - Import`);
 
   useLoadAlignerWorker();
   useRedirectToInProgressImport(collectionName);

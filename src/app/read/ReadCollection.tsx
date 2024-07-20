@@ -1,23 +1,23 @@
-import { ParamParseKey, Params, useLoaderData } from 'react-router-dom';
-import {
-  useCollectionLocalStorage,
-  useCollectionPositionLocalStorage,
-} from '../util/useLocalStorage';
-import { Page } from './Page';
+import type { MutableRefObject } from 'react';
 import {
   useCallback,
   useContext,
-  useEffect,
   useLayoutEffect,
   useRef,
   useState,
 } from 'react';
-import type { MutableRefObject } from 'react';
+import { ParamParseKey, Params, useLoaderData } from 'react-router-dom';
 import { WorkerContext } from '../aligner-worker/AlignerWorker';
 import {
   useAddEventListener,
   useWorkerMessageListener,
 } from '../util/useAddEventListener';
+import {
+  useCollectionLocalStorage,
+  useCollectionPositionLocalStorage,
+} from '../util/useLocalStorage';
+import { useSetTitle } from '../util/useSetTitle';
+import { Page } from './Page';
 
 const IMAGE_CACHE_RANGE = 3;
 
@@ -89,9 +89,7 @@ export function ReadCollection() {
   const [switchMC, setSwitchMC] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
-  useEffect(() => {
-    document.title = `${collectionName} - MLMR`;
-  }, [collectionName]);
+  useSetTitle(`${collectionName} - MLMR`);
 
   const handleMouseMove = useCallback((ev: MouseEvent) => {
     setMousePos({ x: ev.clientX, y: ev.clientY });

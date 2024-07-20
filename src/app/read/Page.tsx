@@ -50,7 +50,6 @@ export const Page = forwardRef<HTMLDivElement | null, PageProps>(function Page(
   }
 
   const { worker } = useContext(WorkerContext);
-
   const messageHandler = useCallback(
     ({ data }: MessageEvent) => {
       if (data['msg'] === 'transl-written' && data['newIndexes'].has(index)) {
