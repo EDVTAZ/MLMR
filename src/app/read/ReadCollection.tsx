@@ -6,6 +6,7 @@ import {
 import { Page } from './Page';
 import styled from 'styled-components';
 import {
+  useCallback,
   useContext,
   useEffect,
   useLayoutEffect,
@@ -14,6 +15,7 @@ import {
 } from 'react';
 import type { MutableRefObject } from 'react';
 import { WorkerContext } from '../aligner-worker/AlignerWorker';
+import { useAddEventListener } from '../util/useAddEventListener';
 
 const IMAGE_CACHE_RANGE = 3;
 
@@ -86,27 +88,21 @@ function ReadCollectionUnstyled({ ...rest }) {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    if (!peeking) return;
-
-    function getMousePos(ev: MouseEvent) {
-      setMousePos({ x: ev.clientX, y: ev.clientY });
-    }
-
-    document.addEventListener('pointermove', getMousePos);
-    return () => {
-      document.removeEventListener('pointermove', getMousePos);
-    };
-  }, [peeking]);
-
-  useEffect(() => {
     document.title = `${collectionName} - MLMR`;
   }, [collectionName]);
 
-  useEffect(() => {
-    function switchLanguage() {
-      setLanguage((v) => (v === 'orig' ? 'transl' : 'orig'));
-    }
-    function step(amount: number) {
+  const handleMouseMove = useCallback((ev: MouseEvent) => {
+    setMousePos({ x: ev.clientX, y: ev.clientY });
+  }, []);
+  useAddEventListener('pointermove', peeking ? handleMouseMove : null);
+
+  const switchLanguage = useCallback(
+    () => setLanguage((v) => (v === 'orig' ? 'transl' : 'orig')),
+    []
+  );
+
+  const stepPage = useCallback(
+    (amount: number) => {
       const calculatedPosition = calculateScroll(pageRefs);
       scrollToPosition(
         Math.min(
@@ -116,17 +112,26 @@ function ReadCollectionUnstyled({ ...rest }) {
         0,
         pageRefs
       );
-    }
-    function keyPressHandler(ev: KeyboardEvent) {
+    },
+    [originalCount.value]
+  );
+
+  const keyPressHandler = useCallback(
+    (ev: KeyboardEvent) => {
       if (ev.key === 'v') switchLanguage();
-      else if (ev.key === 'ArrowLeft' || ev.key === 'a') step(-1);
-      else if (ev.key === 'ArrowRight' || ev.key === 'd') step(1);
+      else if (ev.key === 'ArrowLeft' || ev.key === 'a') stepPage(-1);
+      else if (ev.key === 'ArrowRight' || ev.key === 'd') stepPage(1);
       else if (ev.key === '+') setZoom((z) => Math.min(z + 10, 200));
       else if (ev.key === '-') setZoom((z) => Math.max(z - 10, 10));
       else return;
       ev.preventDefault();
-    }
-    function clickHandler(ev: MouseEvent) {
+    },
+    [stepPage, switchLanguage]
+  );
+  useAddEventListener('keydown', keyPressHandler);
+
+  const clickHandler = useCallback(
+    (ev: MouseEvent) => {
       if (
         ev.button === (switchMC ? 2 : 0) &&
         (ev.target as HTMLElement)?.id !== 'page-counter' &&
@@ -140,55 +145,44 @@ function ReadCollectionUnstyled({ ...rest }) {
         setPeeking(true);
         ev.preventDefault();
       }
-    }
-    function clickReleaseHandler(ev: MouseEvent) {
+    },
+    [switchLanguage, switchMC]
+  );
+  useAddEventListener('mousedown', clickHandler);
+
+  const clickReleaseHandler = useCallback(
+    (ev: MouseEvent) => {
       if (ev.button === (switchMC ? 0 : 2)) {
         setPeeking(false);
         ev.preventDefault();
       }
-    }
+    },
+    [switchMC]
+  );
+  useAddEventListener('mouseup', clickReleaseHandler);
 
-    function touchStartHandler(ev: TouchEvent) {
-      if (switchMC) {
-        setMousePos({
-          x: ev.changedTouches[0].clientX,
-          y: ev.changedTouches[0].clientY,
-        });
-        setPeeking(true);
-      }
-    }
-    function touchMoveHandler(ev: TouchEvent) {
-      if (switchMC) {
-        setMousePos({
-          x: ev.changedTouches[0].clientX,
-          y: ev.changedTouches[0].clientY,
-        });
-      }
-    }
+  const touchStartHandler = useCallback((ev: TouchEvent) => {
+    setMousePos({
+      x: ev.changedTouches[0].clientX,
+      y: ev.changedTouches[0].clientY,
+    });
+    setPeeking(true);
+  }, []);
+  useAddEventListener('touchstart', switchMC ? touchStartHandler : null);
 
-    function touchEndHandler(ev: Event) {
-      if (switchMC) {
-        setPeeking(false);
-      }
-    }
+  const touchMoveHandler = useCallback((ev: TouchEvent) => {
+    setMousePos({
+      x: ev.changedTouches[0].clientX,
+      y: ev.changedTouches[0].clientY,
+    });
+  }, []);
+  useAddEventListener('touchmove', switchMC ? touchMoveHandler : null);
 
-    document.addEventListener('keydown', keyPressHandler);
-    document.addEventListener('mousedown', clickHandler);
-    document.addEventListener('mouseup', clickReleaseHandler);
-    document.addEventListener('touchstart', touchStartHandler);
-    document.addEventListener('touchmove', touchMoveHandler);
-    document.addEventListener('touchend', touchEndHandler);
-    document.addEventListener('touchcancel', touchEndHandler);
-    return () => {
-      document.removeEventListener('keydown', keyPressHandler);
-      document.removeEventListener('mousedown', clickHandler);
-      document.removeEventListener('mouseup', clickReleaseHandler);
-      document.removeEventListener('touchstart', touchStartHandler);
-      document.removeEventListener('touchmove', touchMoveHandler);
-      document.removeEventListener('touchend', touchEndHandler);
-      document.removeEventListener('touchcancel', touchEndHandler);
-    };
-  }, [originalCount, switchMC]);
+  const touchEndHandler = useCallback((ev: Event) => {
+    setPeeking(false);
+  }, []);
+  useAddEventListener('touchend', switchMC ? touchEndHandler : null);
+  useAddEventListener('touchcancel', switchMC ? touchEndHandler : null);
 
   useEffect(() => {
     if (!worker) return;
@@ -203,25 +197,19 @@ function ReadCollectionUnstyled({ ...rest }) {
     };
   }, [worker, originalCount.setValue]);
 
-  useEffect(() => {
-    function scrollHandler(_event: Event) {
-      setCurrentPage(calculateScroll(pageRefs));
-      scrollingRef.current.scrolling = true;
-    }
-    function scrollendHandler(_event: Event) {
-      if (!scrollingRef.current.adjusting) {
-        localStorageCurrentPage.setValue(calculateScroll(pageRefs));
-      }
-      scrollingRef.current = { scrolling: false, adjusting: false };
-    }
+  const scrollHandler = useCallback((_event: Event) => {
+    setCurrentPage(calculateScroll(pageRefs));
+    scrollingRef.current.scrolling = true;
+  }, []);
+  useAddEventListener('scroll', scrollHandler);
 
-    window.addEventListener('scroll', scrollHandler);
-    window.addEventListener('scrollend', scrollendHandler);
-    return () => {
-      window.removeEventListener('scroll', scrollHandler);
-      window.removeEventListener('scrollend', scrollendHandler);
-    };
-  }, [originalCount.value]);
+  const scrollendHandler = useCallback((_event: Event) => {
+    if (!scrollingRef.current.adjusting) {
+      localStorageCurrentPage.setValue(calculateScroll(pageRefs));
+    }
+    scrollingRef.current = { scrolling: false, adjusting: false };
+  }, []); // setter dep unneeded localStorageCurrentPage.setValue
+  useAddEventListener('scrollend', scrollendHandler);
 
   useLayoutEffect(() => {
     let firstCall = true;

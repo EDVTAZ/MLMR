@@ -34,3 +34,4 @@
   - do we need styled components?
 - styling --------------<<<<3>>>>
 - use redux? effect? remeda?
+- use react compiler

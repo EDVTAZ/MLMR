@@ -1,13 +1,14 @@
-import { useEffect, type PropsWithChildren } from 'react';
+import { useCallback } from 'react';
 import { useBrightnessLocalStorage } from './util/useLocalStorage';
+import { useAddEventListener } from './util/useAddEventListener';
 
 const BRIGHTNESS_FRACTION = 10;
 
 export function DimBrightness() {
   const brightness = useBrightnessLocalStorage();
 
-  useEffect(() => {
-    function stepBrightness(amount: number) {
+  const stepBrightness = useCallback(
+    (amount: number) => {
       brightness.setValue((prev) => {
         return (
           Math.max(
@@ -19,21 +20,23 @@ export function DimBrightness() {
           ) / BRIGHTNESS_FRACTION
         );
       });
-    }
+    },
+    [brightness.setValue]
+  );
 
-    function keyPressHandler(ev: KeyboardEvent) {
+  const keypressHandler = useCallback(
+    (ev: KeyboardEvent) => {
       if (ev.target instanceof HTMLElement && ev.target.nodeName === 'INPUT')
         return;
 
       if (ev.key === 'm') stepBrightness(1);
       else if (ev.key === 'n') stepBrightness(-1);
       else return;
-    }
-    document.addEventListener('keydown', keyPressHandler);
-    return () => {
-      document.removeEventListener('keydown', keyPressHandler);
-    };
-  }, []);
+    },
+    [stepBrightness]
+  );
+
+  useAddEventListener('keydown', keypressHandler);
 
   return (
     <div
