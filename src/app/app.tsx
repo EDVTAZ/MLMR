@@ -1,10 +1,9 @@
-import { CreateCollection } from './import/CreateCollection';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
-import { ReadCollection, readCollectionLoader } from './read/ReadCollection';
-import { MainMenu } from './MainMenu';
 import { WorkerProvider } from './aligner-worker/AlignerWorker';
 import { DimBrightness } from './DimBrightness';
-import { DropBoxSyncPage } from './sync/DropBoxSync';
+import { CreateCollection } from './import/CreateCollection';
+import { MainMenu } from './MainMenu';
+import { ReadCollection, readCollectionLoader } from './read/ReadCollection';
 
 const router = createBrowserRouter([
   {

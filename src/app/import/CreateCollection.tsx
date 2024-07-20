@@ -1,16 +1,16 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { WorkerContext } from '../aligner-worker/AlignerWorker';
-import { Link, useNavigate } from 'react-router-dom';
-import { PageOrdering } from './PageOrdering';
-import { useUploadImages } from './useUploadImages';
-import { ImageImportConfigType } from './types';
-import { UploadImages } from './UploadImages';
 import { startAlignment } from '../aligner-worker/start-alignment';
-import { orderFiles } from '../util/filename-compare';
 import {
   useLoadAlignerWorker,
   useRedirectToInProgressImport,
 } from '../aligner-worker/useAlignerworker';
+import { orderFiles } from '../util/filename-compare';
+import { PageOrdering } from './PageOrdering';
+import { ImageImportConfigType } from './types';
+import { UploadImages } from './UploadImages';
+import { useUploadImages } from './useUploadImages';
 
 const defaultImportSettings: ImageImportConfigType = {
   resize: 2000000,

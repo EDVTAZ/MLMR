@@ -2,14 +2,14 @@ import {
   forwardRef,
   useCallback,
   useContext,
-  useEffect,
   useImperativeHandle,
   useRef,
 } from 'react';
-import { useIDBImage, useIDBImageInfo } from '../util/useIndexedDB';
+
 import { WorkerContext } from '../aligner-worker/AlignerWorker';
-import { PageImage } from './PageImage';
 import { useWorkerMessageListener } from '../util/useAddEventListener';
+import { useIDBImage, useIDBImageInfo } from '../util/useIndexedDB';
+import { PageImage } from './PageImage';
 
 type PageProps = {
   collectionName: string;
