@@ -19,10 +19,10 @@ const router = createBrowserRouter([
     path: 'import',
     element: <CreateCollection />,
   },
-  {
-    path: 'sync',
-    element: <DropBoxSyncPage />,
-  },
+  // {
+  //   path: 'sync',
+  //   element: <DropBoxSyncPage />,
+  // },
   {
     path: 'read/:collectionName',
     element: <ReadCollection />,
