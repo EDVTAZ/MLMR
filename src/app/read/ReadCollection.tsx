@@ -4,10 +4,11 @@ import { useCollectionLocalStorage } from '../util/useLocalStorage';
 import { useSetTitle } from '../util/useSetTitle';
 import { ImportProgress } from './ImportProgress';
 import { Page } from './Page';
+import { PositionInfo } from './PositionInfo';
+import { SwitchPeek } from './SwitchPeek';
 import { usePeekTranslation } from './usePeekTranslation';
 import { useScrollControl } from './useScrollControl';
 import { useZoomControl, ZoomSlider } from './Zoom';
-import { PositionInfo } from './PositionInfo';
 
 const IMAGE_CACHE_RANGE = 3;
 
@@ -86,22 +87,12 @@ export function ReadCollection() {
           collectionName={collectionName}
           setOrigPageCount={originalCount.setValue}
         />
-        {zoomSlider && <ZoomSlider zoom={zoom} setZoom={setZoom} />}
-      </div>
-      <div
-        onClick={(ev) => {
-          peek.setSwitchMC((prev) => !prev);
-        }}
-        id="switch-peek"
-        style={{
-          position: 'fixed',
-          right: '0px',
-          bottom: '0px',
-          maxWidth: '4vw',
-          zIndex: 2,
-        }}
-      >
-        Switch Peek
+        {zoomSlider && (
+          <>
+            <ZoomSlider zoom={zoom} setZoom={setZoom} />
+            <SwitchPeek toggle={() => peek.setSwitchMC((prev) => !prev)} />
+          </>
+        )}
       </div>
     </div>
   );
