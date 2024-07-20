@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { ParamParseKey, Params, useLoaderData } from 'react-router-dom';
+import { percentFormat } from '../util/percent-format';
 import { useCollectionLocalStorage } from '../util/useLocalStorage';
 import { useSetTitle } from '../util/useSetTitle';
 import { ImportProgress } from './ImportProgress';
@@ -93,9 +94,7 @@ export function ReadCollection() {
         >
           {`${sc.currentPage.page + 1} / ${originalCount.value}`}
           <br />
-          {Intl.NumberFormat(navigator.language, { style: 'percent' }).format(
-            sc.currentPage.percentage
-          )}
+          {percentFormat(sc.currentPage.percentage)}
         </div>
         <ImportProgress
           collectionName={collectionName}

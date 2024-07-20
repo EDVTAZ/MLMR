@@ -1,5 +1,6 @@
 import { useCallback, useContext } from 'react';
 import { WorkerContext } from '../aligner-worker/AlignerWorker';
+import { percentFormat } from '../util/percent-format';
 import { useWorkerMessageListener } from '../util/useAddEventListener';
 
 type ImportProgressProps = {
@@ -33,13 +34,9 @@ export function ImportProgress({
       >
         {`Loading...`}
         <br />
-        {`Original: ${Intl.NumberFormat(navigator.language, {
-          style: 'percent',
-        }).format(progress.orig)}`}
+        {`Original: ${percentFormat(progress.orig)}`}
         <br />
-        {`Translation: ${Intl.NumberFormat(navigator.language, {
-          style: 'percent',
-        }).format(progress.transl)}`}
+        {`Translation: ${percentFormat(progress.transl)}`}
       </div>
     )
   );
