@@ -1,23 +1,14 @@
-import type { MutableRefObject } from 'react';
-import {
-  useCallback,
-  useContext,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react';
+import { useCallback, useContext, useRef, useState } from 'react';
 import { ParamParseKey, Params, useLoaderData } from 'react-router-dom';
 import { WorkerContext } from '../aligner-worker/AlignerWorker';
 import {
   useAddEventListener,
   useWorkerMessageListener,
 } from '../util/useAddEventListener';
-import {
-  useCollectionLocalStorage,
-  useCollectionPositionLocalStorage,
-} from '../util/useLocalStorage';
+import { useCollectionLocalStorage } from '../util/useLocalStorage';
 import { useSetTitle } from '../util/useSetTitle';
 import { Page } from './Page';
+import { useScrollControl } from './useScrollControl';
 
 const IMAGE_CACHE_RANGE = 3;
 
@@ -33,47 +24,11 @@ export function readCollectionLoader({
   return { collectionName: params.collectionName };
 }
 
-function calculateScroll(
-  pageRefs: MutableRefObject<(HTMLDivElement | null)[]>
-) {
-  const page = pageRefs.current.reduce((prev, v, i): number => {
-    if ((v?.getBoundingClientRect().bottom ?? 0) > 0) {
-      return Math.min(prev, i);
-    }
-    return prev;
-  }, pageRefs.current?.length ?? 0);
-
-  const { top, bottom } = pageRefs.current[page]?.getBoundingClientRect() ?? {
-    top: 0,
-    bottom: 0,
-  };
-  const percentage = top >= 0 ? 0 : top / (top - bottom);
-  return { page, percentage };
-}
-
-function scrollToPosition(
-  page: number,
-  percentage: number,
-  pageRefs: MutableRefObject<(HTMLDivElement | null)[]>
-) {
-  const targetDiv = pageRefs.current[page];
-  if (targetDiv) {
-    const targetRect = targetDiv.getBoundingClientRect();
-    window.scrollBy({
-      top: targetRect.top + targetRect.height * percentage,
-      behavior: 'instant',
-    });
-  }
-}
-
 export function ReadCollection() {
   const { collectionName } = useLoaderData() as ReturnType<
     typeof readCollectionLoader
   >;
   const [language, setLanguage] = useState<'orig' | 'transl'>('orig');
-  const [currentPage, setCurrentPage] = useState({ page: 0, percentage: 0 });
-  const localStorageCurrentPage =
-    useCollectionPositionLocalStorage(collectionName);
 
   const [zoomSlider, setZoomSlider] = useState(false);
   const [zoom, setZoom] = useState(90);
@@ -83,11 +38,17 @@ export function ReadCollection() {
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const pageRefs = useRef<Array<HTMLDivElement | null>>([]);
-  const scrollingRef = useRef({ scrolling: false, adjusting: false });
 
   const [peeking, setPeeking] = useState(false);
   const [switchMC, setSwitchMC] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  const sc = useScrollControl(
+    collectionName,
+    originalCount.value,
+    containerRef,
+    pageRefs
+  );
 
   useSetTitle(`${collectionName} - MLMR`);
 
@@ -101,32 +62,17 @@ export function ReadCollection() {
     []
   );
 
-  const stepPage = useCallback(
-    (amount: number) => {
-      const calculatedPosition = calculateScroll(pageRefs);
-      scrollToPosition(
-        Math.min(
-          Math.max(0, calculatedPosition.page + amount),
-          (originalCount.value ?? 1) - 1
-        ),
-        0,
-        pageRefs
-      );
-    },
-    [originalCount.value]
-  );
-
   const keyPressHandler = useCallback(
     (ev: KeyboardEvent) => {
       if (ev.key === 'v') switchLanguage();
-      else if (ev.key === 'ArrowLeft' || ev.key === 'a') stepPage(-1);
-      else if (ev.key === 'ArrowRight' || ev.key === 'd') stepPage(1);
+      // else if (ev.key === 'ArrowLeft' || ev.key === 'a') stepPage(-1);
+      // else if (ev.key === 'ArrowRight' || ev.key === 'd') stepPage(1);
       else if (ev.key === '+') setZoom((z) => Math.min(z + 10, 200));
       else if (ev.key === '-') setZoom((z) => Math.max(z - 10, 10));
       else return;
       ev.preventDefault();
     },
-    [stepPage, switchLanguage]
+    [switchLanguage]
   );
   useAddEventListener('keydown', keyPressHandler);
 
@@ -191,62 +137,6 @@ export function ReadCollection() {
   }, []); // originalCount.setValue not needed because it is a state setter
   useWorkerMessageListener(worker, messageHandler);
 
-  const scrollHandler = useCallback((_event: Event) => {
-    setCurrentPage(calculateScroll(pageRefs));
-    scrollingRef.current.scrolling = true;
-  }, []);
-  useAddEventListener('scroll', scrollHandler);
-
-  const scrollendHandler = useCallback((_event: Event) => {
-    if (!scrollingRef.current.adjusting) {
-      localStorageCurrentPage.setValue(calculateScroll(pageRefs));
-    }
-    scrollingRef.current = { scrolling: false, adjusting: false };
-  }, []); // setter dep unneeded localStorageCurrentPage.setValue
-  useAddEventListener('scrollend', scrollendHandler);
-
-  useLayoutEffect(() => {
-    let firstCall = true;
-    function scrollToSavedPosition() {
-      if (firstCall) {
-        firstCall = false;
-        return;
-      }
-
-      scrollingRef.current.adjusting = true;
-
-      if (
-        localStorageCurrentPage.value === null ||
-        (inProgress === collectionName && scrollingRef.current.scrolling)
-      ) {
-        return;
-      }
-
-      const containers = pageRefs.current.map(
-        (element) =>
-          element?.getBoundingClientRect() ?? { top: 0, bottom: 0, height: 0 }
-      );
-      if (containers.some((rect) => rect.height === 0)) return;
-
-      scrollToPosition(
-        localStorageCurrentPage.value.page,
-        localStorageCurrentPage.value.percentage,
-        pageRefs
-      );
-    }
-
-    const observer = new ResizeObserver(scrollToSavedPosition);
-    if (containerRef.current) observer.observe(containerRef.current);
-    return () => {
-      observer.disconnect();
-    };
-  }, [
-    collectionName,
-    localStorageCurrentPage.value?.page,
-    localStorageCurrentPage.value?.percentage,
-    inProgress,
-  ]);
-
   return (
     <div
       className={'container'}
@@ -267,7 +157,7 @@ export function ReadCollection() {
                 key={index}
                 language={language}
                 shouldLoad={
-                  Math.abs(currentPage.page - index) <= IMAGE_CACHE_RANGE
+                  Math.abs(sc.currentPage.page - index) <= IMAGE_CACHE_RANGE
                 }
                 peeking={peeking}
                 mousePos={mousePos}
@@ -292,10 +182,10 @@ export function ReadCollection() {
             zIndex: 2,
           }}
         >
-          {`${currentPage.page + 1} / ${originalCount.value}`}
+          {`${sc.currentPage.page + 1} / ${originalCount.value}`}
           <br />
           {Intl.NumberFormat(navigator.language, { style: 'percent' }).format(
-            currentPage.percentage
+            sc.currentPage.percentage
           )}
         </div>
         {inProgress === collectionName && (
