@@ -4,7 +4,6 @@ import {
   useCollectionPositionLocalStorage,
 } from '../util/useLocalStorage';
 import { Page } from './Page';
-import styled from 'styled-components';
 import {
   useCallback,
   useContext,
@@ -64,7 +63,7 @@ function scrollToPosition(
   }
 }
 
-function ReadCollectionUnstyled({ ...rest }) {
+export function ReadCollection() {
   const { collectionName } = useLoaderData() as ReturnType<
     typeof readCollectionLoader
   >;
@@ -256,9 +255,12 @@ function ReadCollectionUnstyled({ ...rest }) {
   return (
     <div
       className={'container'}
-      style={{ alignItems: zoom > 90 ? 'start' : 'center' }}
+      style={{
+        alignItems: zoom > 90 ? 'start' : 'center',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
       ref={containerRef}
-      {...rest}
     >
       <div style={{ width: `${zoom}vw` }}>
         {collectionName &&
@@ -371,8 +373,3 @@ function ReadCollectionUnstyled({ ...rest }) {
     </div>
   );
 }
-
-export const ReadCollection = styled(ReadCollectionUnstyled)`
-  display: flex;
-  flex-direction: column;
-`;

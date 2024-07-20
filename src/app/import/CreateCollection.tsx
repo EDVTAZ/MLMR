@@ -19,7 +19,7 @@ const defaultImportSettings: ImageImportConfigType = {
   right2left: true,
 };
 
-export function CreateCollection({ ...rest }) {
+export function CreateCollection() {
   const [collectionName, setCollectionName] = useState<string>('');
   const {
     openFilePicker: openFilePickerOrig,
