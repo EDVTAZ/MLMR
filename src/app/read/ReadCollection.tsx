@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react';
 import { ParamParseKey, Params, useLoaderData } from 'react-router-dom';
-import { percentFormat } from '../util/percent-format';
 import { useCollectionLocalStorage } from '../util/useLocalStorage';
 import { useSetTitle } from '../util/useSetTitle';
 import { ImportProgress } from './ImportProgress';
@@ -8,6 +7,7 @@ import { Page } from './Page';
 import { usePeekTranslation } from './usePeekTranslation';
 import { useScrollControl } from './useScrollControl';
 import { useZoomControl, ZoomSlider } from './Zoom';
+import { PositionInfo } from './PositionInfo';
 
 const IMAGE_CACHE_RANGE = 3;
 
@@ -77,25 +77,11 @@ export function ReadCollection() {
               />
             );
           })}
-        <div
-          onClick={(ev) => {
-            setZoomSlider((prev) => !prev);
-            ev.preventDefault();
-            return false;
-          }}
-          id="page-counter"
-          style={{
-            position: 'fixed',
-            left: '0px',
-            bottom: '0px',
-            maxWidth: '4vw',
-            zIndex: 2,
-          }}
-        >
-          {`${sc.currentPage.page + 1} / ${originalCount.value}`}
-          <br />
-          {percentFormat(sc.currentPage.percentage)}
-        </div>
+        <PositionInfo
+          currentPage={sc.currentPage}
+          pageCount={originalCount.value}
+          toggleSettings={() => setZoomSlider((prev) => !prev)}
+        />
         <ImportProgress
           collectionName={collectionName}
           setOrigPageCount={originalCount.setValue}
