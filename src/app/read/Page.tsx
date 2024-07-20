@@ -7,45 +7,7 @@ import {
 } from 'react';
 import { useIDBImage, useIDBImageInfo } from '../util/useIndexedDB';
 import { WorkerContext } from '../aligner-worker/AlignerWorker';
-
-function getStyle(
-  show: boolean,
-  peeking: boolean,
-  mousePos: { x: number; y: number },
-  elem: HTMLDivElement | null
-): React.CSSProperties {
-  const rv: React.CSSProperties = {
-    width: '100%',
-    height: '100%',
-    position: 'absolute',
-    left: '0',
-    top: '0',
-    zIndex: '1',
-  };
-  if (!show) {
-    rv['zIndex'] = 0;
-  }
-  if (peeking && elem) {
-    const rect = elem.getBoundingClientRect();
-    const r = Math.floor(Math.min(rect.width, window.innerWidth) * 0.15);
-    const left = mousePos.x - rect.left;
-    const top = mousePos.y - r - rect.top;
-    if (
-      left > -r &&
-      top > -r &&
-      left < rect.width + r &&
-      top < rect.height + r
-    ) {
-      if (!show) {
-        rv['clipPath'] = `circle(${r}px at ${left}px ${top}px)`;
-        rv['zIndex'] = 1;
-      } else {
-        rv['zIndex'] = 0;
-      }
-    }
-  }
-  return rv;
-}
+import { PageImage } from './PageImage';
 
 type PageProps = {
   collectionName: string;
@@ -111,27 +73,21 @@ export const Page = forwardRef<HTMLDivElement | null, PageProps>(function Page(
       }}
       ref={localRef}
     >
-      <img
+      <PageImage
         src={originalPage}
-        style={getStyle(
-          effectiveLanguage === 'orig',
-          peeking,
-          mousePos,
-          localRef.current
-        )}
+        active={effectiveLanguage === 'orig'}
+        peeking={peeking}
+        mousePos={mousePos}
+        parent={localRef.current}
         key={'original'}
-        alt={'loading'}
       />
-      <img
+      <PageImage
         src={translatedPage}
-        style={getStyle(
-          effectiveLanguage === 'transl',
-          peeking,
-          mousePos,
-          localRef.current
-        )}
+        active={effectiveLanguage === 'transl'}
+        peeking={peeking}
+        mousePos={mousePos}
+        parent={localRef.current}
         key={'translated'}
-        alt={'loading'}
       />
     </div>
   );

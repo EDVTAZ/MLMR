@@ -34,3 +34,5 @@
 - styling --------------<<<<3>>>>
 - use redux? effect? remeda?
 - use react compiler
+- use manual indexdDB management instead of wasm filesystem
+- configurable peek radius
