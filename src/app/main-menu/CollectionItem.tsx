@@ -23,7 +23,7 @@ export function CollectionItem({
           colorScheme="red"
           leftIcon={<WarningTwoIcon />}
           onClick={() => deleteCollectionClick(collectionName)}
-        >{`Click here to ${collectionName}!`}</Button>
+        >{`Click here to delete ${collectionName}!`}</Button>
       ) : (
         <Link to={`/read/${collectionName}`}>
           <Button leftIcon={<ArrowRightIcon />}>{collectionName}</Button>
