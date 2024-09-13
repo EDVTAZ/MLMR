@@ -1,3 +1,16 @@
+import { ArrowBackIcon } from '@chakra-ui/icons';
+import {
+  Button,
+  Card,
+  CardBody,
+  Center,
+  Checkbox,
+  Input,
+  InputGroup,
+  InputLeftAddon,
+  Tag,
+  Wrap,
+} from '@chakra-ui/react';
 import { useContext, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { WorkerContext } from '../aligner-worker/AlignerWorker';
@@ -48,102 +61,126 @@ export function CreateCollection() {
   return (
     <>
       {inProgress && (
-        <div>{`Another alignment (${inProgress}) is already in progress, please wait until it finishes...`}</div>
+        <Card width="100%">
+          <CardBody>
+            <Center>
+              <Tag size="lg">
+                {`Another alignment (${inProgress}) is already in progress, please wait until it finishes...`}
+              </Tag>
+            </Center>
+          </CardBody>
+        </Card>
       )}
-      <UploadImages
-        typeName={'original'}
-        openFilePicker={openFilePickerOrig}
-        settings={settingsOrig}
-        setSettings={setSettingsOrig}
-        idBase="orig"
-        disabled={!!inProgress}
-      />
-      <UploadImages
-        typeName={'translation'}
-        openFilePicker={openFilePickerTransl}
-        settings={settingsTransl}
-        setSettings={setSettingsTransl}
-        idBase="transl"
-        disabled={!!inProgress || onlyOrig}
-      />
-      <label htmlFor="orb-count">ORB count</label>
-      <input
-        id="orb-count"
-        name="orbCount"
-        type="number"
-        min="100"
-        value={orbCount}
-        onInput={(e) =>
-          setOrbCount(parseInt((e.target as HTMLInputElement).value))
-        }
-        disabled={!!inProgress}
-      />
-      <input
-        id={`only-orig`}
-        name="onlyOrig"
-        type="checkbox"
-        checked={onlyOrig}
-        onChange={(e) => setOnlyOrig(e.target.checked)}
-        disabled={!!inProgress}
-      />
-      <label htmlFor={`only-orig`}>{'Only import originals]'}</label>
-      <div>{`Loaded ${filesContentOrig.length}+${filesContentTransl.length} images!`}</div>
-      <PageOrdering
-        type={'orig'}
-        files={filesContentOrig}
-        reorder={origReorder}
-        setReorder={setOrigReorder}
-      />
-      <PageOrdering
-        type={'transl'}
-        files={filesContentTransl}
-        reorder={translReorder}
-        setReorder={setTranslReorder}
-      />
-      <form
-        onSubmit={(ev) => {
-          ev.preventDefault();
-          setInProgress(collectionName);
-          const orderedOrig = orderFiles(filesContentOrig, origReorder);
-          const orderedTransl = onlyOrig
-            ? []
-            : orderFiles(filesContentTransl, translReorder);
-          startAlignment(
-            worker,
-            collectionName,
-            orderedOrig,
-            settingsOrig,
-            onlyOrig ? [] : orderedTransl,
-            settingsTransl,
-            orbCount
-          );
-        }}
-      >
-        <label htmlFor="collection-name">{'Collection Name:'}</label>
-        <input
-          id="collection-name"
-          name="collectionName"
-          onInput={(e) =>
-            setCollectionName((e.target as HTMLInputElement).value)
-          }
+      <Wrap>
+        <Card width="100%">
+          <CardBody>
+            <Wrap>
+              <Link to={'/'}>
+                <Button>
+                  <ArrowBackIcon />
+                </Button>
+              </Link>
+              <InputGroup width="auto">
+                <InputLeftAddon>Collection Name:</InputLeftAddon>
+                <Input
+                  id="collection-name"
+                  name="collectionName"
+                  onInput={(e) =>
+                    setCollectionName((e.target as HTMLInputElement).value)
+                  }
+                  disabled={!!inProgress}
+                />
+              </InputGroup>
+
+              <Checkbox
+                id={`only-orig`}
+                name="onlyOrig"
+                defaultChecked={onlyOrig}
+                onChange={(e) => setOnlyOrig(e.target.checked)}
+                disabled={!!inProgress}
+              >
+                Only import originals
+              </Checkbox>
+
+              <InputGroup width="auto">
+                <InputLeftAddon>ORB count:</InputLeftAddon>
+                <Input
+                  id="orb-count"
+                  name="orbCount"
+                  type="number"
+                  min="100"
+                  value={orbCount}
+                  width="auto"
+                  onInput={(e) =>
+                    setOrbCount(parseInt((e.target as HTMLInputElement).value))
+                  }
+                  disabled={!!inProgress || onlyOrig}
+                />
+              </InputGroup>
+              <Button
+                id={'start-import'}
+                isDisabled={
+                  !!inProgress ||
+                  filesContentOrig.length <= 0 ||
+                  (filesContentTransl.length <= 0 && !onlyOrig) ||
+                  collectionName.length === 0
+                }
+                onClick={(ev) => {
+                  ev.preventDefault();
+                  setInProgress(collectionName);
+                  const orderedOrig = orderFiles(filesContentOrig, origReorder);
+                  const orderedTransl = onlyOrig
+                    ? []
+                    : orderFiles(filesContentTransl, translReorder);
+                  startAlignment(
+                    worker,
+                    collectionName,
+                    orderedOrig,
+                    settingsOrig,
+                    onlyOrig ? [] : orderedTransl,
+                    settingsTransl,
+                    orbCount
+                  );
+                }}
+              >
+                Start import
+              </Button>
+            </Wrap>
+          </CardBody>
+        </Card>
+        <UploadImages
+          typeName={'original'}
+          openFilePicker={openFilePickerOrig}
+          settings={settingsOrig}
+          setSettings={setSettingsOrig}
+          idBase="orig"
           disabled={!!inProgress}
-        />
-        <button
-          id={'start-import'}
-          disabled={
-            !!inProgress ||
-            filesContentOrig.length <= 0 ||
-            (filesContentTransl.length <= 0 && !onlyOrig) ||
-            collectionName.length === 0
-          }
         >
-          {'Start'}
-        </button>
-      </form>
-      <hr />
-      <Link to={'/'}>
-        <button>Back to home</button>
-      </Link>
+          <PageOrdering
+            type={'orig'}
+            files={filesContentOrig}
+            reorder={origReorder}
+            setReorder={setOrigReorder}
+          />
+        </UploadImages>
+        {!onlyOrig && (
+          <UploadImages
+            typeName={'translation'}
+            openFilePicker={openFilePickerTransl}
+            settings={settingsTransl}
+            setSettings={setSettingsTransl}
+            idBase="transl"
+            disabled={!!inProgress || onlyOrig}
+          >
+            <PageOrdering
+              type={'transl'}
+              files={filesContentTransl}
+              reorder={translReorder}
+              setReorder={setTranslReorder}
+            />
+          </UploadImages>
+        )}
+      </Wrap>
     </>
   );
 }
