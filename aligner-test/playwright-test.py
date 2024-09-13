@@ -98,9 +98,9 @@ with sync_playwright() as playwright:
     )
 
     if not split_orig:
-        page.locator("#do-split-orig").click()
+        page.locator("#do-split-orig").click(force=True)
     if not split_transl:
-        page.locator("#do-split-transl").click()
+        page.locator("#do-split-transl").click(force=True)
 
     page.locator("#collection-name").fill(COLLECTION_NAME)
 
