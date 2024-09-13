@@ -1,4 +1,6 @@
+import { Card } from '@chakra-ui/react';
 import { percentFormat } from '../util/percent-format';
+import { ProgressBar } from './ProgressBar';
 
 type PositionInfoProps = {
   currentPage: { page: number; percentage: number };
@@ -12,7 +14,7 @@ export function PositionInfo({
   toggleSettings,
 }: PositionInfoProps) {
   return (
-    <div
+    <Card
       onClick={(ev) => {
         toggleSettings();
         ev.preventDefault();
@@ -21,15 +23,23 @@ export function PositionInfo({
       id="page-counter"
       style={{
         position: 'fixed',
-        left: '0px',
-        bottom: '0px',
-        maxWidth: '4vw',
+        left: '2px',
+        bottom: '2px',
         zIndex: 2,
+        overflow: 'hidden',
+        opacity: 0.75,
       }}
     >
-      {`${currentPage.page + 1} / ${pageCount ?? 0}`}
-      <br />
-      {percentFormat(currentPage.percentage)}
-    </div>
+      <ProgressBar
+        text={`${currentPage.page + 1} / ${pageCount ?? 0}`}
+        value={(currentPage.page + 1) / (pageCount ?? 1)}
+        barPosition="top"
+      />
+      <ProgressBar
+        text={percentFormat(currentPage.percentage)}
+        value={currentPage.percentage}
+        barPosition="bottom"
+      />
+    </Card>
   );
 }

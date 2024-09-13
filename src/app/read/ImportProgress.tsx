@@ -1,7 +1,9 @@
+import { Card } from '@chakra-ui/react';
 import { useCallback, useContext } from 'react';
 import { WorkerContext } from '../aligner-worker/AlignerWorker';
 import { percentFormat } from '../util/percent-format';
 import { useWorkerMessageListener } from '../util/useAddEventListener';
+import { ProgressBar } from './ProgressBar';
 
 type ImportProgressProps = {
   collectionName: string | undefined;
@@ -23,21 +25,27 @@ export function ImportProgress({
 
   return (
     collectionName === inProgress && (
-      <div
+      <Card
         style={{
           position: 'fixed',
-          right: '0px',
-          top: '0px',
-          maxWidth: '4vw',
+          right: '2px',
+          top: '2px',
           zIndex: 2,
+          overflow: 'hidden',
+          opacity: 0.75,
         }}
       >
-        {`Loading...`}
-        <br />
-        {`Original: ${percentFormat(progress.orig)}`}
-        <br />
-        {`Translation: ${percentFormat(progress.transl)}`}
-      </div>
+        <ProgressBar
+          text={`Original: ${percentFormat(progress.orig)}`}
+          value={progress.orig}
+          barPosition="top"
+        />{' '}
+        <ProgressBar
+          text={`Translation: ${percentFormat(progress.transl)}`}
+          value={progress.transl}
+          barPosition="bottom"
+        />
+      </Card>
     )
   );
 }

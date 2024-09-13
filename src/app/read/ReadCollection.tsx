@@ -1,5 +1,7 @@
+import { ArrowBackIcon } from '@chakra-ui/icons';
+import { Button, Card, HStack } from '@chakra-ui/react';
 import { useRef, useState } from 'react';
-import { ParamParseKey, Params, useLoaderData } from 'react-router-dom';
+import { Link, ParamParseKey, Params, useLoaderData } from 'react-router-dom';
 import { useCollectionLocalStorage } from '../util/useLocalStorage';
 import { useSetTitle } from '../util/useSetTitle';
 import { ImportProgress } from './ImportProgress';
@@ -31,7 +33,7 @@ export function ReadCollection() {
 
   const peek = usePeekTranslation();
 
-  const [zoomSlider, setZoomSlider] = useState(false);
+  const [readSettingsToggle, setReadSettingsToggle] = useState(false);
   const [zoom, setZoom] = useZoomControl();
 
   const originalCount = useCollectionLocalStorage(collectionName);
@@ -50,7 +52,6 @@ export function ReadCollection() {
 
   return (
     <div
-      className={'container'}
       style={{
         alignItems: zoom > 90 ? 'start' : 'center',
         display: 'flex',
@@ -81,17 +82,29 @@ export function ReadCollection() {
         <PositionInfo
           currentPage={sc.currentPage}
           pageCount={originalCount.value}
-          toggleSettings={() => setZoomSlider((prev) => !prev)}
+          toggleSettings={() => setReadSettingsToggle((prev) => !prev)}
         />
         <ImportProgress
           collectionName={collectionName}
           setOrigPageCount={originalCount.setValue}
         />
-        {zoomSlider && (
-          <>
-            <ZoomSlider zoom={zoom} setZoom={setZoom} />
-            <SwitchPeek toggle={() => peek.setSwitchMC((prev) => !prev)} />
-          </>
+        {readSettingsToggle && (
+          <Card
+            position="fixed"
+            bottom="10px"
+            right="10px"
+            width="80vw"
+            opacity={0.75}
+            zIndex={2}
+          >
+            <HStack justifyContent="flex-end">
+              <ZoomSlider zoom={zoom} setZoom={setZoom} />
+              <SwitchPeek toggle={() => peek.setSwitchMC((prev) => !prev)} />
+              <Link to={'/'}>
+                <Button leftIcon={<ArrowBackIcon />}>Home</Button>
+              </Link>
+            </HStack>
+          </Card>
         )}
       </div>
     </div>

@@ -1,4 +1,8 @@
-import { ChakraProvider } from '@chakra-ui/react';
+import {
+  ChakraProvider,
+  extendTheme,
+  type ThemeConfig,
+} from '@chakra-ui/react';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { WorkerProvider } from './aligner-worker/AlignerWorker';
 import { DimBrightness } from './DimBrightness';
@@ -30,9 +34,16 @@ const router = createBrowserRouter([
   },
 ]);
 
+const config: ThemeConfig = {
+  initialColorMode: 'dark',
+  useSystemColorMode: false,
+};
+
+const theme = extendTheme({ config });
+
 export function App() {
   return (
-    <ChakraProvider>
+    <ChakraProvider theme={theme}>
       <WorkerProvider>
         <RouterProvider router={router} />
       </WorkerProvider>

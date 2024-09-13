@@ -1,3 +1,9 @@
+import {
+  Slider,
+  SliderFilledTrack,
+  SliderThumb,
+  SliderTrack,
+} from '@chakra-ui/react';
 import { useCallback, useState } from 'react';
 import { useAddEventListener } from '../util/useAddEventListener';
 
@@ -8,34 +14,22 @@ type ZoomSliderProps = {
 
 export function ZoomSlider({ zoom, setZoom }: ZoomSliderProps) {
   return (
-    <>
-      <input
-        type="range"
-        list="tickmarks"
-        min="10"
-        max="100"
-        step="10"
-        id="zoom"
-        name="zoom"
-        value={zoom}
-        onChange={(ev) => setZoom(parseInt(ev.target.value))}
-        style={{
-          position: 'fixed',
-          bottom: '5vh',
-          left: '50%',
-          transform: 'translate(-50%, 0)',
-          width: '40vw',
-          zIndex: 2,
-        }}
-      />
-      <datalist id="tickmarks">
-        {Array(10)
-          .fill(1)
-          .map((_, index) => (
-            <option value={(index + 1) * 10} key={index}></option>
-          ))}
-      </datalist>
-    </>
+    <Slider
+      colorScheme="gray"
+      defaultValue={zoom}
+      min={10}
+      max={100}
+      step={5}
+      id="zoom"
+      name="zoom"
+      onChange={(val) => setZoom(val)}
+      w="40vw"
+    >
+      <SliderTrack>
+        <SliderFilledTrack />
+      </SliderTrack>
+      <SliderThumb />
+    </Slider>
   );
 }
 
