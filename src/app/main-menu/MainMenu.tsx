@@ -1,10 +1,12 @@
-import { Button, Divider, Flex, Spacer, VStack } from '@chakra-ui/react';
+import { PlusSquareIcon } from '@chakra-ui/icons';
+import { Button, Divider, VStack } from '@chakra-ui/react';
 import { useContext } from 'react';
 import { Link } from 'react-router-dom';
-import { WorkerContext } from './aligner-worker/AlignerWorker';
-import { deleteCollection } from './util/storage';
-import { useCollectionNamesLocalStorage } from './util/useLocalStorage';
-import { useSetTitle } from './util/useSetTitle';
+import { WorkerContext } from '../aligner-worker/AlignerWorker';
+import { deleteCollection } from '../util/storage';
+import { useCollectionNamesLocalStorage } from '../util/useLocalStorage';
+import { useSetTitle } from '../util/useSetTitle';
+import { CollectionItem } from './CollectionItem';
 
 export function MainMenu() {
   const { collections: collectionNames, refresh: refreshCollectionNames } =
@@ -25,23 +27,17 @@ export function MainMenu() {
   return (
     <VStack spacing={4} align="center" m="3%">
       <Link to={'/import'}>
-        <Button id="import-button" border="solid">
+        <Button id="import-button" leftIcon={<PlusSquareIcon />}>
           {'Import new collection'}
         </Button>
       </Link>
       <Divider />
       {collectionNames.map((collectionName) => (
-        <Flex key={collectionName} w="80%" border="solid">
-          <Link to={`/read/${collectionName}`}>
-            <Button>{`Read ${collectionName}`}</Button>
-          </Link>
-          <Spacer></Spacer>
-          <Button
-            onClick={() => {
-              deleteCollectionClick(collectionName);
-            }}
-          >{`X`}</Button>
-        </Flex>
+        <CollectionItem
+          collectionName={collectionName}
+          deleteCollectionClick={deleteCollectionClick}
+          key={collectionName}
+        />
       ))}
     </VStack>
   );

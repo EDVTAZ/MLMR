@@ -3,7 +3,7 @@ import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { WorkerProvider } from './aligner-worker/AlignerWorker';
 import { DimBrightness } from './DimBrightness';
 import { CreateCollection } from './import/CreateCollection';
-import { MainMenu } from './MainMenu';
+import { MainMenu } from './main-menu/MainMenu';
 import { ReadCollection, readCollectionLoader } from './read/ReadCollection';
 
 const router = createBrowserRouter([
