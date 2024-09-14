@@ -20,7 +20,6 @@ export function PositionInfo({
         ev.preventDefault();
         return false;
       }}
-      id="page-counter"
       style={{
         position: 'fixed',
         left: '2px',
@@ -40,6 +39,16 @@ export function PositionInfo({
         value={currentPage.percentage}
         barPosition="bottom"
       />
+      <div
+        id="page-counter"
+        style={{
+          position: 'fixed',
+          height: '100%',
+          opacity: 0,
+        }}
+      >
+        {`${currentPage.page + 1} / ${pageCount ?? 0}`}
+      </div>
     </Card>
   );
 }
