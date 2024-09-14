@@ -3,6 +3,7 @@
 const mountpointBase = '/idbfs';
 const imageDirs = ['in_transl', 'out_transl', 'in_orig', 'out_orig'];
 const INDEX_BASE = 1000000;
+const SEARCH_RANGE = 10; // TODO get as config option - warning: this should be the same as the constant in main.cpp
 let FSsyncInProgress = false;
 let FSmounted = false;
 let progress = false;
@@ -115,6 +116,38 @@ function getUpdatedIndexes(dir, time) {
   );
 }
 
+async function singleAlignment(type, name, imgs, settings, in_idx, out_idx) {
+  const startTime = new Date();
+  const { width, height } = await loadImageWithCanvas(imgs[in_idx]);
+  const alignArgs = [
+    `${FSmounted}/out_${type}/`,
+    width,
+    height,
+    settings['resize'],
+    settings['do_split'],
+    settings['do_crop'],
+    settings['right2left'],
+  ];
+  if (type === 'transl') {
+    alignArgs.push(settings['orb_count']);
+  }
+  Module[`add_${type}`](...alignArgs);
+  await syncToIDB();
+  const newIndexes = getUpdatedIndexes(`${FSmounted}/out_${type}`, startTime);
+  postMessage({
+    msg: `${type}-written`,
+    collectionName: name,
+    count: (FS.readdir(`${FSmounted}/out_${type}`).length - 2) / 2,
+    progressIndex: in_idx + 1,
+    progressMax: imgs.length,
+    newIndexes,
+  });
+  console.log(`Processed ${type} image no.${in_idx}`);
+  in_idx += 1;
+  out_idx = Math.max(out_idx, ...newIndexes);
+  return [in_idx, out_idx];
+}
+
 async function runAlignment(
   name,
   orig_imgs,
@@ -137,57 +170,35 @@ async function runAlignment(
   await writeImages('in_orig', orig_imgs);
   await writeImages('in_transl', transl_imgs);
 
-  console.log('Processing orig images');
-  for (let i = 0; i < orig_imgs.length; ++i) {
-    const startTime = new Date();
-    const { width, height } = await loadImageWithCanvas(orig_imgs[i]);
-    Module['add_orig'](
-      `${FSmounted}/out_orig/`,
-      width,
-      height,
-      orig_settings['resize'],
-      orig_settings['do_split'],
-      orig_settings['do_crop'],
-      orig_settings['right2left']
-    );
-    await syncToIDB();
-    postMessage({
-      msg: 'orig-written',
-      collectionName: name,
-      count: (FS.readdir(`${FSmounted}/out_orig`).length - 2) / 2,
-      progressIndex: i + 1,
-      progressMax: orig_imgs.length,
-      newIndexes: getUpdatedIndexes(`${FSmounted}/out_orig`, startTime),
-    });
-    console.log(`Processed orig image no.${i}`);
+  console.log('Processing images!');
+  let in_orig_idx = 0;
+  let in_transl_idx = 0;
+  let out_orig_idx = 0;
+  let out_transl_idx = 0;
+  while (in_orig_idx < orig_imgs.length || in_transl_idx < transl_imgs.length) {
+    if (
+      out_transl_idx + SEARCH_RANGE > out_orig_idx &&
+      in_orig_idx < orig_imgs.length
+    ) {
+      [in_orig_idx, out_orig_idx] = await singleAlignment(
+        'orig',
+        name,
+        orig_imgs,
+        orig_settings,
+        in_orig_idx,
+        out_orig_idx
+      );
+    } else if (in_transl_idx < transl_imgs.length) {
+      [in_transl_idx, out_transl_idx] = await singleAlignment(
+        'transl',
+        name,
+        transl_imgs,
+        transl_settings,
+        in_transl_idx,
+        out_transl_idx
+      );
+    }
   }
-
-  console.log('Processing transl images');
-  for (let i = 0; i < transl_imgs.length; ++i) {
-    const startTime = new Date();
-    const { width, height } = await loadImageWithCanvas(transl_imgs[i]);
-    Module['add_transl'](
-      `${FSmounted}/out_transl/`,
-      width,
-      height,
-      transl_settings['resize'],
-      transl_settings['do_split'],
-      transl_settings['do_crop'],
-      transl_settings['right2left'],
-      transl_settings['orb_count']
-    );
-    await syncToIDB();
-    postMessage({
-      msg: 'transl-written',
-      collectionName: name,
-      count: (FS.readdir(`${FSmounted}/out_transl`).length - 2) / 2,
-      progressIndex: i + 1,
-      progressMax: transl_imgs.length,
-      newIndexes: getUpdatedIndexes(`${FSmounted}/out_transl`, startTime),
-    });
-    console.log(`Processed transl image no.${i}`);
-  }
-
   console.log('Alignment done!');
 
   FS.unmount(FSmounted);
