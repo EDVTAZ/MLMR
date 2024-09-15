@@ -1,4 +1,4 @@
-import { ArrowBackIcon } from '@chakra-ui/icons';
+import { ArrowBackIcon, QuestionOutlineIcon } from '@chakra-ui/icons';
 import {
   Button,
   Card,
@@ -8,7 +8,9 @@ import {
   Input,
   InputGroup,
   InputLeftAddon,
+  InputRightElement,
   Tag,
+  Tooltip,
   Wrap,
 } from '@chakra-ui/react';
 import { useContext, useState } from 'react';
@@ -116,6 +118,11 @@ export function CreateCollection() {
                   }
                   disabled={!!inProgress || onlyOrig}
                 />
+                <InputRightElement>
+                  <Tooltip label="Number of ORBs used for matching images (higher is usually better matching but slower)">
+                    <QuestionOutlineIcon />
+                  </Tooltip>
+                </InputRightElement>
               </InputGroup>
               <Button
                 id={'start-import'}

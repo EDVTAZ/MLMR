@@ -1,3 +1,4 @@
+import { QuestionOutlineIcon } from '@chakra-ui/icons';
 import {
   Button,
   Card,
@@ -6,6 +7,8 @@ import {
   Input,
   InputGroup,
   InputLeftAddon,
+  InputRightElement,
+  Tooltip,
   VStack,
 } from '@chakra-ui/react';
 import { PropsWithChildren } from 'react';
@@ -105,6 +108,11 @@ export function UploadImages({
               }
               disabled={disabled}
             />
+            <InputRightElement>
+              <Tooltip label="Resolution of stored images in pixels, 0 for no resize. For good results it is recommended to resize images to similar sizes if the source doesn't guarantee this.">
+                <QuestionOutlineIcon />
+              </Tooltip>
+            </InputRightElement>
           </InputGroup>
           {children}
         </VStack>

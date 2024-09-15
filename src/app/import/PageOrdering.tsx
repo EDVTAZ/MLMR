@@ -1,12 +1,15 @@
+import { QuestionOutlineIcon } from '@chakra-ui/icons';
 import {
   Card,
   CardBody,
   Input,
   InputGroup,
   InputLeftAddon,
+  InputRightElement,
   List,
   ListItem,
   Tag,
+  Tooltip,
 } from '@chakra-ui/react';
 import { Dispatch, SetStateAction } from 'react';
 import { FileContent } from 'use-file-picker/types';
@@ -49,6 +52,11 @@ export function PageOrdering({
                 setReorder(val.length > 0 && val !== 'original' ? val : false);
               }}
             />
+            <InputRightElement>
+              <Tooltip label="For keeping import order, leave empty or type 'original'. Otherwise a regex where groups named int<number> and string<number> will be used for ordering. int will be parsed as a number, string will be left as a string. The number in the group name will indicate priority, 0 for highest.">
+                <QuestionOutlineIcon />
+              </Tooltip>
+            </InputRightElement>
           </InputGroup>
           <datalist id="prepared-regexes">
             <option value="original" />
