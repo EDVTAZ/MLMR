@@ -1,6 +1,7 @@
 # TODO
 
 - alignment: bettersize matching (patchsize or other parameters instead of scaling image?)
+- search range and png compression parameter as configurable parameters (instead of hardcoded as currently)
 - consider internet archive bookreader
 - memory management
 - still jittering during load+scroll

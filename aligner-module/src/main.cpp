@@ -13,6 +13,7 @@ const int PIXEL_EPS = 10;
 const double RATIO_LOWER = 2 / 3 - EPS;
 const double RATIO_HIGHER = 2 / 3 + EPS;
 const int SEARCH_RANGE = 10;
+const std::vector<int> PNG_ENCODING_PARAMS = {cv::IMWRITE_PNG_COMPRESSION, 3};
 
 struct PageImage
 {
@@ -211,7 +212,7 @@ int load_raw(int width, int height, std::deque<PageImage> &acc, int &acc_count, 
 
 void write_im_and_info(std::string name, cv::Mat &image)
 {
-    cv::imwrite(name + ".png", image);
+    cv::imwrite(name + ".png", image, PNG_ENCODING_PARAMS);
 
     std::ofstream infofile(name + ".txt");
     if (infofile.is_open())

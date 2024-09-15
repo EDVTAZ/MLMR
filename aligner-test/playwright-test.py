@@ -120,7 +120,16 @@ with sync_playwright() as playwright:
     while not finished:
         page.wait_for_timeout(1000)
 
-    print(f"Alignment finished in {time.time()-start_time} seconds")
+    storage_usage = page.evaluate(
+        """async () => {
+  const storage_stats = await navigator.storage.estimate();
+  return storage_stats.usageDetails.indexedDB;
+}"""
+    )
+
+    print(
+        f"Alignment finished in {time.time()-start_time} seconds, with {storage_usage} bytes used in indexedDB!"
+    )
 
     logs = sorted(logs)
     with open(f"/src/data/out/{out_dir}/alignment-out.txt", "w") as f:

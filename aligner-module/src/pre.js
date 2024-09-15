@@ -116,6 +116,15 @@ function getUpdatedIndexes(dir, time) {
   );
 }
 
+async function rmdirWithFiles(dir) {
+  const files = FS.readdir(dir).filter((e) => e !== '.' && e !== '..');
+  for (const file of files) {
+    FS.unlink(`${dir}/${file}`);
+  }
+  FS.rmdir(dir);
+  await syncToIDB();
+}
+
 async function singleAlignment(type, name, imgs, settings, in_idx, out_idx) {
   const startTime = new Date();
   const { width, height } = await loadImageWithCanvas(imgs[in_idx]);
@@ -200,6 +209,9 @@ async function runAlignment(
     }
   }
   console.log('Alignment done!');
+
+  await rmdirWithFiles(`${FSmounted}/in_orig`);
+  await rmdirWithFiles(`${FSmounted}/in_transl`);
 
   FS.unmount(FSmounted);
   FSmounted = false;
