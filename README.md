@@ -4,7 +4,6 @@
 - search range and png compression parameter as configurable parameters (instead of hardcoded as currently)
 - consider internet archive bookreader
 - memory management
-- still jittering during load+scroll
 - look for unnecessary useEffect usages
 - turn off debug mode compilation flags
 - more efficiont scroll position calc

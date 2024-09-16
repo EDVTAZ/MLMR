@@ -31,15 +31,23 @@ function calculateScroll(
 function scrollToPosition(
   page: number,
   percentage: number,
-  pageRefs: MutableRefObject<(HTMLDivElement | null)[]>
+  pageRefs: MutableRefObject<(HTMLDivElement | null)[]>,
+  scrollingRef: MutableRefObject<{
+    scrolling: boolean;
+    adjusting: boolean;
+  }> | null
 ) {
   const targetDiv = pageRefs.current[page];
   if (targetDiv) {
     const targetRect = targetDiv.getBoundingClientRect();
-    window.scrollBy({
-      top: targetRect.top + targetRect.height * percentage,
-      behavior: 'instant',
-    });
+    const scrollByTop = targetRect.top + targetRect.height * percentage;
+    if (scrollByTop !== 0) {
+      if (scrollingRef) scrollingRef.current.adjusting = true;
+      window.scrollBy({
+        top: scrollByTop,
+        behavior: 'instant',
+      });
+    }
   }
 }
 
@@ -66,7 +74,8 @@ export function useScrollControl(
           (origPageCount ?? 1) - 1
         ),
         0,
-        pageRefs
+        pageRefs,
+        null
       );
     },
     [origPageCount, pageRefs]
@@ -110,8 +119,6 @@ export function useScrollControl(
         return;
       }
 
-      scrollingRef.current.adjusting = true;
-
       if (
         localStorageCurrentPage.value === null ||
         (inProgress === collectionName && scrollingRef.current.scrolling)
@@ -128,7 +135,8 @@ export function useScrollControl(
       scrollToPosition(
         localStorageCurrentPage.value.page,
         localStorageCurrentPage.value.percentage,
-        pageRefs
+        pageRefs,
+        scrollingRef
       );
     }
 
