@@ -1,4 +1,4 @@
-# [Multi-language manga reader](https://aligned.pictures)
+# [Multi-Language Manga Reader](https://aligned.pictures)
 
 Read manga/comics in multiple languages at the same time.
 
@@ -39,6 +39,8 @@ The overall algorithm:
   - if not successful, maybe a page is missing so let's try to match with the next original
 - if there is no match up to a range, move on to the next translation image
 - whenever there is a match, check if there were translation images that were skipped this way, and backtrack them to be inserted in order backwards without doing any matching
+
+Other than serving the code the site is completely offline, all of the above is done in the browser and the images are stored in IndexedDB. Currently the wasm memory is fixed at 1024MB, so it should work on mobile devices as well - although it does take longer, and graceful continuation from an interrupted import is not implemented yet. I test with around 190 mostly black and white images, so it should be able to handle a full volume in one go in most cases without running out of memory.
 
 For testing currently there is a setup with playwright that does imports with 3 different configurations and compares the outcomes to the previous version. This is done by logging the exact homography matrixes used and diffing to a known good output.
 

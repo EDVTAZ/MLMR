@@ -33,7 +33,7 @@ export function MainMenu() {
           </Button>
         </Link>
         <Link
-          to="https://github.com/EDVTAZ/MLM-reader/blob/master/README.md"
+          to="https://github.com/EDVTAZ/MLMR/blob/master/README.md"
           target="blank"
         >
           <Button leftIcon={<QuestionIcon />}>{'Help and source'}</Button>
