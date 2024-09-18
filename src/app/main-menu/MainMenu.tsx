@@ -32,7 +32,10 @@ export function MainMenu() {
             {'Import new collection'}
           </Button>
         </Link>
-        <Link to="https://github.com/EDVTAZ/MLM-reader" target="blank">
+        <Link
+          to="https://github.com/EDVTAZ/MLM-reader/blob/master/README.md"
+          target="blank"
+        >
           <Button leftIcon={<QuestionIcon />}>{'Help and source'}</Button>
         </Link>
       </HStack>

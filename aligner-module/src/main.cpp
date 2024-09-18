@@ -344,6 +344,12 @@ int add_orig(std::string dst_path, int width, int height, int resize, bool do_sp
         std::cout << "[AA] ORIG-" << origs[origs.size() - 2].index << " split off previous and added" << std::endl;
         write_im_and_info(std::filesystem::path(dst_path) / (std::to_string(origs[origs.size() - 2].index + 1000001)), origs[origs.size() - 2].img);
     }
+
+    if (origs.size() > SEARCH_RANGE + 1)
+    {
+        origs.erase(origs.begin(), origs.begin() + (origs.size() - SEARCH_RANGE - 1));
+    }
+
     return cnt;
 }
 
@@ -445,6 +451,12 @@ int add_transl(std::string dst_path, int width, int height, int resize, bool do_
     {
         total_cnt += find_pairing(dst_path, transls.size() - i, orb_count);
     }
+
+    if (transls.size() > SEARCH_RANGE + 1)
+    {
+        transls.erase(transls.begin(), transls.begin() + (transls.size() - SEARCH_RANGE - 1));
+    }
+
     return total_cnt;
 }
 

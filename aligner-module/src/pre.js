@@ -186,9 +186,11 @@ async function runAlignment(
   let out_transl_idx = 0;
   while (in_orig_idx < orig_imgs.length || in_transl_idx < transl_imgs.length) {
     if (
-      out_transl_idx + SEARCH_RANGE > out_orig_idx &&
+      (out_transl_idx + SEARCH_RANGE > out_orig_idx ||
+        in_transl_idx >= transl_imgs.length) &&
       in_orig_idx < orig_imgs.length
     ) {
+      console.log('Adding original');
       [in_orig_idx, out_orig_idx] = await singleAlignment(
         'orig',
         name,
@@ -198,6 +200,7 @@ async function runAlignment(
         out_orig_idx
       );
     } else if (in_transl_idx < transl_imgs.length) {
+      console.log('Adding transl');
       [in_transl_idx, out_transl_idx] = await singleAlignment(
         'transl',
         name,
@@ -206,6 +209,9 @@ async function runAlignment(
         in_transl_idx,
         out_transl_idx
       );
+    } else {
+      console.log('Error in alignment!');
+      break;
     }
   }
   console.log('Alignment done!');
