@@ -1,3 +1,4 @@
+import { fileTypeFromBuffer } from 'file-type';
 import { useState } from 'react';
 import { useFilePicker } from 'use-file-picker';
 import { FileContent } from 'use-file-picker/types';
@@ -16,14 +17,12 @@ export function useUploadImages(defaultSettings: ImageImportConfigType) {
     onFilesSuccessfullySelected: async ({ plainFiles, filesContent }) => {
       let newProcessedFiles: FileContent<ArrayBuffer>[] = [];
       for (const fileContent of filesContent) {
-        if (
-          fileContent.name.endsWith('.zip') ||
-          fileContent.name.endsWith('.cbz')
-        ) {
+        const fileType = await fileTypeFromBuffer(fileContent.content);
+        if (fileType?.ext === 'zip') {
           newProcessedFiles = newProcessedFiles.concat(
             await unzipImages(fileContent.name, fileContent.content)
           );
-        } else {
+        } else if (fileType?.mime.includes('image')) {
           newProcessedFiles.push(fileContent);
         }
       }
