@@ -71,11 +71,21 @@ async function mountFS(mountpoint) {
 }
 
 async function loadImageWithCanvas(file) {
-  const bitmap = await createImageBitmap(
-    new Blob([file.content], { type: 'image/*' })
-  );
-  const width = bitmap.width;
-  const height = bitmap.height;
+  let bitmap, width, height;
+  try {
+    bitmap = await createImageBitmap(
+      new Blob([file.content], { type: 'image/*' })
+    );
+    width = bitmap.width;
+    height = bitmap.height;
+
+    if (width === 0 || height === 0) {
+      throw new Error();
+    }
+  } catch (e) {
+    console.log(`Warning: ${file.name} could not be processed as an image!`);
+    return { width: 0, height: 0 };
+  }
 
   const canvas = new OffscreenCanvas(width, height);
   const ctx = canvas.getContext('2d');
@@ -128,6 +138,7 @@ async function rmdirWithFiles(dir) {
 async function singleAlignment(type, name, imgs, settings, in_idx, out_idx) {
   const startTime = new Date();
   const { width, height } = await loadImageWithCanvas(imgs[in_idx]);
+  if (width === 0 || height === 0) return [in_idx + 1, out_idx];
   const alignArgs = [
     `${FSmounted}/out_${type}/`,
     width,
@@ -152,9 +163,8 @@ async function singleAlignment(type, name, imgs, settings, in_idx, out_idx) {
     newIndexes,
   });
   console.log(`Processed ${type} image no.${in_idx}`);
-  in_idx += 1;
   out_idx = Math.max(out_idx, ...newIndexes);
-  return [in_idx, out_idx];
+  return [in_idx + 1, out_idx];
 }
 
 async function runAlignment(
