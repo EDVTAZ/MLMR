@@ -2,6 +2,7 @@ import { fileTypeFromBuffer } from 'file-type';
 import { useState } from 'react';
 import { useFilePicker } from 'use-file-picker';
 import { FileContent } from 'use-file-picker/types';
+import { unrarImages } from '../util/rar';
 import { unzipImages } from '../util/zip';
 import { ImageImportConfigType } from './types';
 
@@ -12,7 +13,7 @@ export function useUploadImages(defaultSettings: ImageImportConfigType) {
   // TODO handle loading state and errors
   const { openFilePicker } = useFilePicker({
     readAs: 'ArrayBuffer',
-    accept: ['.avif', 'image/*', '.zip', '.cbz'],
+    accept: ['.avif', 'image/*', '.zip', '.cbz', '.rar', '.cbr'],
     multiple: true,
     onFilesSuccessfullySelected: async ({ plainFiles, filesContent }) => {
       let newProcessedFiles: FileContent<ArrayBuffer>[] = [];
@@ -21,6 +22,10 @@ export function useUploadImages(defaultSettings: ImageImportConfigType) {
         if (fileType?.ext === 'zip') {
           newProcessedFiles = newProcessedFiles.concat(
             await unzipImages(fileContent.name, fileContent.content)
+          );
+        } else if (fileType?.ext === 'rar') {
+          newProcessedFiles = newProcessedFiles.concat(
+            await unrarImages(fileContent.name, fileContent.content)
           );
         } else if (fileType?.mime.includes('image')) {
           newProcessedFiles.push(fileContent);

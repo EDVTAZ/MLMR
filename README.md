@@ -57,7 +57,7 @@ On the viewer side I tried to pay attention to not have all the images loaded at
 - add loading state to reader when opening collection, so we can block scrolling and avoid overwriting stored position
 - resume import if interrupted
 - smaller subfolders for reduced memory footprint
-- add support for various file formats (?? for rar, pdf, etc.)
+- add support for various file formats (?? for pdf, etc.)
 - remove file formats other than png from opencv build
 - service worker / PWA
 - testing UI and additional e2e tests

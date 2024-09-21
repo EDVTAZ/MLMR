@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { FileContent } from 'use-file-picker/types';
+import { type FileContent } from 'use-file-picker/types';
 import { stringCompare } from './filename-compare';
 
 export async function unzipImages(
