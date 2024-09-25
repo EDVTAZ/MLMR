@@ -59,7 +59,6 @@ On the viewer side I tried to pay attention to not have all the images loaded at
 - smaller subfolders for reduced memory footprint
 - add support for various file formats (?? for pdf, etc.)
 - remove file formats other than png from opencv build
-- service worker / PWA
 - testing UI and additional e2e tests
 - have wrap up function to match remaining backtrack stack
 - better IDB handling for faster image loads

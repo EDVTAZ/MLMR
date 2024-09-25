@@ -43,3 +43,5 @@ Thumbs.db
 public/*.js
 public/*.wasm
 !public/unrar.wasm
+
+dev-dist
