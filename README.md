@@ -46,6 +46,22 @@ For testing currently there is a setup with playwright that does imports with 3 
 
 On the viewer side I tried to pay attention to not have all the images loaded at once, but still offer easy scrolling over the whole document and no position change when resizing the window. The language change is done simply by loading both versions of the page and changing which one is on top. Similarly, peeking is done by adding a `clipPath` around one of the images.
 
+## 2024.10 `DataError: Failed to write blobs (InvalidBlob)` failure with IndexedDB/IDBFS
+
+The issue came up for me when I updated chrome on my tablet to 129.0.6668.70, during importing a new collection, IDBFS failed with the following error message: `DataError: Failed to write blobs (InvalidBlob)`. Luckily I didn't do any changes in the application itself around that time, so I could be absolutely sure that it wasn't caused by me. Interestingly, it wasn't failing on my windows desktop with the same chrome version, only on android. After a bit of struggle I was able to find [this bug](https://issues.chromium.org/issues/369670458). I've never really needed to search for chrome bugs before, so I wasn't familiar with this tracker, and because InvalidBlob was written separately in the report my search engine wasn't picking it up with my strict search :facepalm:. At any rate, in the issue the conclusion is that in their case the problem is in [idb](https://www.npmjs.com/package/idb), so I'm guessing in my case similarly the emscripten IDBFS implementation should be at fault for relying on some undefined behavior which was changed in the recent chrome versions. Another issue that seems to be very similar (but old and already resolved) was [this one](https://issues.chromium.org/issues/40150070).
+
+With that in mind I have a the following options:
+
+- dump IDBFS usage (which I was already planning to do for memory efficiency reasons, but is a bigger chunk of work)
+- reproduce the workaround described in the chromium tracker
+- investigate further in the IDBFS implementation, then fix and contribute to emscripten
+
+Since I currently don't have that much time, I've decided to go with the second option, but I'm still curious what the details are, so I want to revisit this sometime in the future.
+
+- https://issues.chromium.org/issues/369670458
+- https://www.npmjs.com/package/idb
+- https://issues.chromium.org/issues/40150070
+
 # Backlog of things to fix and features to add
 
 - check for existing collections when importing (right now it will overwrite), regex rule for valid names

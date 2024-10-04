@@ -22,9 +22,7 @@ async function syncIDB(direction) {
         FSsyncInProgress = true;
         FS.syncfs(direction === 'from', (err) => {
           FSsyncInProgress = false;
-          console.log(
-            `Syncing ${direction} IDB to memory FS done, errors: ${err}`
-          );
+          console.log(`Syncing ${direction} IDB FS done, errors: ${err}`);
           if (!err) {
             resolve();
           } else {
@@ -97,6 +95,19 @@ async function loadImageWithCanvas(file) {
   return { width, height };
 }
 
+function arrayBufferToBS(buffer) {
+  return String.fromCharCode(new Uint8Array(buffer));
+}
+
+function BSToUint8Array(binaryString) {
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
+
 async function writeImages(type, images, reindex = true) {
   if (!FSmounted) {
     console.log('Not mounted yet!');
@@ -104,12 +115,16 @@ async function writeImages(type, images, reindex = true) {
   } else {
     for (let index = 0; index < images.length; ++index) {
       const file = images[index];
+      if (file.content.byteLength === 0) {
+        console.log(`Skipping ${file.name} because it is empty`);
+        continue;
+      }
       if (reindex) {
         file.name = `${index + INDEX_BASE}.${file.name.split('.').at(-1)}`;
       }
       FS.writeFile(
         `${FSmounted}/${type}/${file.name}`,
-        new Uint8Array(file.content)
+        BSToUint8Array(arrayBufferToBS(file.content))
       );
     }
     await syncToIDB();
