@@ -38,6 +38,7 @@ export default defineConfig({
         'mask-icon.svg',
         'unrar.wasm',
         'aligner.*',
+        'sayhello*.zip',
       ],
       manifest: {
         name: 'Multi-Language Manga Reader',

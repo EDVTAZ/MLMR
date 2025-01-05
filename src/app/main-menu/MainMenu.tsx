@@ -1,4 +1,4 @@
-import { PlusSquareIcon, QuestionIcon } from '@chakra-ui/icons';
+import { PlusSquareIcon, QuestionIcon, StarIcon } from '@chakra-ui/icons';
 import { Button, Divider, HStack, VStack } from '@chakra-ui/react';
 import { useContext } from 'react';
 import { Link } from 'react-router-dom';
@@ -26,7 +26,7 @@ export function MainMenu() {
 
   return (
     <VStack spacing={4} align="center" m="3%">
-      <HStack>
+      <HStack wrap="wrap" justify="center">
         <Link to="/import">
           <Button id="import-button" leftIcon={<PlusSquareIcon />}>
             {'Import new collection'}
@@ -37,6 +37,9 @@ export function MainMenu() {
           target="blank"
         >
           <Button leftIcon={<QuestionIcon />}>{'Help and source'}</Button>
+        </Link>
+        <Link to="/demo">
+          <Button leftIcon={<StarIcon />}>{'Demo'}</Button>
         </Link>
       </HStack>
       <Divider />

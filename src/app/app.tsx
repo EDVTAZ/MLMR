@@ -9,6 +9,7 @@ import { DimBrightness } from './DimBrightness';
 import { CreateCollection } from './import/CreateCollection';
 import { MainMenu } from './main-menu/MainMenu';
 import { ReadCollection, readCollectionLoader } from './read/ReadCollection';
+import { Demo } from './demo/Demo';
 
 const router = createBrowserRouter([
   {
@@ -22,6 +23,10 @@ const router = createBrowserRouter([
   {
     path: 'import',
     element: <CreateCollection />,
+  },
+  {
+    path: 'demo',
+    element: <Demo />,
   },
   // {
   //   path: 'sync',

@@ -1,6 +1,6 @@
 # [Multi-Language Manga Reader](https://aligned.pictures)
 
-Read manga/comics in multiple languages at the same time.
+Read manga/comics in multiple languages at the same time. Try it out at: [https://aligned.pictures](https://aligned.pictures)
 
 Import the two versions of the manga/comic. The pages from the translation will be matched to the originals, minor differences in position and missing pages are detected, so everything should be properly aligned.
 
