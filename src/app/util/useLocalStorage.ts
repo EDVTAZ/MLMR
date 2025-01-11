@@ -1,5 +1,5 @@
-import { useEffect, useLayoutEffect, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { REFRESH_MOD } from './storage';
 
 export function useBrightnessLocalStorage() {
@@ -27,10 +27,10 @@ export function useCollectionPositionLocalStorage(
 }
 
 export function useCollectionNamesLocalStorage(): {
-  collections: string[];
+  collections: string[] | null;
   refresh: () => void;
 } {
-  const [collections, setCollections] = useState<string[]>([]);
+  const [collections, setCollections] = useState<string[] | null>(null);
   const [cacheV, setCacheV] = useState(0);
 
   useEffect(() => {

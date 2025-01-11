@@ -1,17 +1,23 @@
-import { PlusSquareIcon, QuestionIcon, StarIcon } from '@chakra-ui/icons';
+import { PlusSquareIcon, QuestionIcon } from '@chakra-ui/icons';
 import { Button, Divider, HStack, VStack } from '@chakra-ui/react';
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { WorkerContext } from '../aligner-worker/AlignerWorker';
 import { deleteCollection } from '../util/storage';
 import { useCollectionNamesLocalStorage } from '../util/useLocalStorage';
 import { useSetTitle } from '../util/useSetTitle';
 import { CollectionItem } from './CollectionItem';
+import { Tutorial } from './Tutorial';
 
 export function MainMenu() {
   const { collections: collectionNames, refresh: refreshCollectionNames } =
     useCollectionNamesLocalStorage();
+  const [showTutorial, setShowTutorial] = useState(false);
   const { setNeeded, inProgress, setInProgress } = useContext(WorkerContext);
+
+  useEffect(() => {
+    if (collectionNames?.length === 0) setShowTutorial(true);
+  }, [collectionNames]);
 
   useSetTitle(`MLMR`);
 
@@ -32,18 +38,17 @@ export function MainMenu() {
             {'Import new collection'}
           </Button>
         </Link>
-        <Link
-          to="https://github.com/EDVTAZ/MLMR/blob/master/README.md"
-          target="blank"
+        <Button
+          onClick={() => setShowTutorial((v) => !v)}
+          variant={showTutorial ? 'outline' : 'solid'}
+          leftIcon={<QuestionIcon />}
         >
-          <Button leftIcon={<QuestionIcon />}>{'Help and source'}</Button>
-        </Link>
-        <Link to="/demo">
-          <Button leftIcon={<StarIcon />}>{'Demo'}</Button>
-        </Link>
+          {'Help'}
+        </Button>
       </HStack>
       <Divider />
-      {collectionNames.map((collectionName) => (
+      {showTutorial && <Tutorial />}
+      {collectionNames?.map((collectionName) => (
         <CollectionItem
           collectionName={collectionName}
           deleteCollectionClick={deleteCollectionClick}
