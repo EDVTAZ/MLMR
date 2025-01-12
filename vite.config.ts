@@ -30,7 +30,6 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 6000000,
       },
       registerType: 'autoUpdate',
-      injectRegister: 'script',
       strategies: 'generateSW',
       includeAssets: [
         'favicon.ico',
