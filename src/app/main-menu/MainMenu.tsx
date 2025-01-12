@@ -1,4 +1,4 @@
-import { PlusSquareIcon, QuestionIcon } from '@chakra-ui/icons';
+import { CloseIcon, PlusSquareIcon, QuestionIcon } from '@chakra-ui/icons';
 import { Button, Divider, HStack, VStack } from '@chakra-ui/react';
 import { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -41,7 +41,7 @@ export function MainMenu() {
         <Button
           onClick={() => setShowTutorial((v) => !v)}
           variant={showTutorial ? 'outline' : 'solid'}
-          leftIcon={<QuestionIcon />}
+          leftIcon={showTutorial ? <CloseIcon /> : <QuestionIcon />}
         >
           {'Help'}
         </Button>

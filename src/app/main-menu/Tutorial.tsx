@@ -54,7 +54,7 @@ export function Tutorial() {
             and right mouse button behavior, this is useful for touchscreen
             where you can't right click.
           </Text>
-          <Text>
+          <Text as="div">
             Additional controls:
             <UnorderedList>
               <ListItem>+/-: control zoom</ListItem>
@@ -77,6 +77,7 @@ export function Tutorial() {
               GitHub <LinkIcon />
             </ChakraLink>
           </Text>
+          <Text>Current version of the app: {__APP_VERSION__}</Text>
         </Stack>
       </CardBody>
     </Card>

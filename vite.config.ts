@@ -103,4 +103,8 @@ export default defineConfig({
       provider: 'v8',
     },
   },
+
+  define: {
+    __APP_VERSION__: JSON.stringify('v0.0.1'),
+  },
 });
