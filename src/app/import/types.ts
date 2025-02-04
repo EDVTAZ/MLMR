@@ -3,6 +3,7 @@ import { FileContent } from 'use-file-picker/types';
 
 export type ImageImportConfigType = {
   resize: number;
+  color_eps: number;
   do_split: boolean;
   do_crop: boolean;
   right2left: boolean;

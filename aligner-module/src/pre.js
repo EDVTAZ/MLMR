@@ -162,6 +162,7 @@ async function singleAlignment(type, name, imgs, settings, in_idx, out_idx) {
     settings['do_split'],
     settings['do_crop'],
     settings['right2left'],
+    settings['color_eps'],
   ];
   if (type === 'transl') {
     alignArgs.push(settings['orb_count']);
@@ -207,15 +208,15 @@ async function runAlignment(
   console.log('Processing images!');
   let in_orig_idx = 0;
   let in_transl_idx = 0;
-  let out_orig_idx = 0;
-  let out_transl_idx = 0;
+  let out_orig_idx = -1;
+  let out_transl_idx = -1;
   while (in_orig_idx < orig_imgs.length || in_transl_idx < transl_imgs.length) {
     if (
-      (out_transl_idx + SEARCH_RANGE > out_orig_idx ||
+      (out_transl_idx + SEARCH_RANGE > out_orig_idx + 1 ||
         in_transl_idx >= transl_imgs.length) &&
       in_orig_idx < orig_imgs.length
     ) {
-      console.log('Adding original');
+      console.log(`Adding original no. ${in_orig_idx}`);
       [in_orig_idx, out_orig_idx] = await singleAlignment(
         'orig',
         name,
@@ -225,7 +226,7 @@ async function runAlignment(
         out_orig_idx
       );
     } else if (in_transl_idx < transl_imgs.length) {
-      console.log('Adding transl');
+      console.log(`Adding transl no. ${in_transl_idx}`);
       [in_transl_idx, out_transl_idx] = await singleAlignment(
         'transl',
         name,

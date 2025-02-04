@@ -96,3 +96,4 @@ Since I currently don't have that much time, I've decided to go with the second 
 - use manual indexdDB management instead of wasm filesystem
 - configurable peek radius
 - refactor
+- update chakra v2->v3

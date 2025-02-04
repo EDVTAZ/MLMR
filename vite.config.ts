@@ -105,6 +105,6 @@ export default defineConfig({
   },
 
   define: {
-    __APP_VERSION__: JSON.stringify('v0.0.1'),
+    __APP_VERSION__: JSON.stringify('v0.0.2'),
   },
 });

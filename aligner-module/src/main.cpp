@@ -8,10 +8,9 @@
 
 // #define ALIGN_DEBUG
 
-const double EPS = 0.1;
-const int PIXEL_EPS = 10;
-const double RATIO_LOWER = 2 / 3 - EPS;
-const double RATIO_HIGHER = 2 / 3 + EPS;
+const double ASPECT_RATIO_EPS = 0.1;
+const int PIXEL_DISTANCE_EPS = 10;
+const double SINGLE_DOUBLE_PAGE_RATIO = 1.0;
 const int SEARCH_RANGE = 10;
 const std::vector<int> PNG_ENCODING_PARAMS = {cv::IMWRITE_PNG_COMPRESSION, 3};
 
@@ -42,8 +41,8 @@ cv::Mat debug_transl;
 
 bool double_page(cv::Mat img)
 {
-    double ratio = img.cols / img.rows;
-    if (RATIO_HIGHER > ratio && ratio > RATIO_LOWER)
+    double ratio = (double)img.cols / img.rows;
+    if (SINGLE_DOUBLE_PAGE_RATIO > ratio)
     {
         return false;
     }
@@ -68,37 +67,42 @@ cv::Mat downscale(cv::Mat &img, int target_size, bool force = false)
 }
 
 // crops black and white image in place and returns roi
-cv::Rect2i crop(cv::Mat &image)
+cv::Rect2i crop(cv::Mat &image, int color_eps)
 {
     bool changed = true;
     cv::Rect2i rv(0, 0, image.cols, image.rows);
     while (changed && rv.area() > 0)
     {
         changed = false;
-        uint8_t topleft = image.row(0).at<uint8_t>(0);
-        uint8_t bottomright = image.row(image.rows - 1).at<uint8_t>(image.cols - 1);
+        int topleft = image.row(0).at<uint8_t>(0);
+        int topleft_min = std::max(0, topleft - color_eps);
+        int topleft_max = std::min(topleft + color_eps + 1, 256);
 
-        if (cv::checkRange(image.row(0), true, NULL, topleft, topleft + 1))
+        int bottomright = image.row(image.rows - 1).at<uint8_t>(image.cols - 1);
+        int bottomright_min = std::max(0, bottomright - color_eps);
+        int bottomright_max = std::min(bottomright + color_eps + 1, 256);
+
+        if (cv::checkRange(image.row(0), true, NULL, topleft_min, topleft_max))
         {
             rv.y++;
             rv.height--;
             image = image(cv::Range(1, image.rows), cv::Range::all());
             changed = true;
         }
-        else if (cv::checkRange(image.row(image.rows - 1), true, NULL, bottomright, bottomright + 1))
+        else if (cv::checkRange(image.row(image.rows - 1), true, NULL, bottomright_min, bottomright_max))
         {
             rv.height--;
             image = image(cv::Range(0, image.rows - 1), cv::Range::all());
             changed = true;
         }
-        else if (cv::checkRange(image.col(0), true, NULL, topleft, topleft + 1))
+        else if (cv::checkRange(image.col(0), true, NULL, topleft_min, topleft_max))
         {
             rv.x++;
             rv.width--;
             image = image(cv::Range::all(), cv::Range(1, image.cols));
             changed = true;
         }
-        else if (cv::checkRange(image.col(image.cols - 1), true, NULL, bottomright, bottomright + 1))
+        else if (cv::checkRange(image.col(image.cols - 1), true, NULL, bottomright_min, bottomright_max))
         {
             rv.width--;
             image = image(cv::Range::all(), cv::Range(0, image.cols - 1));
@@ -108,9 +112,9 @@ cv::Rect2i crop(cv::Mat &image)
     return rv;
 }
 
-void crop_safe(cv::Mat &img_color, cv::Mat &img_grey)
+void crop_safe(cv::Mat &img_color, cv::Mat &img_grey, int color_eps)
 {
-    cv::Rect2i roi = crop(img_grey);
+    cv::Rect2i roi = crop(img_grey, color_eps);
     if (roi.area() > 0)
     {
         img_color = img_color(roi);
@@ -121,20 +125,30 @@ void crop_safe(cv::Mat &img_color, cv::Mat &img_grey)
     }
 }
 
-bool same_color_col(cv::Mat &img, int colnum)
+bool same_color_col(cv::Mat &img, int colnum, int color_eps)
 {
-    uint8_t top = img.col(colnum).at<uint8_t>(0);
-    return cv::checkRange(img.col(colnum), true, NULL, top, top + 1);
+    int top = img.col(colnum).at<uint8_t>(0);
+    int top_min = std::max(0, top - color_eps);
+    int top_max = std::min(top + color_eps + 1, 256);
+    return cv::checkRange(img.col(colnum), true, NULL, top_min, top_max);
 }
 
-int load_and_preproc(cv::Mat &img_color, cv::Mat &img_grey, std::deque<PageImage> &acc, int &acc_count, int resize, bool do_split, bool do_crop, bool right2left)
+bool can_split(cv::Mat &img_grey, int color_eps)
 {
-    if (do_crop)
+    return double_page(img_grey) &&
+           (same_color_col(img_grey, img_grey.cols / 2, color_eps) ||
+            same_color_col(img_grey, img_grey.cols / 2 + PIXEL_DISTANCE_EPS, color_eps) ||
+            same_color_col(img_grey, img_grey.cols / 2 - PIXEL_DISTANCE_EPS, color_eps));
+}
+
+int load_and_preproc(cv::Mat &img_color, cv::Mat &img_grey, std::deque<PageImage> &acc, int &acc_count, int resize, bool do_split, bool do_crop, bool right2left, int color_eps)
+{
+    if (do_crop && !(do_split && can_split(img_grey, color_eps)))
     {
-        crop_safe(img_color, img_grey);
+        crop_safe(img_color, img_grey, color_eps);
     }
 
-    if (do_split && double_page(img_grey) && (same_color_col(img_grey, img_grey.cols / 2) || same_color_col(img_grey, img_grey.cols / 2 + PIXEL_EPS) || same_color_col(img_grey, img_grey.cols / 2 - PIXEL_EPS)))
+    if (do_split && can_split(img_grey, color_eps))
     {
         cv::Mat tmp1_grey, tmp2_grey, tmp1_color, tmp2_color;
 
@@ -148,8 +162,8 @@ int load_and_preproc(cv::Mat &img_color, cv::Mat &img_grey, std::deque<PageImage
 
         if (do_crop)
         {
-            crop_safe(tmp1_color, tmp1_grey);
-            crop_safe(tmp2_color, tmp2_grey);
+            crop_safe(tmp1_color, tmp1_grey, color_eps);
+            crop_safe(tmp2_color, tmp2_grey, color_eps);
         }
 
         if (right2left)
@@ -197,7 +211,7 @@ int load_and_preproc(cv::Mat &img_color, cv::Mat &img_grey, std::deque<PageImage
     }
 }
 
-int load_raw(int width, int height, std::deque<PageImage> &acc, int &acc_count, int resize, bool do_split, bool do_crop, bool right2left)
+int load_raw(int width, int height, std::deque<PageImage> &acc, int &acc_count, int resize, bool do_split, bool do_crop, bool right2left, int color_eps)
 {
     cv::Mat img_color(height, width, CV_8UC4);
     std::ifstream ifs("/rawdata", std::ios::binary);
@@ -207,7 +221,7 @@ int load_raw(int width, int height, std::deque<PageImage> &acc, int &acc_count, 
     cv::Mat img_grey;
     cv::cvtColor(img_color, img_grey, cv::COLOR_BGRA2GRAY);
 
-    return load_and_preproc(img_color, img_grey, acc, acc_count, resize, do_split, do_crop, right2left);
+    return load_and_preproc(img_color, img_grey, acc, acc_count, resize, do_split, do_crop, right2left, color_eps);
 }
 
 void write_im_and_info(std::string name, cv::Mat &image)
@@ -281,6 +295,7 @@ cv::Mat align(cv::Mat &to_align_color, cv::Mat &to_align_grey, cv::Mat &refim_co
 #ifdef ALIGN_DEBUG
     cv::drawKeypoints(to_align_color, alig_keypoints, debug_transl, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
     cv::drawKeypoints(refim_color, ref_keypoints, debug_orig, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+    std::cout << "[DEBUG] keypoint counts: " << ref_keypoints.size() << " / " << alig_keypoints.size() << '\n';
 #endif
 
     if (ref_keypoints.size() == 0 || alig_keypoints.size() == 0)
@@ -332,16 +347,16 @@ cv::Mat align(cv::Mat &to_align_color, cv::Mat &to_align_grey, cv::Mat &refim_co
     return warped_color;
 }
 
-int add_orig(std::string dst_path, int width, int height, int resize, bool do_split, bool do_crop, bool right2left)
+int add_orig(std::string dst_path, int width, int height, int resize, bool do_split, bool do_crop, bool right2left, int color_eps)
 {
-    int cnt = load_raw(width, height, origs, orig_count, resize, do_split, do_crop, right2left);
+    int cnt = load_raw(width, height, origs, orig_count, resize, do_split, do_crop, right2left, color_eps);
 
-    std::cout << "[AA] ORIG-" << origs.back().index << " added" << std::endl;
+    std::cout << "[AA] ORIG-" << std::setw(3) << std::setfill('0') << origs.back().index << " added" << std::endl;
     write_im_and_info(std::filesystem::path(dst_path) / (std::to_string(origs.back().index + 1000001)), origs.back().img);
 
     if (cnt > 1)
     {
-        std::cout << "[AA] ORIG-" << origs[origs.size() - 2].index << " split off previous and added" << std::endl;
+        std::cout << "[AA] ORIG-" << std::setw(3) << std::setfill('0') << origs[origs.size() - 2].index << " split off previous and added" << std::endl;
         write_im_and_info(std::filesystem::path(dst_path) / (std::to_string(origs[origs.size() - 2].index + 1000001)), origs[origs.size() - 2].img);
     }
 
@@ -366,15 +381,15 @@ int find_pairing(std::string dst_path, int transl_index, int orb_count)
             {
                 if (i != 0)
                 {
-                    std::cout << "[AA] Unexpected, multioverlay at i=" << i << " ORIG-" << origs[i].index << " / TRANSL-" << transls[transl_index].index << std::endl;
+                    std::cout << "[AA] Unexpected, multioverlay at i=" << i << " ORIG-" << std::setw(3) << std::setfill('0') << origs[i].index << " / TRANSL-" << std::setw(3) << std::setfill('0') << transls[transl_index].index << std::endl;
                 }
                 cv::add(last_aligned, aligned, last_aligned);
-                std::cout << "[AA] TRANSL-" << transls[transl_index].index << " additionally overlaid onto ORIG-" << origs[i].index << " // homography: " << formatter->format(last_homography) << std::endl;
+                std::cout << "[AA] TRANSL-" << std::setw(3) << std::setfill('0') << transls[transl_index].index << " additionally overlaid onto ORIG-" << std::setw(3) << std::setfill('0') << origs[i].index << " // homography: " << formatter->format(last_homography) << std::endl;
             }
             else
             {
                 last_aligned = aligned;
-                std::cout << "[AA] TRANSL-" << transls[transl_index].index << " primarily overlaid onto ORIG-" << origs[i].index << " // homography: " << formatter->format(last_homography) << std::endl;
+                std::cout << "[AA] TRANSL-" << std::setw(3) << std::setfill('0') << transls[transl_index].index << " primarily overlaid onto ORIG-" << std::setw(3) << std::setfill('0') << origs[i].index << " // homography: " << formatter->format(last_homography) << std::endl;
             }
             origs[i].previously_aligned = true;
             write_im_and_info(std::filesystem::path(dst_path) / (std::to_string(origs[i].index + 1000001)), last_aligned);
@@ -392,7 +407,7 @@ int find_pairing(std::string dst_path, int transl_index, int orb_count)
 #endif
                 cnt += 1;
 
-                std::cout << "[AA] TRANSL-" << transls[bt_transl_index].index << " backtrack paired with ORIG-" << origs[bt_orig_index].index << std::endl;
+                std::cout << "[AA] TRANSL-" << std::setw(3) << std::setfill('0') << transls[bt_transl_index].index << " backtrack paired with ORIG-" << std::setw(3) << std::setfill('0') << origs[bt_orig_index].index << std::endl;
                 write_im_and_info(std::filesystem::path(dst_path) / (std::to_string(origs[bt_orig_index].index + 1000001)), resized);
             }
 
@@ -424,14 +439,14 @@ int find_pairing(std::string dst_path, int transl_index, int orb_count)
             }
 
             // if translation was a single page, or double page but already used once, we are done and can return
-            // std::cout << "[DEBUG] TRANSL-" << transls[0].index << " popped" << std::endl;
+            // std::cout << "[DEBUG] TRANSL-" << std::setw(3) << std::setfill('0') << transls[0].index << " popped" << std::endl;
             transls.pop_front();
             return cnt;
         }
         catch (const std::runtime_error &error)
         {
 #ifdef ALIGN_DEBUG
-            std::cout << "[DEBUG] TRANSL-" << transls[transl_index].index << " couldn't be aligned to ORIG-" << origs[i].index << " // " << error.what() << std::endl;
+            std::cout << "[DEBUG] TRANSL-" << std::setw(3) << std::setfill('0') << transls[transl_index].index << " couldn't be aligned to ORIG-" << std::setw(3) << std::setfill('0') << origs[i].index << " // " << error.what() << std::endl;
             transls[transl_index].img_kp = debug_transl;
 #endif
         }
@@ -443,9 +458,9 @@ int find_pairing(std::string dst_path, int transl_index, int orb_count)
     return 0;
 }
 
-int add_transl(std::string dst_path, int width, int height, int resize, bool do_split, bool do_crop, bool right2left, int orb_count)
+int add_transl(std::string dst_path, int width, int height, int resize, bool do_split, bool do_crop, bool right2left, int color_eps, int orb_count)
 {
-    int loaded_cnt = load_raw(width, height, transls, transl_count, resize, do_split, do_crop, right2left);
+    int loaded_cnt = load_raw(width, height, transls, transl_count, resize, do_split, do_crop, right2left, color_eps);
     int total_cnt = 0;
     for (int i = loaded_cnt; i > 0; --i)
     {

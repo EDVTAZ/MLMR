@@ -30,6 +30,7 @@ import { useUploadImages } from './useUploadImages';
 
 const defaultImportSettings: ImageImportConfigType = {
   resize: 2000000,
+  color_eps: 0,
   do_split: true,
   do_crop: true,
   right2left: true,
@@ -83,11 +84,11 @@ export function CreateCollection() {
                 </Button>
               </Link>
               <InputGroup width="auto">
-                <InputLeftAddon>Collection Name:</InputLeftAddon>
+                <InputLeftAddon>Collection Name</InputLeftAddon>
                 <Input
                   id="collection-name"
                   name="collectionName"
-                  onInput={(e) =>
+                  onChange={(e) =>
                     setCollectionName((e.target as HTMLInputElement).value)
                   }
                   disabled={!!inProgress}
@@ -105,7 +106,7 @@ export function CreateCollection() {
               </Checkbox>
 
               <InputGroup width="auto">
-                <InputLeftAddon>ORB count:</InputLeftAddon>
+                <InputLeftAddon>ORB count</InputLeftAddon>
                 <Input
                   id="orb-count"
                   name="orbCount"
@@ -113,7 +114,7 @@ export function CreateCollection() {
                   min="100"
                   value={orbCount}
                   width="auto"
-                  onInput={(e) =>
+                  onChange={(e) =>
                     setOrbCount(parseInt((e.target as HTMLInputElement).value))
                   }
                   disabled={!!inProgress || onlyOrig}
