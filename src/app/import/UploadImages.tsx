@@ -142,7 +142,7 @@ export function UploadImages({
               disabled={disabled}
             />
             <InputRightElement>
-              <Tooltip label="Epsilon value for decideing color equivalence when cropping and splitting images. If cropping or splitting is not agressive enough, increasing this value may help (e.g. by ignoring faint smudges on the edge of the scan.">
+              <Tooltip label="Epsilon value for deciding color equivalence when cropping and splitting images. If cropping or splitting is not agressive enough, increasing this value may help (e.g. by ignoring faint smudges on the edge of the scan.">
                 <QuestionOutlineIcon />
               </Tooltip>
             </InputRightElement>

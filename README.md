@@ -35,7 +35,7 @@ I use opencv for image registration, some sanity checks and simple transformatio
 The overall algorithm:
 
 - try to match the translation image to the original with opencv
-  - if successful transform it to line up perfectly (I use a few heuristics on the homography matrix returned by the algorithm to decide if it is a match, usually if there is little change, but if the images don't match, the homography will usually completely mangle the image to overfit onto few matching features)
+  - if successful transform it to line up perfectly (I use a few heuristics on the homography matrix returned by the algorithm to decide if it is a match. If two images match, usually there is little change, but if the images don't match, the homography will completely mangle the image to overfit onto few matching features)
   - if not successful, maybe a page is missing so let's try to match with the next original
 - if there is no match up to a range, move on to the next translation image
 - whenever there is a match, check if there were translation images that were skipped this way, and backtrack them to be inserted in order backwards without doing any matching
