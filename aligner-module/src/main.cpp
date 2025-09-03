@@ -383,7 +383,17 @@ int find_pairing(std::string dst_path, int transl_index, int orb_count)
                 {
                     std::cout << "[AA] Unexpected, multioverlay at i=" << i << " ORIG-" << std::setw(3) << std::setfill('0') << origs[i].index << " / TRANSL-" << std::setw(3) << std::setfill('0') << transls[transl_index].index << std::endl;
                 }
-                cv::add(last_aligned, aligned, last_aligned);
+
+                // create mask for areas where the two images overlap, blend them in that area, and the rest of the area simply add them
+                cv::Mat last_mask, mask;
+                cv::threshold(last_aligned, last_mask, 1, 1, cv::THRESH_BINARY_INV);
+                cv::threshold(aligned, mask, 1, 1, cv::THRESH_BINARY_INV);
+                cv::bitwise_or(last_mask, mask, mask);
+                mask += cv::Scalar(1, 1, 1, 1);
+
+                cv::addWeighted(last_aligned, 0.5, aligned, 0.5, 0, last_aligned);
+                cv::multiply(last_aligned, mask, last_aligned);
+
                 std::cout << "[AA] TRANSL-" << std::setw(3) << std::setfill('0') << transls[transl_index].index << " additionally overlaid onto ORIG-" << std::setw(3) << std::setfill('0') << origs[i].index << " // homography: " << formatter->format(last_homography) << std::endl;
             }
             else
